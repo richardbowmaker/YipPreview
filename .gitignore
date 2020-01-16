@@ -1,0 +1,17 @@
+*.o 
+*.d
+Debug/
+Release/
+*.pdb
+*.exe
+*.ilk
+*.iobj
+*.ipdb
+*.log
+*.tlog
+/x64/
+.metadata/
+.vs/
+
+
+
