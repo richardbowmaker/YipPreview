@@ -104,7 +104,8 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WXUSINGDLL;WINDOWS_BUILD;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>D:\_Ricks\c++\wxWidgets\3.1.3\wxWidgets-3.1.3\include;D:\_Ricks\c++\wxWidgets\3.1.3\wxWidgets-3.1.3\lib\vc_x64_lib\mswud;D:\_Ricks\c++\wxWidgets\3.1.3\wxWidgets-3.1.3\lib\vc_x64_dll\mswud</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\CommonSource;D:\_Ricks\c++\wxWidgets\3.1.3\wxWidgets-3.1.3\include;D:\_Ricks\c++\wxWidgets\3.1.3\wxWidgets-3.1.3\lib\vc_x64_lib\mswud;D:\_Ricks\c++\wxWidgets\3.1.3\wxWidgets-3.1.3\lib\vc_x64_dll\mswud</AdditionalIncludeDirectories>
+      <AdditionalOptions>/wd4996 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -141,7 +142,8 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WXUSINGDLL;WINDOWS_BUILD;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>D:\_Ricks\c++\wxWidgets\3.1.3\wxWidgets-3.1.3\include;D:\_Ricks\c++\wxWidgets\3.1.3\wxWidgets-3.1.3\lib\vc_x64_lib\mswu;D:\_Ricks\c++\wxWidgets\3.1.3\wxWidgets-3.1.3\lib\vc_x64_dll\mswu</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\CommonSource;D:\_Ricks\c++\wxWidgets\3.1.3\wxWidgets-3.1.3\include;D:\_Ricks\c++\wxWidgets\3.1.3\wxWidgets-3.1.3\lib\vc_x64_lib\mswu;D:\_Ricks\c++\wxWidgets\3.1.3\wxWidgets-3.1.3\lib\vc_x64_dll\mswu</AdditionalIncludeDirectories>
+      <AdditionalOptions>/wd4996 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -153,13 +155,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\CommonSource\Logger.h" />
+    <ClInclude Include="..\..\..\CommonSource\Tryout.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="YipPreview.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\CommonSource\Logger.cpp" />
     <ClCompile Include="..\..\..\CommonSource\Main.cpp" />
+    <ClCompile Include="..\..\..\CommonSource\Tryout.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="YipPreview.rc" />
