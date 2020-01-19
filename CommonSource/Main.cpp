@@ -8,43 +8,25 @@
 
 // For compilers that support precompilation, includes "wx/wx.h".
 
-#include <iostream>
+#include "Main.h"
+
 
 #include <wx/wxprec.h>
 #ifndef WX_PRECOMP
     #include <wx/wx.h>
 #endif
+#include <cstdlib>
+#include <iostream>
+#include <stdarg.h>
+#include <stdio.h>
 #include <wx/splitter.h>
 #include <wx/sizer.h>
 
 #include "Logger.h"
 #include "Tryout.h"
+#include "Utilities.h"
 
 
-
-class MyApp: public wxApp
-{
-public:
-    virtual bool OnInit();
-};
-
-class MyFrame: public wxFrame
-{
-public:
-    MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size);
-
-    //DECLARE_EVENT_TABLE()
-
-private:
-    void OnHello(wxCommandEvent& event);
-    void OnTryOut(wxCommandEvent& event);
-    void OnExit(wxCommandEvent& event);
-    void OnAbout(wxCommandEvent& event);
-    void OnThread(wxCommandEvent& event);
-	void OnProcessCustom(wxCommandEvent& WXUNUSED(event));
-
-    wxDECLARE_EVENT_TABLE();
-};
 enum
 {
     ID_Hello = 1,
@@ -58,7 +40,6 @@ enum
         wxCommandEventHandler(fn), \
         (wxObject *) NULL \
     ),
-
 
 
 wxBEGIN_EVENT_TABLE(MyFrame, wxFrame)
@@ -109,6 +90,7 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
 
 	wxBoxSizer* txt1sizer = new wxBoxSizer(wxVERTICAL);
 	wxListBox* lb1 = new wxListBox(pnl1, wxID_ANY);
+	lb1->SetMinSize(wxSize(800, 500));
 	txt1sizer->Add(lb1, 1, wxEXPAND, 0);
 	pnl1->SetSizer(txt1sizer);
 
@@ -141,7 +123,7 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
     SetStatusText("Welcome to wxWidgets for Linux!");
 #endif
 
-    //Bind(EVT_COMMAND, &MyFrame::OnExit, this, wxID_EXIT);
+
 
 
 }
@@ -172,8 +154,8 @@ void MyFrame::OnThread(wxCommandEvent& event)
     
 }
 
-void MyFrame::OnProcessCustom(wxCommandEvent& WXUNUSED(event))
+void MyFrame::OnProcessCustom(wxCommandEvent& event)
 {
-	Logger::info(L"Got a custom event!");
+	Logger::info(event.GetString());
 }
 

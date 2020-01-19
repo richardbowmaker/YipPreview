@@ -3,8 +3,6 @@
 #include "Tryout.h"
 
 
-#pragma once
-
 #include <wx/wx.h>
 #include <wx/thread.h>
 

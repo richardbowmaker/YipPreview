@@ -2,7 +2,11 @@
 
 #include <stdio.h>
 #include <stdarg.h>
+#include <string>
 
+#include "Utilities.h"
+
+// static members
 Logger::LevelT Logger::level_ = Logger::Error;
 wxListBox* Logger::listBox_ = nullptr;
 
@@ -57,10 +61,10 @@ void Logger::systemError(const int err, const wchar_t* format, ...)
 		(LPTSTR)& errStr,
 		0,
 		NULL)) return;
-	swprintf(buff, sizeof(buff), L" [%ls: %d]", errStr, err);
+	swprintf(buff, sizeof(buff), L" [%ls: %d]", SU::strToWStr(errStr).c_str(), err);
 	LocalFree(errStr);
 #elif LINUX_BUILD
-	swprintf(buff, sizeof(buff), L" [%ls: %d]", strerror(err), err);
+	swprintf(buff, sizeof(buff), L" [%ls: %d]", SU::strToWStr(strerror(err)).c_str(), err);
 #endif
 	va_list vl;
 	va_start(vl, format);
