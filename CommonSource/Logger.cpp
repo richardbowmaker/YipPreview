@@ -4,21 +4,49 @@
 #include <stdarg.h>
 #include <string>
 
+#include "Events.h"
 #include "Utilities.h"
+
+IMPLEMENT_DYNAMIC_CLASS(LoggerListBox, wxListBox);
+
+wxBEGIN_EVENT_TABLE(LoggerListBox, wxListBox)
+	EVT_LOGGER_EVENT_COMMAND(wxID_ANY, LoggerListBox::OnLogger)
+wxEND_EVENT_TABLE()
+
+
+void LoggerListBox::OnLogger(wxLoggerEvent& event)
+{
+	// add to message box
+	wxListBox* lb = dynamic_cast<wxListBox*>(event.GetEventObject());
+	if (lb != nullptr) lb->Append(event.GetString().wc_str());
+}
 
 // static members
 Logger::LevelT Logger::level_ = Logger::Error;
 wxListBox* Logger::listBox_ = nullptr;
+wxEvtHandler* Logger::event_;
+
+
+void Logger::test()
+{
+	wxLoggerEvent evt;
+	evt.SetString(wxString(L"From Logger::test()"));
+	evt.setLevel(22);
+	evt.SetEventObject(listBox_);
+	//event_->AddPendingEvent(evt);
+	listBox_->GetEventHandler()->AddPendingEvent(evt);
+}
 
 void Logger::setLevel(LevelT level)
 {
 	level_ = level;
 }
 
-void Logger::initialise(wxListBox* listBox, LevelT level)
+void Logger::initialise(wxListBox* listBox, wxEvtHandler* event, LevelT level)
 {
 	level_ = level;
 	listBox_ = listBox;
+	event_ = event;
 }
 
 void Logger::clear()

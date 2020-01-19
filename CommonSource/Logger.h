@@ -4,6 +4,24 @@
 #include <wx/wx.h>
 #include <string>
 
+#include "Events.h"
+
+
+class LoggerListBox : public wxListBox
+{
+	public:
+		DECLARE_DYNAMIC_CLASS(LoggerListBox);
+
+		LoggerListBox () {}
+		LoggerListBox (wxWindow* parent, wxWindowID id)
+			: wxListBox (parent, id) {}
+
+		void OnLogger(wxLoggerEvent& event);
+
+		wxDECLARE_EVENT_TABLE();
+};
+
+
 class Logger
 {
 public:
@@ -17,10 +35,11 @@ public:
 		Info = 1
 	};
 
-	static void initialise(wxListBox* listBox, LevelT level = LevelT::Error);
+	static void initialise(wxListBox* listBox, wxEvtHandler* event, LevelT level = LevelT::Error);
 	static void setLevel(LevelT level);
 	static Logger::LevelT getLevel();
 
+	static void test();
 
 	static void clear();
 	static void log(const LevelT level, const wchar_t* format, ...);
@@ -49,6 +68,7 @@ private:
 
 	static LevelT level_;
 	static wxListBox* listBox_;
+	static wxEvtHandler* event_;
 
 
 };

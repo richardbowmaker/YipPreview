@@ -16,6 +16,8 @@
     #include <wx/wx.h>
 #endif
 
+#include "Events.h"
+
 class MyApp: public wxApp
 {
 public:
@@ -36,6 +38,7 @@ private:
     void OnAbout(wxCommandEvent& event);
     void OnThread(wxCommandEvent& event);
 	void OnProcessCustom(wxCommandEvent& event);
+	void OnLogger(wxLoggerEvent& event);
 
     wxDECLARE_EVENT_TABLE();
 };

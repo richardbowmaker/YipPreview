@@ -22,6 +22,7 @@
 #include <wx/splitter.h>
 #include <wx/sizer.h>
 
+#include "Events.h"
 #include "Logger.h"
 #include "Tryout.h"
 #include "Utilities.h"
@@ -41,13 +42,13 @@ enum
         (wxObject *) NULL \
     ),
 
-
 wxBEGIN_EVENT_TABLE(MyFrame, wxFrame)
     EVT_MENU(ID_Hello,   MyFrame::OnHello)
     EVT_MENU(ID_TryOut, MyFrame::OnTryOut)
     EVT_MENU(wxID_EXIT,  MyFrame::OnExit)
     EVT_MENU(wxID_ABOUT, MyFrame::OnAbout)
 	EVT_MY_CUSTOM_COMMAND(wxID_ANY, MyFrame::OnProcessCustom)
+//	EVT_LOGGER_EVENT_COMMAND(wxID_ANY, MyFrame::OnLogger)
 wxEND_EVENT_TABLE()
 
 wxIMPLEMENT_APP(MyApp);
@@ -89,7 +90,7 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
 	wxPanel* pnl1 = new wxPanel(splittermain, wxID_ANY);
 
 	wxBoxSizer* txt1sizer = new wxBoxSizer(wxVERTICAL);
-	wxListBox* lb1 = new wxListBox(pnl1, wxID_ANY);
+	LoggerListBox* lb1 = new LoggerListBox(pnl1, wxID_ANY);
 	lb1->SetMinSize(wxSize(800, 500));
 	txt1sizer->Add(lb1, 1, wxEXPAND, 0);
 	pnl1->SetSizer(txt1sizer);
@@ -106,7 +107,7 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
 	this->SetSizer(sizermain);
 	sizermain->SetSizeHints(this);
 
-	Logger::initialise(lb1);
+	Logger::initialise(lb1, this, Logger::Info);
 	Logger::log(Logger::Error, L"Error %d", 99);
 
 	FILE* fp = std::fopen("test.txt", "r");
@@ -146,7 +147,8 @@ void MyFrame::OnHello(wxCommandEvent& event)
 
 void MyFrame::OnTryOut(wxCommandEvent& event)
 {
-    TryOut::ThreadEvents(this);
+    //TryOut::ThreadEvents(this);
+	Logger::test();
 }
 
 void MyFrame::OnThread(wxCommandEvent& event)
@@ -158,4 +160,12 @@ void MyFrame::OnProcessCustom(wxCommandEvent& event)
 {
 	Logger::info(event.GetString());
 }
+
+void MyFrame::OnLogger(wxLoggerEvent& event)
+{
+	Logger::info(L"level %d: %ls", event.getLevel(), event.GetString().wc_str());
+}
+
+
+
 
