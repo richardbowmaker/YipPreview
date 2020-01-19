@@ -1,32 +1,21 @@
 #ifndef LOGGER_H
 #define LOGGER_H
 
-#include <wx/wx.h>
 #include <string>
+#include <sys/types.h>
+#include <wx/wx.h>
 
 #include "Events.h"
 
+// This class is a hybrid wxListBox control and static class for providing
+// thread safe global static logging functions.
+// There is only intended to be one instance of the logger in an application.
 
-class LoggerListBox : public wxListBox
-{
-	public:
-		DECLARE_DYNAMIC_CLASS(LoggerListBox);
+class wxLoggerEvent;
 
-		LoggerListBox () {}
-		LoggerListBox (wxWindow* parent, wxWindowID id)
-			: wxListBox (parent, id) {}
-
-		void OnLogger(wxLoggerEvent& event);
-
-		wxDECLARE_EVENT_TABLE();
-};
-
-
-class Logger
+class Logger : public wxListBox
 {
 public:
-
-	virtual ~Logger();
 
 	enum LevelT
 	{
@@ -35,12 +24,14 @@ public:
 		Info = 1
 	};
 
-	static void initialise(wxListBox* listBox, wxEvtHandler* event, LevelT level = LevelT::Error);
+
+	Logger();
+	Logger (wxWindow* parent, wxWindowID id, LevelT level = LevelT::Error);
+	//virtual ~Logger();
+
+
 	static void setLevel(LevelT level);
-	static Logger::LevelT getLevel();
-
-	static void test();
-
+	static LevelT getLevel();
 	static void clear();
 	static void log(const LevelT level, const wchar_t* format, ...);
 	static void systemError(const int err, const wchar_t* format, ...); // err = errno
@@ -59,19 +50,56 @@ public:
 
 private:
 
-	Logger();
-	Logger(const Logger& other);
-	Logger(const Logger&& other);
+	void OnLogger(wxLoggerEvent& event);
 
 	static void log(const LevelT level, const wchar_t* format, va_list vl);
 	static void append(const wchar_t* text);
 
 	static LevelT level_;
-	static wxListBox* listBox_;
-	static wxEvtHandler* event_;
+	static Logger* this_;
+	static long tid_;		// main GUI thread ID
 
-
+	wxDECLARE_DYNAMIC_CLASS(Logger);
+	wxDECLARE_EVENT_TABLE();
 };
+
+//----------------------------------------------------------------------------
+// logger event, used to send log data from worker thread to logger list box
+
+class wxLoggerEvent : public wxCommandEvent
+{
+public:
+	wxLoggerEvent();
+	wxLoggerEvent(const wxLoggerEvent &other);
+
+	virtual wxEvent *Clone() const;
+
+	int getLevel() const;
+	void setLevel(int level);
+
+	DECLARE_DYNAMIC_CLASS(wxLoggerEvent)
+
+private:
+
+	int level_;
+};
+
+
+typedef void (wxEvtHandler::*wxLoggerEventFunction)(wxLoggerEvent&);
+#define wxLoggerEventHandler(func) \
+    wxEVENT_HANDLER_CAST(wxLoggerEventFunction, func)
+
+
+wxDECLARE_EVENT(wxEVT_LOGGER_EVENT, wxLoggerEvent);
+
+// for use in message maps
+#define EVT_LOGGER_EVENT_COMMAND(id, fn) \
+    DECLARE_EVENT_TABLE_ENTRY( \
+    	wxEVT_LOGGER_EVENT, id, wxID_ANY, \
+		wxLoggerEventHandler(fn), \
+        (wxObject *) NULL \
+    ),
+
 
 
 #endif

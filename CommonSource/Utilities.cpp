@@ -11,8 +11,22 @@
 #include <string.h>
 #include <utility>
 
+#ifdef WINDOWS_BUILD
+#include <windows.h>
+#elif LINUX_BUILD
+	#include <unistd.h>
+	#include <sys/syscall.h>
+#endif
 
 
+long Utilities::GetThreadID()
+{
+#ifdef WINDOWS_BUILD
+	return static_cast<long>(GetCurrentThreadId());
+#elif LINUX_BUILD
+	return static_cast<long>(syscall(SYS_gettid));
+#endif
+}
 
 std::wstring SU::strToWStr(const char* str)
 {

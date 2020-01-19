@@ -7,34 +7,34 @@
 #include "Events.h"
 #include "Utilities.h"
 
-IMPLEMENT_DYNAMIC_CLASS(LoggerListBox, wxListBox);
+// static members
+Logger::LevelT Logger::level_ = Logger::Error;
+Logger* Logger::this_ = nullptr;
+long Logger::tid_ = 0;
 
-wxBEGIN_EVENT_TABLE(LoggerListBox, wxListBox)
-	EVT_LOGGER_EVENT_COMMAND(wxID_ANY, LoggerListBox::OnLogger)
+Logger::Logger() : wxListBox()
+{
+}
+
+Logger::Logger(wxWindow* parent, wxWindowID id, LevelT level) :
+	wxListBox (parent, id)
+{
+	tid_ = Utilities::GetThreadID();
+	level_ = level;
+	this_ = this;
+}
+
+wxIMPLEMENT_DYNAMIC_CLASS(Logger, wxListBox);
+
+wxBEGIN_EVENT_TABLE(Logger, wxListBox)
+	EVT_LOGGER_EVENT_COMMAND(wxID_ANY, Logger::OnLogger)
 wxEND_EVENT_TABLE()
 
-
-void LoggerListBox::OnLogger(wxLoggerEvent& event)
+void Logger::OnLogger(wxLoggerEvent& event)
 {
 	// add to message box
 	wxListBox* lb = dynamic_cast<wxListBox*>(event.GetEventObject());
 	if (lb != nullptr) lb->Append(event.GetString().wc_str());
-}
-
-// static members
-Logger::LevelT Logger::level_ = Logger::Error;
-wxListBox* Logger::listBox_ = nullptr;
-wxEvtHandler* Logger::event_;
-
-
-void Logger::test()
-{
-	wxLoggerEvent evt;
-	evt.SetString(wxString(L"From Logger::test()"));
-	evt.setLevel(22);
-	evt.SetEventObject(listBox_);
-	//event_->AddPendingEvent(evt);
-	listBox_->GetEventHandler()->AddPendingEvent(evt);
 }
 
 void Logger::setLevel(LevelT level)
@@ -42,22 +42,28 @@ void Logger::setLevel(LevelT level)
 	level_ = level;
 }
 
-void Logger::initialise(wxListBox* listBox, wxEvtHandler* event, LevelT level)
-{
-	level_ = level;
-	listBox_ = listBox;
-	event_ = event;
-}
-
 void Logger::clear()
 {
-	listBox_->Clear();
+	this_->Clear();
 }
 
 void Logger::append(const wchar_t* text)
 {
-	if (listBox_ == nullptr) return;
-	listBox_->Append(text);
+	if (this_ == nullptr) return;
+	if (tid_ == Utilities::GetThreadID())
+	{
+		// in GUI thread, so update list box
+		this_->Append(text);
+	}
+	else
+	{
+		// post event to GUI thread
+		wxLoggerEvent evt;
+		evt.SetString(wxString(text));
+		evt.setLevel(22);
+		evt.SetEventObject(this_);
+		this_->GetEventHandler()->AddPendingEvent(evt);
+	}
 }
 
 void Logger::log(const LevelT level, const wchar_t* format, va_list vl)
@@ -212,5 +218,42 @@ void CLogger::LogBytes(const LogT level, const uint8_t* bytes, const int len)
 }
 
 */
+
+
+DEFINE_EVENT_TYPE(wxLOGGER_EVENT);
+IMPLEMENT_DYNAMIC_CLASS(wxLoggerEvent, wxCommandEvent)
+
+
+wxDEFINE_EVENT(wxEVT_LOGGER_EVENT, wxLoggerEvent);
+
+
+wxLoggerEvent::wxLoggerEvent() :
+	wxCommandEvent(wxEVT_LOGGER_EVENT, wxID_ANY),
+	level_(0)
+{
+}
+
+wxLoggerEvent::wxLoggerEvent(const wxLoggerEvent &other) :
+	wxCommandEvent(other)
+{
+	level_ = other.level_;
+}
+
+wxEvent *wxLoggerEvent::Clone() const
+{
+	return new wxLoggerEvent(*this);
+};
+
+int wxLoggerEvent::getLevel() const
+{
+	return level_;
+}
+
+void wxLoggerEvent::setLevel(int level)
+{
+	level_ = level;
+}
+
+
 
 

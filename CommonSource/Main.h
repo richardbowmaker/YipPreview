@@ -16,7 +16,7 @@
     #include <wx/wx.h>
 #endif
 
-#include "Events.h"
+#include "Logger.h"
 
 class MyApp: public wxApp
 {

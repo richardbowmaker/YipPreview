@@ -23,17 +23,19 @@ public:
 
 	ExitCode Entry() override
 	{
-		for (unsigned n = 0; n < 1; n++)
+		for (unsigned n = 0; n < 10; n++)
 		{
-			// notify the main thread
-//			wxCommandEvent evt(wxEVT_MY_CUSTOM_COMMAND, wxID_ANY);
-			wxLoggerEvent evt;
-			evt.SetInt(n);
-			evt.SetString(wxString(L"From thread"));
-			evt.setLevel(22);
-			m_parent->AddPendingEvent(evt);
+//			// notify the main thread
+////			wxCommandEvent evt(wxEVT_MY_CUSTOM_COMMAND, wxID_ANY);
+//			wxLoggerEvent evt;
+//			evt.SetInt(n);
+//			evt.SetString(wxString(L"From thread"));
+//			evt.setLevel(22);
+//			m_parent->AddPendingEvent(evt);
 
-			this->Sleep(500);
+			Logger::info(L"from worker thread");
+
+			this->Sleep(100);
 		}
 
 		return ExitCode(nullptr);

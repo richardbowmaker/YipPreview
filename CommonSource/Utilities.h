@@ -13,7 +13,10 @@
 class Utilities
 {
 public:
+
 	virtual ~Utilities();
+
+	static long GetThreadID();
 
 private:
 

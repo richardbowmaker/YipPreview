@@ -90,7 +90,7 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
 	wxPanel* pnl1 = new wxPanel(splittermain, wxID_ANY);
 
 	wxBoxSizer* txt1sizer = new wxBoxSizer(wxVERTICAL);
-	LoggerListBox* lb1 = new LoggerListBox(pnl1, wxID_ANY);
+	Logger* lb1 = new Logger(pnl1, wxID_ANY, Logger::Info);
 	lb1->SetMinSize(wxSize(800, 500));
 	txt1sizer->Add(lb1, 1, wxEXPAND, 0);
 	pnl1->SetSizer(txt1sizer);
@@ -107,7 +107,6 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
 	this->SetSizer(sizermain);
 	sizermain->SetSizeHints(this);
 
-	Logger::initialise(lb1, this, Logger::Info);
 	Logger::log(Logger::Error, L"Error %d", 99);
 
 	FILE* fp = std::fopen("test.txt", "r");
@@ -147,8 +146,7 @@ void MyFrame::OnHello(wxCommandEvent& event)
 
 void MyFrame::OnTryOut(wxCommandEvent& event)
 {
-    //TryOut::ThreadEvents(this);
-	Logger::test();
+    TryOut::ThreadEvents(this);
 }
 
 void MyFrame::OnThread(wxCommandEvent& event)
