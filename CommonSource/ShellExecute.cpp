@@ -7,19 +7,20 @@
 
 #include "ShellExecute.h"
 
+#include <cstdio>
 #include <errno.h>
 #include <fcntl.h>
-#include <cstdio>
+#include <stdarg.h>
+#include <stdio.h>
 #include <string>
 #include <sstream>
-//#include <string.h>
 #include <sys/wait.h>
 #include <sys/types.h>
 #include <unistd.h>
 
+
 #include "Logger.h"
 #include "Utilities.h"
-
 
 ShellExecute::ShellExecute()
 {
@@ -29,8 +30,27 @@ ShellExecute::~ShellExecute()
 {
 }
 
-bool ShellExecute::shell(const std::string &cmd, int &exitCode, std::string &stdout, const int timeoutms)
+bool ShellExecute::shellSync(const std::wstring &cmd, const int timeoutms /*= -1*/)
 {
+	ShellExecuteResult result;	// throw away
+	return shell_(cmd, timeoutms, nullptr, result);
+}
+
+bool ShellExecute::shellSync(const std::wstring &cmd, ShellExecuteResult &result, const int timeoutms /*= -1 */)
+{
+	return shell_(cmd, timeoutms, nullptr, result);
+}
+
+// core shell execute function
+bool ShellExecute::shell_(
+	const std::wstring &cmd,
+	const int timeoutms,
+	void* data,
+	ShellExecuteResult &result)
+{
+	result.clear();
+	result.cmd_ = cmd;
+
 	pid_t child_pid;
 	constexpr int fdRead = 0;
 	constexpr int fdWrite = 1;
@@ -39,12 +59,15 @@ bool ShellExecute::shell(const std::string &cmd, int &exitCode, std::string &std
 	if (pipe(fd) == -1)
 	{
 	    Logger::systemError(errno, L"Error creating pipe");
+	    result.error_ = errno;
 	    return false;
 	}
 
 	if((child_pid = fork()) == -1)
 	{
 	    Logger::systemError(errno, L"Error forking process");
+	    result.error_ = errno;
+		result.success_ = false;
 	    return false;
 	}
 
@@ -55,7 +78,7 @@ bool ShellExecute::shell(const std::string &cmd, int &exitCode, std::string &std
 	    dup2(fd[fdWrite], 1); // Redirect stdout to pipe
 
 	    setpgid(child_pid, child_pid); //Needed so negative PIDs can kill children of /bin/sh
-	    execl("/bin/sh", "/bin/sh", "-c", cmd.c_str(), NULL);
+	    execl("/bin/sh", "/bin/sh", "-c", SU::wStrToStr(cmd).c_str(), NULL);
 	    _exit(0);
 	}
 
@@ -74,7 +97,7 @@ bool ShellExecute::shell(const std::string &cmd, int &exitCode, std::string &std
 
 	while (true)
 	{
-		rerr = read(fileno(fp), buff, sizeof(buff)-1);
+		rerr = read(fileno(fp), buff, sizeof(buff) - 1);
 		if (rerr == 0)
 		{
 			break;
@@ -83,8 +106,11 @@ bool ShellExecute::shell(const std::string &cmd, int &exitCode, std::string &std
 		{
 			if (errno != EWOULDBLOCK)
 			{
-				Logger::systemError(errno, L"File read error");
 				fclose(fp);
+				Logger::systemError(errno, L"File read error");
+				result.pid_ = child_pid;
+			    result.error_ = errno;
+				result.success_ = false;
 				return false;
 			}
 			else
@@ -94,8 +120,11 @@ bool ShellExecute::shell(const std::string &cmd, int &exitCode, std::string &std
 					long timer = Utilities::getMsCounter();
 					if (timer - stime > timeoutms)
 					{
-						Logger::systemError(errno, L"Shell execute timed out");
 						fclose(fp);
+						Logger::systemError(errno, L"Shell execute timed out");
+						result.pid_ = child_pid;
+						result.timedOut_ = true;
+						result.success_ = false;
 						return false;
 					}
 				}
@@ -108,68 +137,139 @@ bool ShellExecute::shell(const std::string &cmd, int &exitCode, std::string &std
 	}
 
 	// close read end of pipe
-	int stat;
-	int ec = fclose(fp);
-	while (waitpid(child_pid, &stat, 0) == -1)
+	int exit;
+	fclose(fp);
+	while (waitpid(child_pid, &exit, 0) == -1)
 	{
 	    if (errno != EINTR)
 	    {
-			Logger::systemError(errno, L"Error closing pipe");
 			fclose(fp);
+			Logger::systemError(errno, L"Error closing pipe");
+			result.pid_ = child_pid;
+		    result.error_ = errno;
 			return false;
 	    }
 	}
 
-	exitCode = ec;
-	stdout = output.str();
-	return ec == 0;
+	// setup return result
+	result.exitCode_ 	= exit;
+	result.stdout_ 		= SU::strToWStr(output.str());
+	result.pid_ 		= 0;
+	result.success_ 	= exit == 0;
+	return result.success_;
 }
-
 
 //-----------------------------------------------------------
-// ShellExecuteEvent
+// ShellExecuteResult
 
-ShellExecuteEvent::ShellExecuteEvent()
+ShellExecuteResult::ShellExecuteResult()
+{
+	clear();
+}
+
+ShellExecuteResult::~ShellExecuteResult()
 {
 }
 
-ShellExecuteEvent::~ShellExecuteEvent()
-{
-}
-
-ShellExecuteEvent::ShellExecuteEvent(const ShellExecuteEvent &other)
-{
-	*this = other;
-}
-
-ShellExecuteEvent::ShellExecuteEvent(ShellExecuteEvent &&other)
+ShellExecuteResult::ShellExecuteResult(const ShellExecuteResult &other)
 {
 	*this = other;
-	other.stdout_.clear();
 }
 
-ShellExecuteEvent& ShellExecuteEvent::operator=(const ShellExecuteEvent &other)
+ShellExecuteResult::ShellExecuteResult(ShellExecuteResult &&other)
+{
+	*this = other;
+	other.clear();
+}
+
+void ShellExecuteResult::clear()
+{
+	cmd_.clear();
+	pid_ = 0;
+	exitCode_ = 0;
+	success_ = false;
+	error_ = 0;
+	stdout_.clear();
+	timedOut_ = false;
+	userData_ = nullptr;
+}
+
+ShellExecuteResult& ShellExecuteResult::operator=(const ShellExecuteResult &other)
 {
 	if (&other != this)
 	{
-		pid_ 	= other.pid_;
-		error_ 	= other.error_;
-		stdout_ = other.stdout_;
+		cmd_		= other.cmd_;
+		pid_ 		= other.pid_;
+		exitCode_	= other.exitCode_;
+		success_	= other.success_;
+		error_ 		= other.error_;
+		stdout_ 	= other.stdout_;
+		timedOut_	= other.timedOut_;
+		userData_	= other.userData_;
 	}
 	return *this;
 }
 
-int ShellExecuteEvent::getError() const
+std::wstring ShellExecuteResult::getCmd() const
 {
-	return error_;
+	return cmd_;
 }
 
-int ShellExecuteEvent::getPid() const
+int ShellExecuteResult::getPid() const
 {
 	return pid_;
 }
 
-std::string ShellExecuteEvent::getStdout() const
+int ShellExecuteResult::getExitCode() const
+{
+	return exitCode_;
+}
+
+bool ShellExecuteResult::getSuccess() const
+{
+	return success_;
+}
+
+int ShellExecuteResult::getError() const
+{
+	return error_;
+}
+
+std::wstring ShellExecuteResult::getStdout() const
 {
 	return stdout_;
 }
+
+bool ShellExecuteResult::getTimedOut() const
+{
+	return timedOut_;
+}
+
+void* ShellExecuteResult::getUserData() const
+{
+	return userData_;
+}
+
+std::wstring ShellExecuteResult::toString() const
+{
+	wchar_t buf[4000];
+	swprintf(buf, sizeof(buf) / sizeof(wchar_t),
+			L"Shell result:\ncommand: %ls\n%ls, pid: %d, exit code: %d, error: %d%ls\nstdout:\n%ls",
+			cmd_.c_str(),
+			(success_ ? L"Success" : L"Fail"),
+			pid_,
+			exitCode_,
+			error_,
+			(timedOut_ ? L", TimedOut" : L""),
+			stdout_.c_str());
+	return std::wstring(buf);
+}
+
+void ShellExecuteResult::killChildProcess()
+{
+	if (pid_ == 0) return;
+
+	// to do
+}
+
+

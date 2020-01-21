@@ -163,8 +163,8 @@ void TryOut::ExecIt()
     int pid;
     int timeout = 5;
 //    std::string command = "/bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al";
-//    std::string command = "nonexistentprogram";
-    std::string command = "/bin/notepadqq";
+    std::string command = "nonexistentprogram";
+//    std::string command = "/bin/notepadqq";
     int rfd;
     FILE * fp = popen2(command, "r", pid, rfd);
     char command_out[100] = {0};
@@ -193,13 +193,14 @@ void TryOut::ExecIt()
     		}
     		else
     		{
-        		// timeout
-    		    long timer = static_cast<long>(time(nullptr));
-    		    if (timer - startt > timeout)
-    		    {
-    		    	int yy = 0;
-    		    	break;
-    		    }
+//        		// timeout
+//    		    long timer = static_cast<long>(time(nullptr));
+//    		    if (timer - startt > timeout)
+//    		    {
+//    		    	int yy = 0;
+//    		    	break;
+//    		    }
+
     		}
     	}
     	else if (rerr > 0)

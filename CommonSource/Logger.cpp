@@ -1,5 +1,7 @@
 #include "Logger.h"
 
+#include <iostream>
+#include <sstream>
 #include <stdio.h>
 #include <stdarg.h>
 #include <string>
@@ -16,11 +18,11 @@ Logger::Logger() : wxListBox()
 {
 }
 
-Logger::Logger(wxWindow* parent, wxWindowID id, LevelT level) :
+Logger::Logger(wxWindow* parent, wxWindowID id) :
 	wxListBox (parent, id)
 {
 	tid_ = Utilities::getThreadId();
-	level_ = level;
+	level_ = Error;
 	this_ = this;
 }
 
@@ -50,10 +52,15 @@ void Logger::clear()
 void Logger::append(const wchar_t* text)
 {
 	if (this_ == nullptr) return;
+
 	if (tid_ == Utilities::getThreadId())
 	{
 		// in GUI thread, so update list box
-		this_->Append(text);
+		std::wstring str(text), temp;
+		std::wstringstream wss(str);
+		while(std::getline(wss, temp, L'\n'))
+			this_->Append(temp);
+//			this_->Append(text);
 	}
 	else
 	{

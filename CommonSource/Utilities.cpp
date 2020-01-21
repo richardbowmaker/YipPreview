@@ -44,14 +44,13 @@ long Utilities::getMsCounter()
 #elif LINUX_BUILD
 	timespec ts;
 	if (clock_gettime(CLOCK_REALTIME, &ts) != -1)
-		return ts.tv_nsec / 1000000;
+		return ts.tv_sec * 1000 +  ts.tv_nsec / 1000000;
 	else
 		return 0;
 	return static_cast<long>(getpid());
 #endif
 
 }
-
 
 std::wstring SU::strToWStr(const char* str)
 {
@@ -68,3 +67,14 @@ std::string SU::wStrToStr(const wchar_t* str)
 	std::wcstombs( &sc[0], str, len );
 	return sc;
 }
+
+std::wstring SU::strToWStr(const std::string str)
+{
+	return strToWStr(str.c_str());
+}
+
+std::string SU::wStrToStr(const std::wstring str)
+{
+	return wStrToStr(str.c_str());
+}
+

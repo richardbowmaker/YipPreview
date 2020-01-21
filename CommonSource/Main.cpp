@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <wx/splitter.h>
 #include <wx/sizer.h>
+#include <iterator>
 
 #include "Events.h"
 #include "Logger.h"
@@ -58,7 +59,6 @@ bool MyApp::OnInit()
 {
     MyFrame *frame = new MyFrame( "Hello World", wxPoint(50, 50), wxSize(450, 340) );
     frame->Show( true );
-	Logger::setLevel(Logger::Info);
     return true;
 }
 
@@ -91,7 +91,8 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
 	wxPanel* pnl1 = new wxPanel(splittermain, wxID_ANY);
 
 	wxBoxSizer* txt1sizer = new wxBoxSizer(wxVERTICAL);
-	Logger* lb1 = new Logger(pnl1, wxID_ANY, Logger::Info);
+	Logger* lb1 = new Logger(pnl1, wxID_ANY);
+	Logger::setLevel(Logger::Info);
 	lb1->SetMinSize(wxSize(800, 500));
 	txt1sizer->Add(lb1, 1, wxEXPAND, 0);
 	pnl1->SetSizer(txt1sizer);
@@ -125,9 +126,6 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
     SetStatusText("Welcome to wxWidgets for Linux!");
 #endif
 
-
-
-
 }
 
 void MyFrame::OnExit(wxCommandEvent& event)
@@ -148,12 +146,14 @@ void MyFrame::OnHello(wxCommandEvent& event)
 
 void MyFrame::OnTryOut(wxCommandEvent& event)
 {
-	int exitCode;
-	std::string stdout;
-    //bool res = ShellExecute::shell("/bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al", exitCode, stdout);
-    //bool res = ShellExecute::shell("/bin/nonexistentprogram", exitCode, stdout);
-    bool res = ShellExecute::shell("/bin/notepadqq", exitCode, stdout, 5000);
-    bool x = res;
+//	TryOut::ExecIt();
+
+	ShellExecuteResult result;
+    ShellExecute::shellSync(L"/bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al", result);
+    //ShellExecute::shellSync(L"/bin/nonexistentprogram", result);
+    //ShellExecute::shellSync(L"/bin/notepadqq", result, 5000);
+    std::wstring ws = result.toString();
+    Logger::info(ws.c_str());
 }
 
 void MyFrame::OnThread(wxCommandEvent& event)

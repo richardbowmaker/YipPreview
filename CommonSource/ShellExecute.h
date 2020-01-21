@@ -10,37 +10,63 @@
 
 #include <string>
 
+class ShellExecuteResult;
+
 class ShellExecute
 {
 public:
 	ShellExecute();
 	virtual ~ShellExecute();
 
-	static bool shell(const std::string &cmd, int &exitCode, std::string &stdout, const int timeoutms = -1);
+	typedef void (*ShellExecuteEventHandler)(ShellExecuteResult &result);
+
+	static bool shellSync(const std::wstring &cmd, const int timeoutms = -1);
+	static bool shellSync(const std::wstring &cmd, ShellExecuteResult &result, const int timeoutms = -1);
+//	static bool shellAsync(const std::wstring &cmd, ShellExecuteEventHandler * handler, const int userId, const int timeoutms = -1);
 
 private:
 
+	static bool shell_(
+		const std::wstring &cmd,
+		const int timeoutms,
+		void* data,
+		ShellExecuteResult &result);
 
 };
 
-class ShellExecuteEvent
+class ShellExecuteResult
 {
 public:
-	ShellExecuteEvent();
-	ShellExecuteEvent(const ShellExecuteEvent &other);
-	ShellExecuteEvent(ShellExecuteEvent &&other);
-	virtual ~ShellExecuteEvent();
-	ShellExecuteEvent& operator=(const ShellExecuteEvent &other);
+	ShellExecuteResult();
+	ShellExecuteResult(const ShellExecuteResult &other);
+	ShellExecuteResult(ShellExecuteResult &&other);
+	virtual ~ShellExecuteResult();
+	ShellExecuteResult& operator=(const ShellExecuteResult &other);
 
-	int  getError() const;
+	std::wstring getCmd() const;
 	int  getPid() const;
-	std::string getStdout() const;
+	int  getExitCode() const;
+	bool getSuccess() const;
+	int  getError() const;
+	std::wstring getStdout() const;
+	bool getTimedOut() const;
+	void* getUserData() const;
+	std::wstring toString() const;
+	void killChildProcess();
+	void clear();
+
+	friend class ShellExecute;
 
 private:
 
-	int pid_;
+	std::wstring cmd_;
+	int pid_;		// process id of child shell, 0 if destroyed
+	int exitCode_;
+	bool success_;	// executed successfully
 	int error_;
-	std::string stdout_;
+	std::wstring stdout_;
+	bool timedOut_;
+	void* userData_;	// returned to client, asynch shell only
 };
 
 #endif /* COMMON_SHELLEXECUTE_H_ */

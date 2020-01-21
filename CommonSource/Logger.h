@@ -26,7 +26,7 @@ public:
 
 
 	Logger();
-	Logger (wxWindow* parent, wxWindowID id, LevelT level = LevelT::Error);
+	Logger (wxWindow* parent, wxWindowID id);
 	//virtual ~Logger();
 
 
