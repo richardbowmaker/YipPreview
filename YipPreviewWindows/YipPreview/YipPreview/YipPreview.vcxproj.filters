@@ -36,6 +36,15 @@
     <ClInclude Include="..\..\..\CommonSource\Tryout.h">
       <Filter>Common</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\CommonSource\Events.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\CommonSource\Main.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\CommonSource\Utilities.h">
+      <Filter>Common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\CommonSource\Main.cpp">
@@ -45,6 +54,12 @@
       <Filter>Common</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\CommonSource\Tryout.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\CommonSource\Events.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\CommonSource\Utilities.cpp">
       <Filter>Common</Filter>
     </ClCompile>
   </ItemGroup>

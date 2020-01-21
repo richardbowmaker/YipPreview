@@ -26,6 +26,7 @@
 #include "Logger.h"
 #include "Tryout.h"
 #include "Utilities.h"
+#include "ShellExecute.h"
 
 
 enum
@@ -107,7 +108,8 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
 	this->SetSizer(sizermain);
 	sizermain->SetSizeHints(this);
 
-	Logger::log(Logger::Error, L"Error %d", 99);
+	Logger::info(L"PID %d", (int)Utilities::getProcessId());
+
 
 	FILE* fp = std::fopen("test.txt", "r");
 #ifdef WINDOWS_BUILD
@@ -146,12 +148,16 @@ void MyFrame::OnHello(wxCommandEvent& event)
 
 void MyFrame::OnTryOut(wxCommandEvent& event)
 {
-    TryOut::ThreadEvents(this);
+	int exitCode;
+	std::string stdout;
+    //bool res = ShellExecute::shell("/bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al", exitCode, stdout);
+    //bool res = ShellExecute::shell("/bin/nonexistentprogram", exitCode, stdout);
+    bool res = ShellExecute::shell("/bin/notepadqq", exitCode, stdout, 5000);
+    bool x = res;
 }
 
 void MyFrame::OnThread(wxCommandEvent& event)
 {
-    
 }
 
 void MyFrame::OnProcessCustom(wxCommandEvent& event)

@@ -4,6 +4,26 @@
 #include <wx/wx.h>
 #include <wx/thread.h>
 
+#ifdef WINDOWS_BUILD
+#elif LINUX_BUILD
+	#include <unistd.h>
+#endif
+
+#include <cstdio>
+#include <iostream>
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <array>
+#include <utility>
+#include <string.h>
+#include <sys/wait.h>
+#include <sys/types.h>
+#include <errno.h>
+#include <sstream>
+#include <fcntl.h>
+#include <time.h>
+
 #include "Logger.h"
 #include "Tryout.h"
 #include "Events.h"
@@ -65,80 +85,240 @@ void TryOut::ThreadEvents(wxEvtHandler* parent)
 		return;
 	}
 
+}
+
+FILE * popen2(std::string command, std::string type, int & pid, int &rfd);
+int pclose2(FILE * fp, pid_t pid);
+
+
+void TryOut::ExecIt()
+{
+//	int n = execl("/bin/ls", "ls", "-al", 0);
+//
+//	int m = 10;
+
+
+
+//	std::array<char, 128> buffer;
+//	std::string result;
+//	std::unique_ptr<FILE, decltype(&pclose)> pipe(popen("/bin/ls", "r"), pclose);
+//	if (!pipe)
+//	{
+//		throw std::runtime_error("popen() failed!");
+//	}
+//	while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr)
+//	{
+//		result += buffer.data();
+//	}
+
+//--------------------------------------------
+
+//	std::array<char, 128> buffer;
+//	std::string result;
+//	auto pipe = popen("/bin/ls", "r"); // get rid of shared_ptr
+//
+//	if (!pipe) throw std::runtime_error("popen() failed!");
+//
+//	while (!feof(pipe))
+//	{
+//		if (fgets(buffer.data(), 128, pipe) != nullptr)
+//			result += buffer.data();
+//	}
+//
+//	auto rc = pclose(pipe);
+//
+//	Logger::systemError(rc, L"");
+
+//-------------------------------------------------
+
+//	//char* cmd = "/bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al";
+////	char* cmd = "/bin/notepadqq";
+//	char* cmd = "non-existent program";
+//	std::array<char, 128> buffer;
+//	std::string result;
+//    int return_code = -1;
+//    auto pclose_wrapper = [&return_code](FILE* f){ return_code = pclose(f); };
+//    { // scope is important, have to make sure the ptr goes out of scope first
+//    const std::unique_ptr<FILE, decltype(pclose_wrapper)> pipe(popen(cmd, "r"), pclose_wrapper);
+//    if (pipe)
+//    {
+//        while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr)
+//        {
+//            result += buffer.data();
+//        }
+//    }
+//    }
+//    auto xx = std::make_pair(result, return_code);
+//
+//    Logger::systemError(return_code >> 8, L"");
+//
+//
+//	int z = 0;
+
+	// get child pid from parent, ps -o pid --ppid 7867
+	// pstree shows the process tree
+
+//-------------------------------------------------
+
+    int pid;
+    int timeout = 5;
+//    std::string command = "/bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al";
+//    std::string command = "nonexistentprogram";
+    std::string command = "/bin/notepadqq";
+    int rfd;
+    FILE * fp = popen2(command, "r", pid, rfd);
+    char command_out[100] = {0};
+    std::stringstream output;
+
+    int flags = fcntl(rfd, F_GETFL);
+    int fderr = fcntl(rfd, F_SETFL, flags | O_NONBLOCK);
+
+    errno = 0;
+    int rerr;
+
+    timespec ts;
+    long startt = static_cast<long>(time(nullptr));
+
+    while (rerr = read(fileno(fp), command_out, sizeof(command_out)-1))
+    {
+    	if (rerr == EAGAIN)
+    	{
+    		int nn = 0;
+    	}
+    	else if (rerr <= 0)
+    	{
+    		if (errno != EWOULDBLOCK)
+    		{
+    			break;
+    		}
+    		else
+    		{
+        		// timeout
+    		    long timer = static_cast<long>(time(nullptr));
+    		    if (timer - startt > timeout)
+    		    {
+    		    	int yy = 0;
+    		    	break;
+    		    }
+    		}
+    	}
+    	else if (rerr > 0)
+    	{
+			output << std::string(command_out);
+			//kill(-pid, 9);
+			memset(&command_out, 0, sizeof(command_out));
+			rerr = read(fileno(fp), command_out, sizeof(command_out)-1);
+    	}
+    }
+
+    std::string token;
+    while (getline(output, token, '\n'))
+        printf("OUT: %s\n", token.c_str());
+
+    int nn = pclose2(fp, pid);
+
+    int zzz =  0;
+
 
 
 }
 
-///////////////////////////////
-/*
-class MyFrame : public wxFrame
+
+#define READ   0
+#define WRITE  1
+FILE * popen2(std::string command, std::string type, int & pid, int &rfd)
 {
-private:
-	DECLARE_EVENT_TABLE()
-	MyThread* m_pThread;
-	wxStaticText* m_static_text;
+    pid_t child_pid;
+    int fd[2];
+    pipe(fd);
 
-public:
-	MyFrame() : wxFrame(nullptr, wxID_ANY, wxT("Hello wxWidgets"), wxPoint(50, 50), wxSize(800, 600))
-	{
-		// create the thread
-		m_pThread = new MyThread(this);
-		wxThreadError err = m_pThread->Create();
+    if((child_pid = fork()) == -1)
+    {
+        perror("fork");
+        exit(1);
+    }
 
-		if (err != wxTHREAD_NO_ERROR)
-		{
-			wxMessageBox(_("Couldn't create thread!"));
-			return;
-		}
+    /* child process */
+    if (child_pid == 0)
+    {
+        if (type == "r")
+        {
+            close(fd[READ]);    //Close the READ end of the pipe since the child's fd is write-only
+            dup2(fd[WRITE], 1); //Redirect stdout to pipe
+        }
+        else
+        {
+            close(fd[WRITE]);    //Close the WRITE end of the pipe since the child's fd is read-only
+            dup2(fd[READ], 0);   //Redirect stdin to pipe
+        }
 
-		err = m_pThread->Run();
+        setpgid(child_pid, child_pid); //Needed so negative PIDs can kill children of /bin/sh
+        execl("/bin/sh", "/bin/sh", "-c", command.c_str(), NULL);
+        _exit(0);
+    }
+    else
+    {
+        if (type == "r")
+        {
+            close(fd[WRITE]); //Close the WRITE end of the pipe since parent's fd is read-only
+        }
+        else
+        {
+            close(fd[READ]); //Close the READ end of the pipe since parent's fd is write-only
+        }
+    }
 
-		if (err != wxTHREAD_NO_ERROR)
-		{
-			wxMessageBox(_("Couldn't run thread!"));
-			return;
-		}
+    pid = child_pid;
 
-		const auto panel = new wxPanel(this);
-		const auto sizer = new wxBoxSizer(wxHORIZONTAL);
-		m_static_text = new wxStaticText(panel, wxID_ANY, "Counter: 0", wxPoint(50, 50), wxSize(200, 200));
-		m_static_text->Show(true);
+    if (type == "r")
+    {
+        rfd = fd[READ];
+        return fdopen(fd[READ], "r");
+    }
 
-		sizer->Add(m_static_text);
-		panel->SetSizer(sizer);
-	}
+    return fdopen(fd[WRITE], "w");
+}
 
-	~MyFrame()
-	{
-		m_pThread = nullptr;
-	}
-
-	void OnThread(wxCommandEvent& evt)
-	{
-		m_static_text->SetLabelText(wxString::Format("Counter: %i", evt.GetInt()));
-	}
-};
-
-// catch the event from the thread
-BEGIN_EVENT_TABLE(MyFrame, wxFrame)
-EVT_COMMAND(wxID_ANY, wxEVT_MY_EVENT, MyFrame::OnThread)
-END_EVENT_TABLE()
-
-class MyApp : public wxApp
+int pclose2(FILE * fp, pid_t pid)
 {
-private:
-	wxFrame* m_frame;
+    int stat;
 
-public:
-	bool OnInit() override
-	{
-		m_frame = new MyFrame();
-		m_frame->Show();
+    int err = fclose(fp);
+    while (waitpid(pid, &stat, 0) == -1)
+    {
+        if (errno != EINTR)
+        {
+            stat = -1;
+            break;
+        }
+    }
 
-		return true;
-	}
-};
+    return stat;
+}
 
-IMPLEMENT_APP(MyApp)
+//int main()
+//{
+//    int pid;
+//    std::string command = "ping 8.8.8.8";
+//    FILE * fp = popen2(command, "r", pid);
+//    char command_out[100] = {0};
+//    std::stringstream output;
+//
+//    //Using read() so that I have the option of using select() if I want non-blocking flow
+//    while (read(fileno(fp), command_out, sizeof(command_out)-1) != 0)
+//    {
+//        output << std::string(command_out);
+//        kill(-pid, 9);
+//        memset(&command_out, 0, sizeof(command_out));
+//    }
+//
+//    std::string token;
+//    while (getline(output, token, '\n'))
+//        printf("OUT: %s\n", token.c_str());
+//
+//    pclose2(fp, pid);
+//
+//    return 0;
+//}
 
-*/
+

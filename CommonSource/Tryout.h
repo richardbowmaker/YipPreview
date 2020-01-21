@@ -12,6 +12,7 @@ public:
 	~TryOut() = default;
 
 	static void ThreadEvents(wxEvtHandler* parent);
+	static void ExecIt();
 };
 
 

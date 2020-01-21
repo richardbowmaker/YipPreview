@@ -14,12 +14,12 @@
 #ifdef WINDOWS_BUILD
 #include <windows.h>
 #elif LINUX_BUILD
-	#include <unistd.h>
 	#include <sys/syscall.h>
+	#include <time.h>
+	#include <unistd.h>
 #endif
 
-
-long Utilities::GetThreadID()
+long Utilities::getThreadId()
 {
 #ifdef WINDOWS_BUILD
 	return static_cast<long>(GetCurrentThreadId());
@@ -27,6 +27,31 @@ long Utilities::GetThreadID()
 	return static_cast<long>(syscall(SYS_gettid));
 #endif
 }
+
+long Utilities::getProcessId()
+{
+#ifdef WINDOWS_BUILD
+	return static_cast<long>(GetCurrentThreadId());
+#elif LINUX_BUILD
+	return static_cast<long>(getpid());
+#endif
+}
+
+long Utilities::getMsCounter()
+{
+#ifdef WINDOWS_BUILD
+	return ??;
+#elif LINUX_BUILD
+	timespec ts;
+	if (clock_gettime(CLOCK_REALTIME, &ts) != -1)
+		return ts.tv_nsec / 1000000;
+	else
+		return 0;
+	return static_cast<long>(getpid());
+#endif
+
+}
+
 
 std::wstring SU::strToWStr(const char* str)
 {

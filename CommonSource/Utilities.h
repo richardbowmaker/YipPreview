@@ -16,7 +16,9 @@ public:
 
 	virtual ~Utilities();
 
-	static long GetThreadID();
+	static long getThreadId();
+	static long getProcessId();
+	static long getMsCounter();
 
 private:
 

@@ -19,7 +19,7 @@ Logger::Logger() : wxListBox()
 Logger::Logger(wxWindow* parent, wxWindowID id, LevelT level) :
 	wxListBox (parent, id)
 {
-	tid_ = Utilities::GetThreadID();
+	tid_ = Utilities::getThreadId();
 	level_ = level;
 	this_ = this;
 }
@@ -50,7 +50,7 @@ void Logger::clear()
 void Logger::append(const wchar_t* text)
 {
 	if (this_ == nullptr) return;
-	if (tid_ == Utilities::GetThreadID())
+	if (tid_ == Utilities::getThreadId())
 	{
 		// in GUI thread, so update list box
 		this_->Append(text);
