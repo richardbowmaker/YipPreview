@@ -23,10 +23,18 @@
 #include <sstream>
 #include <fcntl.h>
 #include <time.h>
+#include <future>
+#include <atomic>
+#include <string>
+#include <thread>
+#include <pthread.h>
+
 
 #include "Logger.h"
 #include "Tryout.h"
 #include "Events.h"
+#include "Utilities.h"
+#include "ShellExecute.h"
 
 
 
@@ -293,33 +301,56 @@ int pclose2(FILE * fp, pid_t pid)
             break;
         }
     }
-
     return stat;
 }
 
-//int main()
-//{
-//    int pid;
-//    std::string command = "ping 8.8.8.8";
-//    FILE * fp = popen2(command, "r", pid);
-//    char command_out[100] = {0};
-//    std::stringstream output;
-//
-//    //Using read() so that I have the option of using select() if I want non-blocking flow
-//    while (read(fileno(fp), command_out, sizeof(command_out)-1) != 0)
-//    {
-//        output << std::string(command_out);
-//        kill(-pid, 9);
-//        memset(&command_out, 0, sizeof(command_out));
-//    }
-//
-//    std::string token;
-//    while (getline(output, token, '\n'))
-//        printf("OUT: %s\n", token.c_str());
-//
-//    pclose2(fp, pid);
-//
-//    return 0;
-//}
+
+void* TheWorkerThread(void*)
+{
+	Logger::info(L"worker thread id: %ld", Utilities::getThreadId());
+	for (int i = 0; i < 5; ++i)
+	{
+		Logger::info(L"worker thread %d", i);
+		std::this_thread::sleep_for(std::chrono::milliseconds(250));
+		//sleep(1);
+	}
+	pthread_exit(0);
+}
+
+std::future<bool> wait1;
+
+void TryOut::WorkerThread()
+{
+//	Logger::clear();
+//	wait1 = std::async(std::launch::async, [] () -> bool { return TheWorkerThread(); } );
+//    int n = 0;
+
+	pthread_t thread_;
+	pthread_attr_t attr;
+	pthread_attr_init(&attr);
+	pthread_create(&thread_, &attr, TheWorkerThread, 0);
+
+//	int s, i;
+//	s = pthread_attr_getdetachstate(&attr, &i);
+
+
+
+}
+
+void ShelExecuteHandler(ShellExecuteResult &result)
+{
+	Logger::info(L"Shell Async completed");
+	Logger::info(result.toString().c_str());
+}
+
+void TryOut::AsyncShell()
+{
+    //ShellExecute::shellAsync(L"/bin/nonexistentprogram", 10000, nullptr, &ShelExecuteHandler);
+    ShellExecute::shellAsync(L"/bin/notepadqq", 5000, nullptr, &ShelExecuteHandler);
+	//ShellExecute::shellAsync(L"/bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al", 10000, nullptr, &ShelExecuteHandler);
+	Logger::info(L"Shell Async launched");
+}
+
+
 
 

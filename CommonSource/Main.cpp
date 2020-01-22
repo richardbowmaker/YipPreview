@@ -146,14 +146,16 @@ void MyFrame::OnHello(wxCommandEvent& event)
 
 void MyFrame::OnTryOut(wxCommandEvent& event)
 {
+	TryOut::AsyncShell();
+//	TryOut::WorkerThread();
 //	TryOut::ExecIt();
 
-	ShellExecuteResult result;
-    ShellExecute::shellSync(L"/bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al", result);
-    //ShellExecute::shellSync(L"/bin/nonexistentprogram", result);
-    //ShellExecute::shellSync(L"/bin/notepadqq", result, 5000);
-    std::wstring ws = result.toString();
-    Logger::info(ws.c_str());
+//	ShellExecuteResult result;
+//    ShellExecute::shellSync(L"/bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al", result);
+//    //ShellExecute::shellSync(L"/bin/nonexistentprogram", result);
+//    //ShellExecute::shellSync(L"/bin/notepadqq", result, 5000);
+//    std::wstring ws = result.toString();
+//    Logger::info(ws.c_str());
 }
 
 void MyFrame::OnThread(wxCommandEvent& event)

@@ -18,11 +18,18 @@ public:
 	ShellExecute();
 	virtual ~ShellExecute();
 
-	typedef void (*ShellExecuteEventHandler)(ShellExecuteResult &result);
+//	typedef void (*ShellExecuteEventHandler)(ShellExecuteResult &result);
+	using ShellExecuteEventHandlerPtr = void (*)(ShellExecuteResult &result);
 
 	static bool shellSync(const std::wstring &cmd, const int timeoutms = -1);
 	static bool shellSync(const std::wstring &cmd, ShellExecuteResult &result, const int timeoutms = -1);
 //	static bool shellAsync(const std::wstring &cmd, ShellExecuteEventHandler * handler, const int userId, const int timeoutms = -1);
+
+	static bool shellAsync(
+		const std::wstring &cmd,
+		const int timeoutms,
+		void* data,
+		ShellExecuteEventHandlerPtr handler);
 
 private:
 
@@ -31,6 +38,8 @@ private:
 		const int timeoutms,
 		void* data,
 		ShellExecuteResult &result);
+
+	static void* ShellAsyncWait(void *ptr);
 
 };
 

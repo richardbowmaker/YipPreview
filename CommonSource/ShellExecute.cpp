@@ -10,6 +10,8 @@
 #include <cstdio>
 #include <errno.h>
 #include <fcntl.h>
+#include <memory>
+#include <pthread.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string>
@@ -157,6 +159,171 @@ bool ShellExecute::shell_(
 	result.pid_ 		= 0;
 	result.success_ 	= exit == 0;
 	return result.success_;
+}
+
+struct ShellAsyncData
+{
+public:
+
+	FILE* fp_;
+	ShellExecuteResult result_;
+	int timeoutms_;
+	ShellExecute::ShellExecuteEventHandlerPtr handler_;
+};
+
+void* ShellExecute::ShellAsyncWait(void *ptr)
+{
+	ShellAsyncData *p = (ShellAsyncData*)ptr;
+	ShellAsyncData &data = *p;
+	ShellExecuteResult &result = p->result_;
+
+	if (p != nullptr)
+	{
+		char buff[1000] = {0};
+		std::stringstream output;
+
+		int rerr;
+		long stime = Utilities::getMsCounter();
+
+		while (true)
+		{
+			rerr = read(fileno(data.fp_), buff, sizeof(buff) - 1);
+			if (rerr == 0)
+			{
+				break;
+			}
+			else if (rerr <= 0)
+			{
+				if (errno != EWOULDBLOCK)
+				{
+					fclose(data.fp_);
+					Logger::systemError(errno, L"File read error");
+				    result.error_ = errno;
+				    result.success_ = false;
+					// notify
+				    data.handler_(data.result_);
+					delete p;
+					return nullptr;
+				}
+				else
+				{
+					if (p->timeoutms_ != -1)
+					{
+						long timer = Utilities::getMsCounter();
+						if (timer - stime > p->timeoutms_)
+						{
+							fclose(data.fp_);
+							Logger::systemError(errno, L"Shell execute timed out");
+							result.timedOut_ = true;
+							result.success_ = false;
+							// notify
+						    data.handler_(data.result_);
+							delete p;
+							return nullptr;
+						}
+					}
+				}
+			}
+			else if (rerr > 0)
+			{
+				output << std::string(buff);
+			}
+		}
+
+		// close read end of pipe
+		int exit;
+		fclose(data.fp_);
+		while (waitpid(data.result_.pid_, &exit, 0) == -1)
+		{
+		    if (errno != EINTR)
+		    {
+				fclose(data.fp_);
+				Logger::systemError(errno, L"Error closing pipe");
+			    data.result_.error_ = errno;
+		    }
+		}
+
+		// setup return result
+		result.exitCode_ 	= exit;
+		result.stdout_ 		= SU::strToWStr(output.str());
+		result.pid_ 		= 0;
+		result.success_ 	= exit == 0;
+
+		//notify
+	    data.handler_(data.result_);
+		delete p;
+	    return nullptr;
+	}
+}
+
+// core shell execute function
+bool ShellExecute::shellAsync(
+	const std::wstring &cmd,
+	const int timeoutms,
+	void* data,
+	ShellExecuteEventHandlerPtr handler)
+{
+	pid_t child_pid;
+	constexpr int fdRead = 0;
+	constexpr int fdWrite = 1;
+	int fd[2] = {0};
+
+	if (pipe(fd) == -1)
+	{
+	    Logger::systemError(errno, L"Error creating pipe");
+	    return false;
+	}
+
+	if((child_pid = fork()) == -1)
+	{
+	    Logger::systemError(errno, L"Error forking process");
+	    return false;
+	}
+
+	// child process
+	if (child_pid == 0)
+	{
+	    close(fd[fdRead]);    // Close the READ end of the pipe since the child's fd is write-only
+	    dup2(fd[fdWrite], 1); // Redirect stdout to pipe
+
+	    setpgid(child_pid, child_pid); //Needed so negative PIDs can kill children of /bin/sh
+	    execl("/bin/sh", "/bin/sh", "-c", SU::wStrToStr(cmd).c_str(), NULL);
+	    _exit(0);
+	}
+
+	close(fd[fdWrite]); // Close the WRITE end of the pipe since parent's fd is read-only
+	FILE* fp = fdopen(fd[fdRead], "r");
+
+	// set read to non-blocking so we can timeout
+	int flags = fcntl(fd[fdRead], F_GETFL);
+	fcntl(fd[fdRead], F_SETFL, flags | O_NONBLOCK);
+
+//--------------------------
+
+	// start a thread to monitor the output of the shell execute
+	// and notify client when completed
+
+	ShellExecuteResult result;
+	result.cmd_ = cmd;
+	result.userData_ = data;
+	result.pid_ = child_pid;
+
+	ShellAsyncData* ptr = new ShellAsyncData;
+	ptr->fp_ = fp;
+	ptr->result_ = result;
+	ptr->timeoutms_ = timeoutms;
+	ptr->handler_ = handler;
+
+	pthread_t thread_;
+	if (pthread_create(&thread_, NULL, &ShellExecute::ShellAsyncWait, (void*)ptr) != 0)
+	{
+		Logger::systemError(errno, L"Error creating thread");
+		delete ptr;
+		return false;
+	}
+
+	// allow client to continue
+	return true;
 }
 
 //-----------------------------------------------------------
