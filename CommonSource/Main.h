@@ -40,7 +40,9 @@ private:
     void OnThread(wxCommandEvent& event);
 	void OnProcessCustom(wxCommandEvent& event);
 	void OnLogger(wxLoggerEvent& event);
-	void OnShellExecute(wxShellExecuteResult& event);
+	void OnShellExecuteAny(wxShellExecuteResult& event);
+	void OnShellExecute1(wxShellExecuteResult& event);
+	void OnShellExecute2(wxShellExecuteResult& event);
 
     wxDECLARE_EVENT_TABLE();
 };

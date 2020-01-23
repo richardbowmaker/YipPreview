@@ -14,6 +14,12 @@
 
 class ShellExecuteResult;
 
+//----------------------------------------------------------------------------
+// Shell execute functions, synchronous and asynchronous.
+// Asynchronous functions provide a callback on a worker thread
+// or a wxWidgets event on the main GUI thread.
+//----------------------------------------------------------------------------
+
 class ShellExecute
 {
 public:
@@ -22,36 +28,48 @@ public:
 
 	using ShellExecuteEventHandlerPtr = void (*)(ShellExecuteResult &result);
 
+	// simple synchronous, no result object returned
+	// returns true if command executed ok
 	static bool shellSync(
 			const std::wstring &cmd,
 			const int timeoutms = -1);
 
+	// synchronous with user supplied result object filled out with the
+	// result of the command
 	static bool shellSync(
 			const std::wstring &cmd,
 			ShellExecuteResult &result,
 			const int timeoutms = -1);
 
+	// asynchronous, event handler function optional
 	static bool shellAsync(
 			const std::wstring &cmd,
-			const int timeoutms,
-			const int id,
-			void* data,
-			ShellExecuteEventHandlerPtr handler);
+			ShellExecuteEventHandlerPtr handler = nullptr,
+			const int userId = 0,
+			void* data = nullptr,
+			const int timeoutms = -1);
 
+	// asynchronous, wxEventHandler optional
 	static bool shellAsyncGui(
 			const std::wstring &cmd,
-			const int timeoutms,
-			const int id,
-			void *data,
-			wxEvtHandler *wxHandler);
+			wxEvtHandler *wxHandler = nullptr,
+			const int wxid = wxID_ANY,
+			const int userId = 0,
+			void *data = nullptr,
+			const int timeoutms = -1);
 
 private:
 
-	static void* shellAsyncWait(void *ptr);
-	static void* shellAsyncWaitGui(void *ptr);
-	static bool startShell(ShellExecuteResult &result, FILE *&fp);
+	static void *shellThreadWait(void *ptr);
+	static void *shellThreadWaitGui(void *ptr);
+	static bool shellStart(ShellExecuteResult &result, FILE *&fp);
 	static bool shellWait(ShellExecuteResult &result_, FILE *fp_, const int timeoutms);
 };
+
+//----------------------------------------------------------------------------
+// Shell execute result, when a client is notified of shell execute completion
+// an instance of this class is provided with the result of the shell.
+//----------------------------------------------------------------------------
 
 class ShellExecuteResult
 {
@@ -69,11 +87,12 @@ public:
 	int  getError() const;
 	std::wstring getStdout() const;
 	bool getTimedOut() const;
-	int  getId() const;
-	void* getUserData() const;
+	int  getUserId() const;
+	void *getUserData() const;
 	std::wstring toString() const;
 
-	void killChildProcess();
+	void killChildProcess();	// after a timeout this can be used to kill
+								// the hanging process
 	void clear();
 
 	friend class ShellExecute;
@@ -81,18 +100,20 @@ public:
 private:
 
 	std::wstring 	cmd_;		// command executed
-	int 			pid_;		// process id of child shell, 0 if destroyed
+	int 			pid_;		// process id of child shell, 0 if already destroyed
 	int 			exitCode_;	// exit code from command
 	bool 			success_;	// executed successfully
 	int 			error_;		// system error code
 	std::wstring 	stdout_;	// stdout capture
 	bool 			timedOut_;	// true if command timedout
-	int				id_;		// id set by user, allows the same handler to handle more than one event
-	void* 			userData_;	// user data, asynch shell calls only only
+
+	// async calls only
+	int				userId_;	// id set by user, allows the same handler to handle more than one event
+	void* 			userData_;	// user data
 };
 
 //----------------------------------------------------------------------------
-// shell execute  event, used to notify GUI of completion of shell execute
+// Shell execute event, used to notify wxWidgets GUI of completion of shell execute
 //
 // add the following to the message map for the wxEventHandler (e.g. wxFrame)
 //
@@ -111,15 +132,18 @@ private:
 //			// get user data as set in call to shellAsyncGui( ..., ..., data, ...)
 //			MyData* data = (MyData *)result.getUserData();
 //			...
+//			event.Skip();
 //		}
 //
-
+// To have more than one handler in the wxWidgets map, the wxid must be set to something other than wxID_ANY
+// in the event table map and must be the the same as that set in the call to shellAsyncGui().
+//----------------------------------------------------------------------------
 
 class wxShellExecuteResult : public wxCommandEvent
 {
 public:
 	wxShellExecuteResult();
-	wxShellExecuteResult(ShellExecuteResult &result);
+	wxShellExecuteResult(ShellExecuteResult &result, int wxid = wxID_ANY);
 	wxShellExecuteResult(const wxShellExecuteResult &other);
 
 	virtual wxEvent *Clone() const;

@@ -339,24 +339,70 @@ void TryOut::WorkerThread()
 
 void ShelExecuteHandler(ShellExecuteResult &result)
 {
-	Logger::info(L"Shell Async completed");
+
 	Logger::info(result.toString().c_str());
 }
 
 void TryOut::AsyncShell(wxEvtHandler *handler)
 {
-    //ShellExecute::shellAsync(L"/bin/nonexistentprogram", 10000, nullptr, &ShelExecuteHandler);
-    //ShellExecute::shellAsync(L"/bin/notepadqq", 5000, nullptr, &ShelExecuteHandler);
-	//ShellExecute::shellAsync(L"/bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al", 10000, nullptr, &ShelExecuteHandler);
-	//Logger::info(L"Shell Async launched");
-
 //	ShellExecuteResult result;
-//	ShellExecute::shellSync(L"/bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al", result, 10000);
+//	Logger::info(L"----------------------------------");
+//	Logger::info(L"Shell sync GUI launched: /bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al");
+//	ShellExecute::shellSync(L"/bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al", result, 1000);
+//	Logger::info(result.toString().c_str());
+//
+//	Logger::info(L"----------------------------------");
+//	Logger::info(L"Shell sync GUI launched: /bin/nonexistentprogram");
+//	ShellExecute::shellSync(L"/bin/nonexistentprogram", result, 1000);
+//	Logger::info(result.toString().c_str());
+//
+//	Logger::info(L"----------------------------------");
+//	Logger::info(L"Shell sync GUI launched: /bin/notepadqq");
+//	ShellExecute::shellSync(L"/bin/notepadqq", result, 5000);
 //	Logger::info(result.toString().c_str());
 
-	ShellExecute::shellAsyncGui(L"/bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al", 10000, 123, nullptr, handler);
-	Logger::info(L"Shell Async GUI launched");
+	Logger::info(L"----------------------------------");
+	Logger::info(L"Shell async GUI launched: /bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al, no event handler");
+	ShellExecute::shellAsync(L"/bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al");
+
+	Logger::info(L"----------------------------------");
+	Logger::info(L"Shell async GUI launched: /bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al");
+	ShellExecute::shellAsync(L"/bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al", &ShelExecuteHandler, 200, nullptr, 10000);
+//
+//	Logger::info(L"----------------------------------");
+//	Logger::info(L"Shell async GUI launched: /bin/nonexistentprogram");
+//    ShellExecute::shellAsync(L"/bin/nonexistentprogram", &ShelExecuteHandler, 201, nullptr, 10000);
+//
+//	Logger::info(L"----------------------------------");
+//	Logger::info(L"Shell async GUI launched: /bin/notepadqq");
+//    ShellExecute::shellAsync(L"/bin/notepadqq", &ShelExecuteHandler, 202, nullptr, 5000);
+
+
+	Logger::info(L"----------------------------------");
+	Logger::info(L"Shell async GUI launched any: /bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al, no event handler");
+	ShellExecute::shellAsyncGui(L"/bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al");
+
+	Logger::info(L"----------------------------------");
+	Logger::info(L"Shell async GUI launched any: /bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al");
+	ShellExecute::shellAsyncGui(L"/bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al", handler, wxID_ANY, 3001);
+
+//	Logger::info(L"----------------------------------");
+//	Logger::info(L"Shell async GUI launched 1: /bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al");
+//	ShellExecute::shellAsyncGui(L"/bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al", handler, 1, 3002);
+//
+//	Logger::info(L"----------------------------------");
+//	Logger::info(L"Shell async GUI launched 2: /bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al");
+//	ShellExecute::shellAsyncGui(L"/bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al", handler, 2, 3003);
+
+	//	Logger::info(L"----------------------------------");
+//	Logger::info(L"Shell async GUI launched: /bin/nonexistentprogram");
+//	ShellExecute::shellAsyncGui(L"/bin/nonexistentprogram", 5000, 301, nullptr, handler);
+//
+//	Logger::info(L"----------------------------------");
+//	Logger::info(L"Shell async GUI launched: /bin/notepadqq");
+//	ShellExecute::shellAsyncGui(L"/bin/notepadqq", 5000, 302, nullptr, handler);
 }
+
 
 
 

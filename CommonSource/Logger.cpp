@@ -13,6 +13,8 @@
 Logger::LevelT Logger::level_ = Logger::Error;
 Logger* Logger::this_ = nullptr;
 long Logger::tid_ = 0;
+long Logger::count_ = 0;
+bool Logger::lcEnable_ = false;
 
 Logger::Logger() : wxListBox()
 {
@@ -22,7 +24,6 @@ Logger::Logger(wxWindow* parent, wxWindowID id) :
 	wxListBox (parent, id)
 {
 	tid_ = Utilities::getThreadId();
-	level_ = Error;
 	this_ = this;
 }
 
@@ -49,6 +50,11 @@ void Logger::clear()
 	this_->Clear();
 }
 
+void Logger::enableLineCount(const bool enable)
+{
+	lcEnable_ = enable;
+}
+
 void Logger::append(const wchar_t* text)
 {
 	if (this_ == nullptr) return;
@@ -59,7 +65,18 @@ void Logger::append(const wchar_t* text)
 		std::wstring str(text), temp;
 		std::wstringstream wss(str);
 		while(std::getline(wss, temp, L'\n'))
-			this_->Append(temp);
+		{
+			if (lcEnable_)
+			{
+				wchar_t buf[1024];
+				swprintf(buf,  sizeof(buf) / sizeof(wchar_t), L"%ld: %ls", count_, temp.c_str());
+				this_->Append(buf);
+				++count_;
+			}
+			else
+				this_->Append(temp);
+
+		}
 //			this_->Append(text);
 	}
 	else

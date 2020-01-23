@@ -32,6 +32,8 @@ public:
 
 	static void setLevel(LevelT level);
 	static LevelT getLevel();
+	static void enableLineCount(const bool enable);
+
 	static void clear();
 	static void log(const LevelT level, const wchar_t* format, ...);
 	static void systemError(const int err, const wchar_t* format, ...); // err = errno
@@ -58,6 +60,8 @@ private:
 	static LevelT level_;
 	static Logger* this_;
 	static long tid_;		// main GUI thread ID
+	static long count_;
+	static bool lcEnable_;
 
 	wxDECLARE_DYNAMIC_CLASS(Logger);
 	wxDECLARE_EVENT_TABLE();

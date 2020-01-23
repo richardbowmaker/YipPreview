@@ -40,7 +40,7 @@ bool ShellExecute::shellSync(
 	result.cmd_ = cmd;
 
 	FILE* fp;
-	if (!startShell(result, fp)) return false;
+	if (!shellStart(result, fp)) return false;
 	return shellWait(result, fp, timeoutms);
 }
 
@@ -54,12 +54,12 @@ bool ShellExecute::shellSync(
 	result.cmd_ = cmd;
 
 	FILE* fp;
-	if (!startShell(result, fp)) return false;
+	if (!shellStart(result, fp)) return false;
 	return shellWait(result, fp, timeoutms);
 }
 
 // data passed to pthread function via pointer
-struct ShellAsyncData
+struct ShellThreadData
 {
 public:
 
@@ -67,32 +67,33 @@ public:
 	ShellExecuteResult result_;
 	int timeoutms_;
 	ShellExecute::ShellExecuteEventHandlerPtr handler_;
-	wxEvtHandler* guiHandler;
+	wxEvtHandler* guiHandler_;
+	int	wxid_;
 };
 
 // Asynch shell execute, notification is via user supplied handler on worker thread
 bool ShellExecute::shellAsync(
-	const std::wstring &cmd,
-	const int timeoutms,
-	const int id,
-	void* data,
-	ShellExecuteEventHandlerPtr handler)
+		const std::wstring &cmd,
+		ShellExecuteEventHandlerPtr handler,
+		const int userId,
+		void* data,
+		const int timeoutms)
 {
 	ShellExecuteResult result;
-	result.cmd_ = cmd;
-	result.id_ = id;
+	result.cmd_ 	 = cmd;
+	result.userId_ 	 = userId;
 	result.userData_ = data;
 	FILE* fp;
-	if (!startShell(result, fp)) return false;
+	if (!shellStart(result, fp)) return false;
 
-	ShellAsyncData* ptr = new ShellAsyncData;
-	ptr->fp_ = fp;
-	ptr->result_ = result;
+	ShellThreadData* ptr = new ShellThreadData;
+	ptr->fp_ 	    = fp;
+	ptr->result_ 	= result;
 	ptr->timeoutms_ = timeoutms;
-	ptr->handler_ = handler;
+	ptr->handler_ 	= handler;
 
 	pthread_t thread_;
-	if (pthread_create(&thread_, NULL, &ShellExecute::shellAsyncWait, (void*)ptr) != 0)
+	if (pthread_create(&thread_, NULL, &ShellExecute::shellThreadWait, (void*)ptr) != 0)
 	{
 		Logger::systemError(errno, L"Error creating thread");
 		delete ptr;
@@ -105,27 +106,29 @@ bool ShellExecute::shellAsync(
 
 // Asynch shell execute, notification is via wxWidgets event handler on GUI thread
 bool ShellExecute::shellAsyncGui(
-	const std::wstring &cmd,
-	const int timeoutms,
-	const int id,
-	void *data,
-	wxEvtHandler *wxHandler)
+		const std::wstring &cmd,
+		wxEvtHandler *wxHandler,
+		const int wxid,
+		const int userId,
+		void *data,
+		const int timeoutms)
 {
 	ShellExecuteResult result;
-	result.cmd_ = cmd;
-	result.id_ = id;
+	result.cmd_ 	 = cmd;
+	result.userId_ 	 = userId;
 	result.userData_ = data;
 	FILE* fp;
-	if (!startShell(result, fp)) return false;
+	if (!shellStart(result, fp)) return false;
 
-	ShellAsyncData* ptr = new ShellAsyncData;
-	ptr->fp_ = fp;
-	ptr->result_ = result;
-	ptr->timeoutms_ = timeoutms;
-	ptr->guiHandler = wxHandler;
+	ShellThreadData* ptr = new ShellThreadData;
+	ptr->fp_ 	     = fp;
+	ptr->result_ 	 = result;
+	ptr->timeoutms_  = timeoutms;
+	ptr->guiHandler_ = wxHandler;
+	ptr->wxid_ = wxid;
 
 	pthread_t thread_;
-	if (pthread_create(&thread_, NULL, &ShellExecute::shellAsyncWaitGui, (void*)ptr) != 0)
+	if (pthread_create(&thread_, NULL, &ShellExecute::shellThreadWaitGui, (void*)ptr) != 0)
 	{
 		Logger::systemError(errno, L"Error creating thread");
 		delete ptr;
@@ -138,35 +141,35 @@ bool ShellExecute::shellAsyncGui(
 
 //-----------------------------------------------------------
 
-void* ShellExecute::shellAsyncWait(void *ptr)
+void *ShellExecute::shellThreadWait(void *ptr)
 {
 	if (ptr == nullptr) return nullptr;
 
 	// wait for shell to complete
-	ShellAsyncData *p = (ShellAsyncData*)ptr;
+	ShellThreadData *p = (ShellThreadData*)ptr;
 	shellWait(p->result_, p->fp_, p->timeoutms_);
 
 	// notify client
-	p->handler_(p->result_);
+	if (p->handler_ != nullptr) p->handler_(p->result_);
 	delete p;
 }
 
-void* ShellExecute::shellAsyncWaitGui(void *ptr)
+void *ShellExecute::shellThreadWaitGui(void *ptr)
 {
 	if (ptr == nullptr) return nullptr;
 
 	// wait for shell to complete
-	ShellAsyncData *p = (ShellAsyncData*)ptr;
+	ShellThreadData *p = (ShellThreadData*)ptr;
 	shellWait(p->result_, p->fp_, p->timeoutms_);
 
 	// notify client
-	wxShellExecuteResult evt(p->result_);
+	wxShellExecuteResult evt(p->result_, p->wxid_);
 
-	p->guiHandler->AddPendingEvent(evt);
+	if (p->guiHandler_ != nullptr) p->guiHandler_->AddPendingEvent(evt);
 	delete p;
 }
 
-bool ShellExecute::startShell(ShellExecuteResult &result, FILE *&fp)
+bool ShellExecute::shellStart(ShellExecuteResult &result, FILE *&fp)
 {
 	pid_t child_pid;
 	constexpr int kFdRead = 0;
@@ -229,7 +232,7 @@ bool ShellExecute::shellWait(ShellExecuteResult &result, FILE *fp, const int tim
 		{
 			break;
 		}
-		else if (rerr <= 0)
+		else if (rerr < 0)
 		{
 			if (errno != EWOULDBLOCK)
 			{
@@ -247,7 +250,7 @@ bool ShellExecute::shellWait(ShellExecuteResult &result, FILE *fp, const int tim
 					if (timer - stime > timeoutms)
 					{
 						fclose(fp);
-						Logger::systemError(errno, L"Shell execute timed out");
+						Logger::error(L"Shell execute timed out");
 						result.timedOut_ = true;
 						result.success_ = false;
 						return false;
@@ -300,8 +303,8 @@ wxShellExecuteResult::wxShellExecuteResult() :
 {
 }
 
-wxShellExecuteResult::wxShellExecuteResult(ShellExecuteResult &result) :
-	wxCommandEvent(wxEVT_SHELL_EXECUTE_RESULT, wxID_ANY),
+wxShellExecuteResult::wxShellExecuteResult(ShellExecuteResult &result, int wxid) :
+	wxCommandEvent(wxEVT_SHELL_EXECUTE_RESULT, wxid),
 	result_(result)
 {
 }
@@ -354,7 +357,7 @@ void ShellExecuteResult::clear()
 	success_ 	= false;
 	error_ 		= 0;
 	timedOut_ 	= false;
-	id_ 		= 0;
+	userId_ 	= 0;
 	userData_ 	= nullptr;
 }
 
@@ -369,7 +372,7 @@ ShellExecuteResult& ShellExecuteResult::operator=(const ShellExecuteResult &othe
 		error_ 		= other.error_;
 		stdout_ 	= other.stdout_;
 		timedOut_	= other.timedOut_;
-		id_			= other.id_;
+		userId_		= other.userId_;
 		userData_	= other.userData_;
 	}
 	return *this;
@@ -410,12 +413,12 @@ bool ShellExecuteResult::getTimedOut() const
 	return timedOut_;
 }
 
-int ShellExecuteResult::getId() const
+int ShellExecuteResult::getUserId() const
 {
-	return id_;
+	return userId_;
 }
 
-void* ShellExecuteResult::getUserData() const
+void *ShellExecuteResult::getUserData() const
 {
 	return userData_;
 }
@@ -427,7 +430,7 @@ std::wstring ShellExecuteResult::toString() const
 			L"Shell result:\ncommand: %ls\n%ls, id %d, pid: %d, exit code: %d, error: %d%ls\nstdout:\n%ls",
 			cmd_.c_str(),
 			(success_ ? L"Success" : L"Fail"),
-			id_,
+			userId_,
 			pid_,
 			exitCode_,
 			error_,

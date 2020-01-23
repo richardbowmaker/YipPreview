@@ -50,7 +50,9 @@ wxBEGIN_EVENT_TABLE(MyFrame, wxFrame)
     EVT_MENU(wxID_EXIT,  MyFrame::OnExit)
     EVT_MENU(wxID_ABOUT, MyFrame::OnAbout)
 	EVT_MY_CUSTOM_COMMAND(wxID_ANY, MyFrame::OnProcessCustom)
-	EVT_SHELL_EXECUTE_RESULT_COMMAND(wxID_ANY, MyFrame::OnShellExecute)
+	EVT_SHELL_EXECUTE_RESULT_COMMAND(1, MyFrame::OnShellExecute1)
+	EVT_SHELL_EXECUTE_RESULT_COMMAND(2, MyFrame::OnShellExecute2)
+	EVT_SHELL_EXECUTE_RESULT_COMMAND(wxID_ANY, MyFrame::OnShellExecuteAny)
 //	EVT_LOGGER_EVENT_COMMAND(wxID_ANY, MyFrame::OnLogger)
 wxEND_EVENT_TABLE()
 
@@ -62,7 +64,6 @@ bool MyApp::OnInit()
     frame->Show( true );
     return true;
 }
-
 
 MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
         : wxFrame(NULL, wxID_ANY, title, pos, size)
@@ -94,6 +95,7 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
 	wxBoxSizer* txt1sizer = new wxBoxSizer(wxVERTICAL);
 	Logger* lb1 = new Logger(pnl1, wxID_ANY);
 	Logger::setLevel(Logger::Info);
+	Logger::enableLineCount(true);
 	lb1->SetMinSize(wxSize(800, 500));
 	txt1sizer->Add(lb1, 1, wxEXPAND, 0);
 	pnl1->SetSizer(txt1sizer);
@@ -173,13 +175,26 @@ void MyFrame::OnLogger(wxLoggerEvent& event)
 	Logger::info(L"level %d: %ls", event.getLevel(), event.GetString().wc_str());
 }
 
-void MyFrame::OnShellExecute(wxShellExecuteResult& event)
+void MyFrame::OnShellExecute1(wxShellExecuteResult& event)
 {
-	Logger::info(L"Shell execute notify via GUI thread");
+	Logger::info(L"Shell execute notify via GUI thread 1");
 	Logger::info(event.getResult().toString().c_str());
+	event.Skip();
 }
 
+void MyFrame::OnShellExecute2(wxShellExecuteResult& event)
+{
+	Logger::info(L"Shell execute notify via GUI thread 2");
+	Logger::info(event.getResult().toString().c_str());
+	event.Skip();
+}
 
+void MyFrame::OnShellExecuteAny(wxShellExecuteResult& event)
+{
+	Logger::info(L"Shell execute notify via GUI thread any");
+	Logger::info(event.getResult().toString().c_str());
+	event.Skip();
+}
 
 
 
