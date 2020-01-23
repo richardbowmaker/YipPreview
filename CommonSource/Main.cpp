@@ -50,6 +50,7 @@ wxBEGIN_EVENT_TABLE(MyFrame, wxFrame)
     EVT_MENU(wxID_EXIT,  MyFrame::OnExit)
     EVT_MENU(wxID_ABOUT, MyFrame::OnAbout)
 	EVT_MY_CUSTOM_COMMAND(wxID_ANY, MyFrame::OnProcessCustom)
+	EVT_SHELL_EXECUTE_RESULT_COMMAND(wxID_ANY, MyFrame::OnShellExecute)
 //	EVT_LOGGER_EVENT_COMMAND(wxID_ANY, MyFrame::OnLogger)
 wxEND_EVENT_TABLE()
 
@@ -146,7 +147,7 @@ void MyFrame::OnHello(wxCommandEvent& event)
 
 void MyFrame::OnTryOut(wxCommandEvent& event)
 {
-	TryOut::AsyncShell();
+	TryOut::AsyncShell(GetEventHandler());
 //	TryOut::WorkerThread();
 //	TryOut::ExecIt();
 
@@ -171,6 +172,13 @@ void MyFrame::OnLogger(wxLoggerEvent& event)
 {
 	Logger::info(L"level %d: %ls", event.getLevel(), event.GetString().wc_str());
 }
+
+void MyFrame::OnShellExecute(wxShellExecuteResult& event)
+{
+	Logger::info(L"Shell execute notify via GUI thread");
+	Logger::info(event.getResult().toString().c_str());
+}
+
 
 
 

@@ -17,6 +17,7 @@
 #endif
 
 #include "Logger.h"
+#include "ShellExecute.h"
 
 class MyApp: public wxApp
 {
@@ -39,6 +40,7 @@ private:
     void OnThread(wxCommandEvent& event);
 	void OnProcessCustom(wxCommandEvent& event);
 	void OnLogger(wxLoggerEvent& event);
+	void OnShellExecute(wxShellExecuteResult& event);
 
     wxDECLARE_EVENT_TABLE();
 };

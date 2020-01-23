@@ -227,12 +227,9 @@ void CLogger::LogBytes(const LogT level, const uint8_t* bytes, const int len)
 */
 
 
-DEFINE_EVENT_TYPE(wxLOGGER_EVENT);
 IMPLEMENT_DYNAMIC_CLASS(wxLoggerEvent, wxCommandEvent)
 
-
 wxDEFINE_EVENT(wxEVT_LOGGER_EVENT, wxLoggerEvent);
-
 
 wxLoggerEvent::wxLoggerEvent() :
 	wxCommandEvent(wxEVT_LOGGER_EVENT, wxID_ANY),

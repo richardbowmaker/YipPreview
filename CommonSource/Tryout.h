@@ -14,7 +14,7 @@ public:
 	static void ThreadEvents(wxEvtHandler* parent);
 	static void ExecIt();
 	static void WorkerThread();
-	static void AsyncShell();
+	static void AsyncShell(wxEvtHandler *handler);
 
 };
 

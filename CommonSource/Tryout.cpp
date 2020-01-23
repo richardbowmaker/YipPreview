@@ -343,12 +343,19 @@ void ShelExecuteHandler(ShellExecuteResult &result)
 	Logger::info(result.toString().c_str());
 }
 
-void TryOut::AsyncShell()
+void TryOut::AsyncShell(wxEvtHandler *handler)
 {
     //ShellExecute::shellAsync(L"/bin/nonexistentprogram", 10000, nullptr, &ShelExecuteHandler);
-    ShellExecute::shellAsync(L"/bin/notepadqq", 5000, nullptr, &ShelExecuteHandler);
+    //ShellExecute::shellAsync(L"/bin/notepadqq", 5000, nullptr, &ShelExecuteHandler);
 	//ShellExecute::shellAsync(L"/bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al", 10000, nullptr, &ShelExecuteHandler);
-	Logger::info(L"Shell Async launched");
+	//Logger::info(L"Shell Async launched");
+
+//	ShellExecuteResult result;
+//	ShellExecute::shellSync(L"/bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al", result, 10000);
+//	Logger::info(result.toString().c_str());
+
+	ShellExecute::shellAsyncGui(L"/bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al", 10000, 123, nullptr, handler);
+	Logger::info(L"Shell Async GUI launched");
 }
 
 
