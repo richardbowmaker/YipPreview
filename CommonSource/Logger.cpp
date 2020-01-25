@@ -72,16 +72,6 @@ void Logger::append(const wchar_t* text)
 			{
 				wchar_t buf[BUFFER_MAX];
 				swprintf(buf,  sizeof(buf) / sizeof(wchar_t), L"%ld: %ls", count_, temp.c_str());
-
-				int len = wcslen(buf);
-
-				//
-				//
-				//
-				//
-				//
-
-
 				this_->Append(buf);
 				++count_;
 			}

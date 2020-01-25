@@ -12,60 +12,6 @@
 #include <wx/wx.h>
 
 
-class ShellExecuteResult;
-
-//----------------------------------------------------------------------------
-// Shell execute functions, synchronous and asynchronous.
-// Asynchronous functions provide a callback on a worker thread
-// or a wxWidgets event on the main GUI thread.
-//----------------------------------------------------------------------------
-
-class ShellExecute
-{
-public:
-	ShellExecute();
-	virtual ~ShellExecute();
-
-	using ShellExecuteEventHandlerPtr = void (*)(ShellExecuteResult &result);
-
-	// simple synchronous, no result object returned
-	// returns true if command executed ok
-	static bool shellSync(
-			const std::wstring &cmd,
-			const int timeoutms = -1);
-
-	// synchronous with user supplied result object filled out with the
-	// result of the command
-	static bool shellSync(
-			const std::wstring &cmd,
-			ShellExecuteResult &result,
-			const int timeoutms = -1);
-
-	// asynchronous, event handler function optional
-	static bool shellAsync(
-			const std::wstring &cmd,
-			ShellExecuteEventHandlerPtr handler = nullptr,
-			const int userId = 0,
-			void* data = nullptr,
-			const int timeoutms = -1);
-
-	// asynchronous, wxEventHandler optional
-	static bool shellAsyncGui(
-			const std::wstring &cmd,
-			wxEvtHandler *wxHandler = nullptr,
-			const int wxid = wxID_ANY,
-			const int userId = 0,
-			void *data = nullptr,
-			const int timeoutms = -1);
-
-private:
-
-	static void *shellThreadWait(void *ptr);
-	static void *shellThreadWaitGui(void *ptr);
-	static bool shellStart(ShellExecuteResult &result, FILE *&fp1, FILE *&fp2);
-	static bool shellWait(ShellExecuteResult &result_, FILE *&fp1, FILE *&fp2, const int timeoutms);
-};
-
 //----------------------------------------------------------------------------
 // Shell execute result, when a client is notified of shell execute completion
 // an instance of this class is provided with the result of the shell.
@@ -113,6 +59,76 @@ private:
 	int				userId_;	// id set by user, allows the same handler to handle more than one event
 	void* 			userData_;	// user data
 };
+
+
+//----------------------------------------------------------------------------
+// Shell execute functions, synchronous and asynchronous.
+// Asynchronous functions provide a callback on a worker thread
+// or a wxWidgets event on the main GUI thread.
+//----------------------------------------------------------------------------
+
+class ShellExecute
+{
+public:
+	ShellExecute();
+	virtual ~ShellExecute();
+
+	using ShellExecuteEventHandlerPtr = void (*)(ShellExecuteResult &result);
+
+	// simple synchronous, no result object returned
+	// returns true if command executed ok
+	static bool shellSync(
+			const std::wstring &cmd,
+			const int timeoutms = -1);
+
+	// synchronous with user supplied result object filled out with the
+	// result of the command
+	static bool shellSync(
+			const std::wstring &cmd,
+			ShellExecuteResult &result,
+			const int timeoutms = -1);
+
+	// asynchronous, event handler function optional
+	static bool shellAsync(
+			const std::wstring &cmd,
+			ShellExecuteEventHandlerPtr handler = nullptr,
+			const int userId = 0,
+			void* userData = nullptr,
+			const int timeoutms = -1);
+
+	// asynchronous, wxEventHandler optional
+	static bool shellAsyncGui(
+			const std::wstring &cmd,
+			wxEvtHandler *wxHandler = nullptr,
+			const int wxid = wxID_ANY,
+			const int userId = 0,
+			void *userData = nullptr,
+			const int timeoutms = -1);
+
+private:
+
+	// data passed to pthread function via pointer
+	struct ShellThreadData
+	{
+	public:
+
+		ShellThreadData();
+
+		FILE				*fpStdout_;
+		FILE				*fpStderr_;
+		ShellExecuteResult 	result_;
+		int 				timeoutms_;
+		wxEvtHandler 		*wxHandler_;
+		int					wxid_;
+		ShellExecute::ShellExecuteEventHandlerPtr handler_;
+	};
+
+	static void *shellThreadWait(void *ptr);
+	static void *shellThreadWaitGui(void *ptr);
+	static bool shellStart(ShellThreadData &data);
+	static bool shellWait(ShellThreadData &data);
+};
+
 
 //----------------------------------------------------------------------------
 // Shell execute event, used to notify wxWidgets GUI of completion of shell execute

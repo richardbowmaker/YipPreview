@@ -347,46 +347,58 @@ void TryOut::AsyncShell(wxEvtHandler *handler)
 {
 
 	ShellExecuteResult result;
+
+// ffmpeg -i /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/f3.mp4 -af "volumedetect" -vn -sn -dn -f null NUL
+// /bin/ffmpeg -i /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/f3.mp4 -af "volumedetect" -vn -sn -dn -f null NUL 2>/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/ffmpeg.txt
 	Logger::info(L"----------------------------------");
-	Logger::info(L"Shell sync GUI launched: test.bat");
-	ShellExecute::shellSync(L"/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/test.bat", result);
+	Logger::info(L"Shell sync launched: ffmpeg -i /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/f3.mp4 -af \"volumedetect\" -vn -sn -dn -f null NUL");
+	ShellExecute::shellSync(L"/bin/ffmpeg -i /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/f3.mp4 -af \"volumedetect\" -vn -sn -dn -f null NUL &2>1", result, 10000);
 	Logger::info(result.toString().c_str());
 
 //	Logger::info(L"----------------------------------");
-//	Logger::info(L"Shell sync GUI launched: ffmpeg");
+//	Logger::info(L"Shell sync launched: ffmpegbat");
+//	ShellExecute::shellSync(L"/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/ffmpegbat &2>1", result, 2000);
+//	Logger::info(result.toString().c_str());
+
+//	Logger::info(L"----------------------------------");
+//	Logger::info(L"Shell sync launched: test.bat");
+//	ShellExecute::shellSync(L"/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/test.bat", result);
+//	Logger::info(result.toString().c_str());
+
+//	Logger::info(L"----------------------------------");
+//	Logger::info(L"Shell sync launched: ffmpeg");
 //	ShellExecute::shellSync(L"/bin/ffmpeg", result, 2000);
 //	Logger::info(result.toString().c_str());
 
-//	ShellExecuteResult result;
-	Logger::info(L"----------------------------------");
-	Logger::info(L"Shell sync GUI launched: /bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al");
-	ShellExecute::shellSync(L"/bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al", result, 1000);
-	Logger::info(result.toString().c_str());
-
-	Logger::info(L"----------------------------------");
-	Logger::info(L"Shell sync GUI launched: /bin/nonexistentprogram");
-	ShellExecute::shellSync(L"/bin/nonexistentprogram", result, 1000);
-	Logger::info(result.toString().c_str());
-
-	Logger::info(L"----------------------------------");
-	Logger::info(L"Shell sync GUI launched: /bin/notepadqq");
-	ShellExecute::shellSync(L"/bin/notepadqq", result, 5000);
-	Logger::info(result.toString().c_str());
-
 //	Logger::info(L"----------------------------------");
-//	Logger::info(L"Shell async GUI launched: /bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al, no event handler");
-//	ShellExecute::shellAsync(L"/bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al");
+//	Logger::info(L"Shell sync launched: /bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al");
+//	ShellExecute::shellSync(L"/bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al", result, 1000);
+//	Logger::info(result.toString().c_str());
 //
-	Logger::info(L"----------------------------------");
-	Logger::info(L"Shell async GUI launched: /bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al");
-	ShellExecute::shellAsync(L"/bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al", &ShelExecuteHandler, 200, nullptr, 10000);
+//	Logger::info(L"----------------------------------");
+//	Logger::info(L"Shell sync launched: /bin/nonexistentprogram");
+//	ShellExecute::shellSync(L"/bin/nonexistentprogram", result, 1000);
+//	Logger::info(result.toString().c_str());
 
 //	Logger::info(L"----------------------------------");
-//	Logger::info(L"Shell async GUI launched: /bin/nonexistentprogram");
+//	Logger::info(L"Shell sync launched: /bin/notepadqq");
+//	ShellExecute::shellSync(L"/bin/notepadqq", result, 5000);
+//	Logger::info(result.toString().c_str());
+
+//	Logger::info(L"----------------------------------");
+//	Logger::info(L"Shell async launched: /bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al, no event handler");
+//	ShellExecute::shellAsync(L"/bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al");
+
+//	Logger::info(L"----------------------------------");
+//	Logger::info(L"Shell async launched: /bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al");
+//	ShellExecute::shellAsync(L"/bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al", &ShelExecuteHandler, 200, nullptr, 10000);
+
+//	Logger::info(L"----------------------------------");
+//	Logger::info(L"Shell async launched: /bin/nonexistentprogram");
 //    ShellExecute::shellAsync(L"/bin/nonexistentprogram", &ShelExecuteHandler, 201, nullptr, 10000);
 //
 //	Logger::info(L"----------------------------------");
-//	Logger::info(L"Shell async GUI launched: /bin/notepadqq");
+//	Logger::info(L"Shell async launched: /bin/notepadqq");
 //    ShellExecute::shellAsync(L"/bin/notepadqq", &ShelExecuteHandler, 202, nullptr, 5000);
 
 
@@ -396,14 +408,14 @@ void TryOut::AsyncShell(wxEvtHandler *handler)
 //	Logger::info(L"Shell async GUI launched any: /bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al, no event handler");
 //	ShellExecute::shellAsyncGui(L"/bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al");
 
-	Logger::info(L"----------------------------------");
-	Logger::info(L"Shell async GUI launched any: /bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al");
-	ShellExecute::shellAsyncGui(L"/bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al", handler, wxID_ANY, 3001);
+//	Logger::info(L"----------------------------------");
+//	Logger::info(L"Shell async GUI launched any: /bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al");
+//	ShellExecute::shellAsyncGui(L"/bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al", handler, wxID_ANY, 3001);
 
 //	Logger::info(L"----------------------------------");
 //	Logger::info(L"Shell async GUI launched 1: /bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al");
 //	ShellExecute::shellAsyncGui(L"/bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al", handler, 1, 3002);
-//
+
 //	Logger::info(L"----------------------------------");
 //	Logger::info(L"Shell async GUI launched 2: /bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al");
 //	ShellExecute::shellAsyncGui(L"/bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al", handler, 2, 3003);

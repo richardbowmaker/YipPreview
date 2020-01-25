@@ -37,13 +37,12 @@ bool ShellExecute::shellSync(
 		const std::wstring &cmd,
 		const int timeoutms /*= -1*/)
 {
-	ShellExecuteResult result;	// throw away
-	result.cmd_ = cmd;
+	ShellThreadData data;
+	data.result_.cmd_ = cmd;
+	data.timeoutms_   = timeoutms;
 
-	FILE* fp1;
-	FILE* fp2;
-	if (!shellStart(result, fp1, fp2)) return false;
-	return shellWait(result, fp1, fp2, timeoutms);
+	if (!shellStart(data)) return false;
+	return shellWait(data);
 }
 
 // Synchronous shell execute that returns the result data
@@ -52,57 +51,38 @@ bool ShellExecute::shellSync(
 		ShellExecuteResult &result,
 		const int timeoutms /*= -1 */)
 {
-	result.clear();
-	result.cmd_ = cmd;
+	ShellThreadData data;
+	data.result_.cmd_ = cmd;
+	data.timeoutms_   = timeoutms;
 
-	FILE* fp1;
-	FILE* fp2;
-	if (!shellStart(result, fp1, fp2)) return false;
-	return shellWait(result, fp1, fp2, timeoutms);
+	if (!shellStart(data)) return false;
+	bool res = shellWait(data);
+	result = data.result_;
+	return res;
 }
-
-// data passed to pthread function via pointer
-struct ShellThreadData
-{
-public:
-
-	FILE* fp1_;
-	FILE* fp2_;
-	ShellExecuteResult result_;
-	int timeoutms_;
-	ShellExecute::ShellExecuteEventHandlerPtr handler_;
-	wxEvtHandler* guiHandler_;
-	int	wxid_;
-};
 
 // Asynch shell execute, notification is via user supplied handler on worker thread
 bool ShellExecute::shellAsync(
 		const std::wstring &cmd,
 		ShellExecuteEventHandlerPtr handler,
 		const int userId,
-		void* data,
+		void* userData,
 		const int timeoutms)
 {
-	ShellExecuteResult result;
-	result.cmd_ 	 = cmd;
-	result.userId_ 	 = userId;
-	result.userData_ = data;
-	FILE* fp1;
-	FILE* fp2;
-	if (!shellStart(result, fp1, fp2)) return false;
+	ShellThreadData* data = new ShellThreadData;
+	data->result_.cmd_ 	    = cmd;
+	data->result_.userId_   = userId;
+	data->result_.userData_ = userData;
+	data->timeoutms_        = timeoutms;
+	data->handler_ 			= handler;
 
-	ShellThreadData* ptr = new ShellThreadData;
-	ptr->fp1_ 	    = fp1;
-	ptr->fp2_ 	    = fp2;
-	ptr->result_ 	= result;
-	ptr->timeoutms_ = timeoutms;
-	ptr->handler_ 	= handler;
+	if (!shellStart(*data)) return false;
 
 	pthread_t thread_;
-	if (pthread_create(&thread_, NULL, &ShellExecute::shellThreadWait, (void*)ptr) != 0)
+	if (pthread_create(&thread_, NULL, &ShellExecute::shellThreadWait, (void*)data) != 0)
 	{
 		Logger::systemError(errno, L"Error creating thread");
-		delete ptr;
+		delete data;
 		return false;
 	}
 
@@ -116,30 +96,24 @@ bool ShellExecute::shellAsyncGui(
 		wxEvtHandler *wxHandler,
 		const int wxid,
 		const int userId,
-		void *data,
+		void *userData,
 		const int timeoutms)
 {
-	ShellExecuteResult result;
-	result.cmd_ 	 = cmd;
-	result.userId_ 	 = userId;
-	result.userData_ = data;
-	FILE* fp1;
-	FILE* fp2;
-	if (!shellStart(result, fp1, fp2)) return false;
+	ShellThreadData* data = new ShellThreadData;
+	data->result_.cmd_ 	    = cmd;
+	data->result_.userId_   = userId;
+	data->result_.userData_ = userData;
+	data->timeoutms_        = timeoutms;
+	data->wxHandler_ 		= wxHandler;
+	data->wxid_ 		    = wxid;
 
-	ShellThreadData* ptr = new ShellThreadData;
-	ptr->fp1_ 	    = fp1;
-	ptr->fp2_ 	    = fp2;
-	ptr->result_ 	 = result;
-	ptr->timeoutms_  = timeoutms;
-	ptr->guiHandler_ = wxHandler;
-	ptr->wxid_ = wxid;
+	if (!shellStart(*data)) return false;
 
 	pthread_t thread_;
-	if (pthread_create(&thread_, NULL, &ShellExecute::shellThreadWaitGui, (void*)ptr) != 0)
+	if (pthread_create(&thread_, NULL, &ShellExecute::shellThreadWaitGui, (void*)data) != 0)
 	{
 		Logger::systemError(errno, L"Error creating thread");
-		delete ptr;
+		delete data;
 		return false;
 	}
 
@@ -154,12 +128,13 @@ void *ShellExecute::shellThreadWait(void *ptr)
 	if (ptr == nullptr) return nullptr;
 
 	// wait for shell to complete
-	ShellThreadData *p = (ShellThreadData*)ptr;
-	shellWait(p->result_, p->fp1_, p->fp2_, p->timeoutms_);
+	ShellThreadData *data = (ShellThreadData*)ptr;
+	shellWait(*data);
 
 	// notify client
-	if (p->handler_ != nullptr) p->handler_(p->result_);
-	delete p;
+	if (data->handler_ != nullptr)
+		data->handler_(data->result_);
+	delete data;
 }
 
 void *ShellExecute::shellThreadWaitGui(void *ptr)
@@ -167,205 +142,188 @@ void *ShellExecute::shellThreadWaitGui(void *ptr)
 	if (ptr == nullptr) return nullptr;
 
 	// wait for shell to complete
-	ShellThreadData *p = (ShellThreadData*)ptr;
-	shellWait(p->result_, p->fp1_, p->fp2_, p->timeoutms_);
+	ShellThreadData *data = (ShellThreadData*)ptr;
+	shellWait(*data);
 
 	// notify client
-	wxShellExecuteResult evt(p->result_, p->wxid_);
-
-	if (p->guiHandler_ != nullptr) p->guiHandler_->AddPendingEvent(evt);
-	delete p;
+	if (data->wxHandler_ != nullptr)
+	{
+		wxShellExecuteResult evt(data->result_, data->wxid_);
+		data->wxHandler_->AddPendingEvent(evt);
+	}
+	delete data;
 }
 
-bool ShellExecute::shellStart(ShellExecuteResult &result, FILE *&fp1, FILE *&fp2)
+bool ShellExecute::shellStart(ShellThreadData &data)
 {
 	pid_t child_pid;
 	constexpr int kFdRead = 0;
 	constexpr int kFdWrite = 1;
-	int fd1[2] = {0};
-	int fd2[2] = {0};
+	int fdStdout[2] = {0};
+	int fdStderr[2] = {0};
 
-	if (pipe(fd1) == -1)
+	if (pipe(fdStdout) == -1)
 	{
-	    Logger::systemError(errno, L"Error creating pipe");
-	    result.error_ = errno;
+	    Logger::systemError(errno, L"Error creating stdout pipe");
+	    data.result_.error_ = errno;
 	    return false;
 	}
 
-	if (pipe(fd2) == -1)
+	if (pipe(fdStderr) == -1)
 	{
-	    Logger::systemError(errno, L"Error creating pipe");
-	    result.error_ = errno;
+	    Logger::systemError(errno, L"Error creating stderr pipe");
+	    data.result_.error_ = errno;
 	    return false;
 	}
 
 	if((child_pid = fork()) == -1)
 	{
 	    Logger::systemError(errno, L"Error forking process");
-	    result.error_ = errno;
-		result.success_ = false;
+	    data.result_.error_ = errno;
+	    data.result_.success_ = false;
 	    return false;
 	}
 
 	// child process
 	if (child_pid == 0)
 	{
-	    close(fd1[kFdRead]);    // Close the READ end of the pipe since the child's fd is write-only
-	    dup2(fd1[kFdWrite], 1); // Redirect stdout to pipe
+	    close(fdStdout[kFdRead]);    // Close the READ end of the pipe since the child's fd is write-only
+	    dup2(fdStdout[kFdWrite], 1); // Redirect stdout to pipe
 
-	    close(fd2[kFdRead]);    // Close the READ end of the pipe since the child's fd is write-only
-	    dup2(fd2[kFdWrite], 2); // Redirect stderr to pipe
+	    close(fdStderr[kFdRead]);    // Close the READ end of the pipe since the child's fd is write-only
+	    dup2(fdStderr[kFdWrite], 2); // Redirect stderr to pipe
 
 	    setpgid(child_pid, child_pid); //Needed so negative PIDs can kill children of /bin/sh
 	    execl(
 	    		"/bin/sh", "/bin/sh", "-c",
-				SU::wStrToStr(result.cmd_).c_str(),
+				SU::wStrToStr(data.result_.cmd_).c_str(),
 				NULL);
 	    _exit(0);
 	}
 
-	close(fd1[kFdWrite]); // Close the WRITE end of the pipe since parent's fd is read-only
-	close(fd2[kFdWrite]);
-	result.pid_ = child_pid;
+	close(fdStdout[kFdWrite]); // Close the WRITE end of the pipe since parent's fd is read-only
+	close(fdStderr[kFdWrite]);
+	data.result_.pid_ = child_pid;
 
-	fp1 = fdopen(fd1[kFdRead], "r");
-	fp2 = fdopen(fd2[kFdRead], "r");
+	data.fpStdout_ = fdopen(fdStdout[kFdRead], "r");
+	data.fpStderr_ = fdopen(fdStderr[kFdRead], "r");
 
 	// set read to non-blocking so we can timeout
-	int flags = fcntl(fd1[kFdRead], F_GETFL);
-	fcntl(fd1[kFdRead], F_SETFL, flags | O_NONBLOCK);
+	int flags = fcntl(fdStdout[kFdRead], F_GETFL);
+	fcntl(fdStdout[kFdRead], F_SETFL, flags | O_NONBLOCK);
 
-	flags = fcntl(fd2[kFdRead], F_GETFL);
-	fcntl(fd2[kFdRead], F_SETFL, flags | O_NONBLOCK);
+	flags = fcntl(fdStderr[kFdRead], F_GETFL);
+	fcntl(fdStderr[kFdRead], F_SETFL, flags | O_NONBLOCK);
 
 	return true;
 }
 
-bool ShellExecute::shellWait(ShellExecuteResult &result, FILE *&fp1, FILE *&fp2, const int timeoutms)
+bool ShellExecute::shellWait(ShellThreadData &data)
 {
-	char buff[100000] = {0};
-	std::stringstream stdout;
-	std::stringstream stderr;
+	char buff[100000];
 
 	int rerr;
 	long stime = Utilities::getMsCounter();
 
-	bool bout = true;
-	bool berr = true;
+	bool bStdout = true;
+	bool bStderr = true;
 
 	while (true)
 	{
 		// std out handling
-		buff[0] = 0;
-		rerr = read(fileno(fp1), buff, sizeof(buff) - 1);
+		rerr = read(fileno(data.fpStdout_), buff, sizeof(buff) - 1);
 		if (rerr == 0)
 		{
-			bout = false;
-			if (!berr) break;
+			bStdout = false;
+			if (!bStderr) break;
 		}
 		else if (rerr < 0)
 		{
 			if (errno != EWOULDBLOCK)
 			{
-				fclose(fp1);
-				fclose(fp2);
+				fclose(data.fpStdout_);
+				fclose(data.fpStderr_);
 				Logger::systemError(errno, L"File stdout read error");
-				result.error_ = errno;
-				result.success_ = false;
+				data.result_.error_   = errno;
+				data.result_.success_ = false;
 				return false;
 			}
 		}
 		else if (rerr > 0)
 		{
-			stdout << std::string(buff);
+			data.result_.stdout_ += SU::strToWStr(std::string(buff, rerr));
 		}
 
 		// std err handling
-		buff[0] = 0;
-		rerr = read(fileno(fp2), buff, sizeof(buff) - 1);
+		rerr = read(fileno(data.fpStderr_), buff, sizeof(buff) - 1);
 		if (rerr == 0)
 		{
-			berr = false;
-			if (!bout) break;
+			bStderr = false;
+			if (!bStdout) break;
 		}
 		else if (rerr <= 0)
 		{
 			if (errno != EWOULDBLOCK)
 			{
-				fclose(fp1);
-				fclose(fp2);
+				fclose(data.fpStdout_);
+				fclose(data.fpStderr_);
 				Logger::systemError(errno, L"File stderr read error");
-				result.error_ = errno;
-				result.success_ = false;
+				data.result_.error_   = errno;
+				data.result_.success_ = false;
 				return false;
 			}
 		}
 		else if (rerr > 0)
 		{
-			std::string s = std::string(buff);
-			std::cout << "-----------------------------------" << std::endl;
-			std::cout << s << std::endl;
-			stderr << std::string(buff);
+			data.result_.stderr_ += SU::strToWStr(std::string(buff, rerr));
 		}
 
 		// check for timedout
-		if (timeoutms != -1)
+		if (data.timeoutms_ != -1)
 		{
 			long timer = Utilities::getMsCounter();
-			if (timer - stime > timeoutms)
+			if (timer - stime > data.timeoutms_)
 			{
-				fclose(fp1);
-				fclose(fp2);
+				fclose(data.fpStdout_);
+				fclose(data.fpStderr_);
 				Logger::error(L"Shell execute timed out");
-				result.timedOut_ = true;
-				result.success_ = false;
+				data.result_.timedOut_ = true;
+				data.result_.success_ = false;
 				return false;
 			}
 		}
 	}
 
-	// save std output
-	result.stdout_ = SU::strToWStr(stdout.str());
-	result.stderr_ = SU::strToWStr(stderr.str());
-
 	// close read end of pipe
 	int exit;
-	fclose(fp1);
-	fclose(fp2);
-	while (waitpid(result.pid_, &exit, 0) == -1)
+	fclose(data.fpStdout_);
+	fclose(data.fpStderr_);
+	while (waitpid(data.result_.pid_, &exit, 0) == -1)
 	{
 		if (errno != EINTR)
 		{
 			Logger::systemError(errno, L"Error closing pipe");
-			result.error_ = errno;
-			result.success_ = false;
+			data.result_.error_ = errno;
+			data.result_.success_ = false;
 			return false;
 		}
 	}
 
 	// setup return result
-	result.exitCode_ 	= exit;
-	result.pid_ 		= 0;
-	result.success_ 	= exit == 0;
+	data.result_.exitCode_ 	= exit;
+	data.result_.pid_ 		= 0;
+	data.result_.success_ 	= exit == 0;
+	return data.result_.success_;
+}
 
-	std::cout << "-----------------------------------" << std::endl;
-	std::cout << "-----------------------------------" << std::endl;
-	std::cout << stderr.str() << std::endl;
-
-	std::cout << "-----------------------------------" << std::endl;
-	std::cout << "-----------------------------------" << std::endl;
-
-	std::wstring str(SU::strToWStr(stderr.str())), temp;
-	std::wstringstream wss(str);
-	while(std::getline(wss, temp, L'\n'))
-	{
-		std::cout << temp << std::endl;
-	}
-
-
-
-
-	return result.success_;
+ShellExecute::ShellThreadData::ShellThreadData() :
+	fpStdout_ (0),
+	fpStderr_ (0),
+	timeoutms_(0),
+	wxHandler_(nullptr),
+	wxid_     (wxID_ANY),
+	handler_  (nullptr)
+{
 }
 
 //-----------------------------------------------------------
