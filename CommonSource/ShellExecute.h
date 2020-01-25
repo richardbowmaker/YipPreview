@@ -47,7 +47,8 @@ public:
 private:
 
 	std::wstring 	cmd_;		// command executed
-	int 			pid_;		// process id of child shell, 0 if already destroyed
+	int 			pid_;		// process id of the shell process, the shell itself has a child process
+								// which is the command being run. 0 if exited
 	int 			exitCode_;	// exit code from command
 	bool 			success_;	// executed successfully
 	int 			error_;		// system error code
@@ -74,6 +75,10 @@ public:
 	virtual ~ShellExecute();
 
 	using ShellExecuteEventHandlerPtr = void (*)(ShellExecuteResult &result);
+
+	// simple synchronous, no result object returned
+	// returns true if command executed ok
+	static bool shell(const std::wstring &cmd);
 
 	// simple synchronous, no result object returned
 	// returns true if command executed ok

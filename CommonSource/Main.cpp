@@ -22,6 +22,7 @@
 #include <wx/splitter.h>
 #include <wx/sizer.h>
 #include <iterator>
+#include <wchar.h>
 
 #include "Events.h"
 #include "Logger.h"
@@ -149,6 +150,8 @@ void MyFrame::OnHello(wxCommandEvent& event)
 
 void MyFrame::OnTryOut(wxCommandEvent& event)
 {
+
+
 	TryOut::AsyncShell(GetEventHandler());
 //	TryOut::WorkerThread();
 //	TryOut::ExecIt();

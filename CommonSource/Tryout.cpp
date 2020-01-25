@@ -346,10 +346,17 @@ void ShelExecuteHandler(ShellExecuteResult &result)
 void TryOut::AsyncShell(wxEvtHandler *handler)
 {
 
+//	Logger::info(L"----------------------------------");
+//	Logger::info(L"Shell launched: firefox");
+//	ShellExecute::shell(L"/usr/bin/firefox");
+//	ShellExecute::shell(L"/bin/notepadqq");
+
+
+
 	ShellExecuteResult result;
 
-// ffmpeg -i /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/f3.mp4 -af "volumedetect" -vn -sn -dn -f null NUL
-// /bin/ffmpeg -i /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/f3.mp4 -af "volumedetect" -vn -sn -dn -f null NUL 2>/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/ffmpeg.txt
+
+	// /bin/ffmpeg -i /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/f3.mp4 -af "volumedetect" -vn -sn -dn -f null NUL &2>1
 	Logger::info(L"----------------------------------");
 	Logger::info(L"Shell sync launched: ffmpeg -i /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/f3.mp4 -af \"volumedetect\" -vn -sn -dn -f null NUL");
 	ShellExecute::shellSync(L"/bin/ffmpeg -i /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/f3.mp4 -af \"volumedetect\" -vn -sn -dn -f null NUL &2>1", result, 10000);
@@ -366,11 +373,6 @@ void TryOut::AsyncShell(wxEvtHandler *handler)
 //	Logger::info(result.toString().c_str());
 
 //	Logger::info(L"----------------------------------");
-//	Logger::info(L"Shell sync launched: ffmpeg");
-//	ShellExecute::shellSync(L"/bin/ffmpeg", result, 2000);
-//	Logger::info(result.toString().c_str());
-
-//	Logger::info(L"----------------------------------");
 //	Logger::info(L"Shell sync launched: /bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al");
 //	ShellExecute::shellSync(L"/bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al", result, 1000);
 //	Logger::info(result.toString().c_str());
@@ -382,8 +384,9 @@ void TryOut::AsyncShell(wxEvtHandler *handler)
 
 //	Logger::info(L"----------------------------------");
 //	Logger::info(L"Shell sync launched: /bin/notepadqq");
-//	ShellExecute::shellSync(L"/bin/notepadqq", result, 5000);
+//	ShellExecute::shellSync(L"/bin/notepadqq", result, 2000);
 //	Logger::info(result.toString().c_str());
+//	result.killChildProcess();
 
 //	Logger::info(L"----------------------------------");
 //	Logger::info(L"Shell async launched: /bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al, no event handler");

@@ -7,19 +7,25 @@
 
 #include "ShellExecute.h"
 
+#include <algorithm>
+#include <cctype>
 #include <cstdio>
+#include <cwchar>
 #include <errno.h>
 #include <fcntl.h>
 #include <memory>
 #include <pthread.h>
+#include <signal.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string>
 #include <sstream>
 #include <sys/wait.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <utility>
+#include <wchar.h>
 
 #include "Logger.h"
 #include "Utilities.h"
@@ -30,6 +36,21 @@ ShellExecute::ShellExecute()
 
 ShellExecute::~ShellExecute()
 {
+}
+
+// shell
+bool ShellExecute::shell(const std::wstring &cmd)
+{
+	ShellThreadData data;
+	data.result_.cmd_ = cmd;
+	if (shellStart(data))
+	{
+		fclose(data.fpStdout_);
+		fclose(data.fpStderr_);
+		return true;
+	}
+	else
+		return false;
 }
 
 // Synchronous shell execute
@@ -156,7 +177,7 @@ void *ShellExecute::shellThreadWaitGui(void *ptr)
 
 bool ShellExecute::shellStart(ShellThreadData &data)
 {
-	pid_t child_pid;
+	pid_t pid;
 	constexpr int kFdRead = 0;
 	constexpr int kFdWrite = 1;
 	int fdStdout[2] = {0};
@@ -176,7 +197,7 @@ bool ShellExecute::shellStart(ShellThreadData &data)
 	    return false;
 	}
 
-	if((child_pid = fork()) == -1)
+	if((pid = fork()) == -1)
 	{
 	    Logger::systemError(errno, L"Error forking process");
 	    data.result_.error_ = errno;
@@ -185,7 +206,7 @@ bool ShellExecute::shellStart(ShellThreadData &data)
 	}
 
 	// child process
-	if (child_pid == 0)
+	if (pid == 0)
 	{
 	    close(fdStdout[kFdRead]);    // Close the READ end of the pipe since the child's fd is write-only
 	    dup2(fdStdout[kFdWrite], 1); // Redirect stdout to pipe
@@ -193,17 +214,16 @@ bool ShellExecute::shellStart(ShellThreadData &data)
 	    close(fdStderr[kFdRead]);    // Close the READ end of the pipe since the child's fd is write-only
 	    dup2(fdStderr[kFdWrite], 2); // Redirect stderr to pipe
 
-	    setpgid(child_pid, child_pid); //Needed so negative PIDs can kill children of /bin/sh
-	    execl(
-	    		"/bin/sh", "/bin/sh", "-c",
-				SU::wStrToStr(data.result_.cmd_).c_str(),
-				NULL);
+	    setpgid(pid, pid); //Needed so negative PIDs can kill children of /bin/sh
+	    execl("/bin/sh", "/bin/sh", "-c",
+			  SU::wStrToStr(data.result_.cmd_).c_str(),
+			  NULL);
 	    _exit(0);
 	}
 
 	close(fdStdout[kFdWrite]); // Close the WRITE end of the pipe since parent's fd is read-only
 	close(fdStderr[kFdWrite]);
-	data.result_.pid_ = child_pid;
+	data.result_.pid_ = pid;
 
 	data.fpStdout_ = fdopen(fdStdout[kFdRead], "r");
 	data.fpStderr_ = fdopen(fdStderr[kFdRead], "r");
@@ -292,9 +312,12 @@ bool ShellExecute::shellWait(ShellThreadData &data)
 				return false;
 			}
 		}
+
+		// child process terminated, quit reading
+		if (kill(data.result_.pid_, 0) != 0) break;
 	}
 
-	// close read end of pipe
+	// close reading end of pipe
 	int exit;
 	fclose(data.fpStdout_);
 	fclose(data.fpStderr_);
@@ -309,9 +332,12 @@ bool ShellExecute::shellWait(ShellThreadData &data)
 		}
 	}
 
+	// if child process ended, clear pid
+	if (kill(data.result_.pid_, 0) != 0)
+		data.result_.pid_ = 0;
+
 	// setup return result
 	data.result_.exitCode_ 	= exit;
-	data.result_.pid_ 		= 0;
 	data.result_.success_ 	= exit == 0;
 	return data.result_.success_;
 }
@@ -498,9 +524,30 @@ std::wstring ShellExecuteResult::toString() const
 
 void ShellExecuteResult::killChildProcess()
 {
+	// kills the shell and the child process
 	if (pid_ == 0) return;
 
-	// to do
+	// get child pid of the shell, from the shell pid
+	wchar_t buf[200];
+	swprintf(buf, sizeof(buf) / sizeof(wchar_t), L"/bin/ps --ppid %d", pid_);
+	ShellExecuteResult result;
+
+	if (ShellExecute::shellSync(buf, result, 1000))
+	{
+		std::wstring s = result.stdout_;
+
+		// extract process id, starting first digit
+		std::wstring::iterator n =
+				std::find_if(s.begin(), s.end(), [](wchar_t c){ return std::isdigit(c); });
+
+		if (n != s.end())
+		{
+			int pid;
+			swscanf(s.c_str() + (n - s.begin()), L"%d", &pid);
+			kill(pid, SIGTERM);
+		}
+		kill(pid_, SIGTERM);
+	}
 }
 
 
