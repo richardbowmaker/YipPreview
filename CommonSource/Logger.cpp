@@ -16,6 +16,8 @@ long Logger::tid_ = 0;
 long Logger::count_ = 0;
 bool Logger::lcEnable_ = false;
 
+#define BUFFER_MAX 100000
+
 Logger::Logger() : wxListBox()
 {
 }
@@ -68,8 +70,18 @@ void Logger::append(const wchar_t* text)
 		{
 			if (lcEnable_)
 			{
-				wchar_t buf[1024];
+				wchar_t buf[BUFFER_MAX];
 				swprintf(buf,  sizeof(buf) / sizeof(wchar_t), L"%ld: %ls", count_, temp.c_str());
+
+				int len = wcslen(buf);
+
+				//
+				//
+				//
+				//
+				//
+
+
 				this_->Append(buf);
 				++count_;
 			}
@@ -92,7 +104,7 @@ void Logger::append(const wchar_t* text)
 
 void Logger::log(const LevelT level, const wchar_t* format, va_list vl)
 {
-	wchar_t buff[1024];
+	wchar_t buff[BUFFER_MAX];
 	vswprintf(buff, sizeof(buff), format, vl);
 	append(buff);
 }
@@ -109,7 +121,7 @@ void Logger::log(const LevelT level, const wchar_t* format, ...)
 
 void Logger::systemError(const int err, const wchar_t* format, ...)
 {
-	wchar_t buff[1024];
+	wchar_t buff[BUFFER_MAX];
 #ifdef WINDOWS_BUILD
 	char* errStr;
 	if (!FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,

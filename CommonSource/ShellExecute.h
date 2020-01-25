@@ -62,8 +62,8 @@ private:
 
 	static void *shellThreadWait(void *ptr);
 	static void *shellThreadWaitGui(void *ptr);
-	static bool shellStart(ShellExecuteResult &result, FILE *&fp);
-	static bool shellWait(ShellExecuteResult &result_, FILE *fp_, const int timeoutms);
+	static bool shellStart(ShellExecuteResult &result, FILE *&fp1, FILE *&fp2);
+	static bool shellWait(ShellExecuteResult &result_, FILE *&fp1, FILE *&fp2, const int timeoutms);
 };
 
 //----------------------------------------------------------------------------
@@ -86,6 +86,7 @@ public:
 	bool getSuccess() const;
 	int  getError() const;
 	std::wstring getStdout() const;
+	std::wstring getStderr() const;
 	bool getTimedOut() const;
 	int  getUserId() const;
 	void *getUserData() const;
@@ -105,6 +106,7 @@ private:
 	bool 			success_;	// executed successfully
 	int 			error_;		// system error code
 	std::wstring 	stdout_;	// stdout capture
+	std::wstring 	stderr_;
 	bool 			timedOut_;	// true if command timedout
 
 	// async calls only
