@@ -24,7 +24,8 @@ public:
     virtual void Uninitialise() = 0;        // client thread uninitialise
     virtual bool ThreadInitialise() = 0;    // in thread initialise
     virtual void ThreadUninitialise() = 0;  // in thread uninitialise
-    virtual bool ThreadMain() = 0;          // thread worker, called repeatedly                                        	// return false to stop thread
+    virtual bool ThreadMain() = 0;          // thread worker, called repeatedly                                        	
+											// return false to stop thread
 };
 
 class CThread

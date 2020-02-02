@@ -34,8 +34,8 @@ public:
 
 	virtual ~SU();
 
-	static std::wstring strToWStr(const char* str);		// string to wide string
-	static std::string wStrToStr(const wchar_t* str);	// wide string to string
+	static std::wstring strToWStr(const char* str, int len = 0);		// string to wide string
+	static std::string wStrToStr(const wchar_t* str, int len = 0);	    // wide string to string
 	static std::wstring strToWStr(const std::string str);
 	static std::string wStrToStr(const std::wstring str);
 

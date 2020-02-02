@@ -7,16 +7,18 @@
 
 #include "Utilities.h"
 
-#include <stdio.h>
-#include <string.h>
-#include <utility>
-
 #ifdef WINDOWS_BUILD
-#include <windows.h>
+	#include <stdio.h>
+	#include <string.h>
+	#include <utility>
+	#include <windows.h>
 #elif LINUX_BUILD
+	#include <stdio.h>
+	#include <string.h>
 	#include <sys/syscall.h>
 	#include <time.h>
 	#include <unistd.h>
+	#include <utility>
 #endif
 
 long Utilities::getThreadId()
@@ -31,7 +33,7 @@ long Utilities::getThreadId()
 long Utilities::getProcessId()
 {
 #ifdef WINDOWS_BUILD
-	return static_cast<long>(GetCurrentThreadId());
+	return static_cast<long>(GetCurrentProcessId());
 #elif LINUX_BUILD
 	return static_cast<long>(getpid());
 #endif
@@ -40,7 +42,7 @@ long Utilities::getProcessId()
 long Utilities::getMsCounter()
 {
 #ifdef WINDOWS_BUILD
-	return ??;
+	return static_cast<long>(GetTickCount64());
 #elif LINUX_BUILD
 	timespec ts;
 	if (clock_gettime(CLOCK_REALTIME, &ts) != -1)
@@ -52,19 +54,19 @@ long Utilities::getMsCounter()
 
 }
 
-std::wstring SU::strToWStr(const char* str)
+std::wstring SU::strToWStr(const char* str, int len /*= 0*/)
 {
-	std::size_t len = strlen(str);
-	std::wstring wc(len, L' ');
-	std::mbstowcs( &wc[0], str, len );
+	std::size_t l = (len == 0 ? strlen(str) : static_cast<std::size_t>(len));
+	std::wstring wc(l, L' ');
+	std::mbstowcs( &wc[0], str, l);
 	return wc;
 }
 
-std::string SU::wStrToStr(const wchar_t* str)
+std::string SU::wStrToStr(const wchar_t* str, int len /*= 0*/)
 {
-	std::size_t len = wcslen(str);
-	std::string sc(len, L' ');
-	std::wcstombs( &sc[0], str, len );
+	std::size_t l = (len == 0 ? wcslen(str) : static_cast<std::size_t>(len));
+	std::string sc(l, L' ');
+	std::wcstombs( &sc[0], str, l);
 	return sc;
 }
 

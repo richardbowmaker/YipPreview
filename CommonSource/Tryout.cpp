@@ -1,33 +1,53 @@
 
 
-
-#include <wx/wx.h>
-#include <wx/thread.h>
-
 #ifdef WINDOWS_BUILD
+	#include <cstdio>
+	#include <iostream>
+	#include <memory>
+	#include <stdexcept>
+	#include <string>
+	#include <array>
+	#include <utility>
+	#include <string.h>
+	#include <errno.h>
+	#include <sstream>
+	#include <fcntl.h>
+	#include <time.h>
+	#include <future>
+	#include <atomic>
+	#include <string>
+	#include <thread>
+	#include <wx/wx.h>
+	#include <wx/thread.h>
+	#include <windows.h> 
+	#include <tchar.h>
+	#include <stdio.h> 
+	#include <strsafe.h>
+	#include <tchar.h>
 #elif LINUX_BUILD
+	#include <sys/wait.h>
+	#include <sys/types.h>
+	#include <pthread.h>
+	#include <cstdio>
+	#include <iostream>
+	#include <memory>
+	#include <stdexcept>
+	#include <string>
+	#include <array>
+	#include <utility>
+	#include <string.h>
+	#include <errno.h>
+	#include <sstream>
+	#include <fcntl.h>
+	#include <time.h>
+	#include <future>
+	#include <atomic>
+	#include <string>
+	#include <thread>
 	#include <unistd.h>
+	#include <wx/wx.h>
+	#include <wx/thread.h>
 #endif
-
-#include <cstdio>
-#include <iostream>
-#include <memory>
-#include <stdexcept>
-#include <string>
-#include <array>
-#include <utility>
-#include <string.h>
-#include <sys/wait.h>
-#include <sys/types.h>
-#include <errno.h>
-#include <sstream>
-#include <fcntl.h>
-#include <time.h>
-#include <future>
-#include <atomic>
-#include <string>
-#include <thread>
-#include <pthread.h>
 
 
 #include "Logger.h"
@@ -35,8 +55,6 @@
 #include "Events.h"
 #include "Utilities.h"
 #include "ShellExecute.h"
-
-
 
 wxDEFINE_EVENT(wxEVT_MY_CUSTOM_COMMAND, wxCommandEvent);
 
@@ -95,9 +113,365 @@ void TryOut::ThreadEvents(wxEvtHandler* parent)
 
 }
 
+#ifdef WINDOWS_BUILD
+
+// https://docs.microsoft.com/en-us/windows/win32/ipc/named-pipe-server-using-overlapped-i-o?redirectedfrom=MSDN
+// https://stackoverflow.com/questions/30914346/read-lines-from-file-async-using-winapi-readfile
+// https://stackoverflow.com/questions/51127722/reading-pipe-asynchronously-using-readfile
+
+// https://www.daniweb.com/programming/software-development/threads/295780/using-named-pipes-with-asynchronous-i-o-redirection-to-winapi
+
+
+void TryOut::ReadAsync()
+{
+	HANDLE hFile = CreateFile(
+		LR"(D:\Projects\WxWidgets\YipPreview\Tryout\test.bat)", 
+		GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING,
+		FILE_FLAG_OVERLAPPED | FILE_FLAG_NO_BUFFERING, NULL);
+
+	if (hFile == INVALID_HANDLE_VALUE)
+	{
+		Logger::systemError(GetLastError(), L"INVALID_HANDLE_VALUE");
+		return;
+	}
+
+	BOOL bResult;
+	BYTE bReadBuf[2048];
+
+	OVERLAPPED oRead = { 0 };
+	oRead.hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+	bResult = ReadFile(hFile, bReadBuf, _countof(bReadBuf), NULL, &oRead);
+
+	if (!bResult && GetLastError() != ERROR_IO_PENDING)
+	{
+		Logger::systemError(GetLastError(), L"ERROR io pending");
+		CloseHandle(hFile);
+		return;
+	}
+
+
+	DWORD dwWaitRes = WaitForSingleObject(oRead.hEvent, INFINITE);
+	switch (WAIT_OBJECT_0)
+	{
+	case WAIT_OBJECT_0: // reading finished
+	{
+		Logger::info(L"String that was read from file: ");
+		std::string s((char*)bReadBuf, oRead.InternalHigh);
+		Logger::info(L"String that was read from file: %s", SU::strToWStr(s).c_str());
+	}
+		break;
+
+	default:
+		Logger::error(L"Nooo");
+	}
+
+	CloseHandle(hFile);
+
+}
+
+void TryOut::ShellAsync()
+{
+	SECURITY_ATTRIBUTES saAttr;
+
+	printf("\n->Start of parent execution.\n");
+
+	// Set the bInheritHandle flag so pipe handles are inherited. 
+
+	saAttr.nLength = sizeof(SECURITY_ATTRIBUTES);
+	saAttr.bInheritHandle = TRUE;
+	saAttr.lpSecurityDescriptor = NULL;
+
+	// Create a pipe for the child process's STDOUT. 
+
+	HANDLE hPipe = CreateNamedPipe(
+		LR"(\\.\pipe\yipreviewshellexec)",
+		PIPE_ACCESS_INBOUND, // | FILE_FLAG_OVERLAPPED,				// open mode
+		PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT, //PIPE_TYPE_BYTE  | PIPE_READMODE_BYTE | PIPE_WAIT,		// pipe mode
+		PIPE_UNLIMITED_INSTANCES,
+		1000,
+		1000,
+		5000,
+		&saAttr);
+
+	if (hPipe == INVALID_HANDLE_VALUE)
+	{
+		Logger::systemError(GetLastError(), L"Error opening pipe");
+		return;
+	}
+
+	HANDLE hOutputWrite = CreateFile(
+		LR"(\\.\pipe\yipreviewshellexec)",
+		FILE_WRITE_DATA | SYNCHRONIZE,
+		0,
+		&saAttr,
+		OPEN_EXISTING, // very important flag!
+		FILE_ATTRIBUTE_NORMAL,
+		0 // no template file for OPEN_EXISTING
+	);
+
+	if (hOutputWrite == INVALID_HANDLE_VALUE)
+	{
+		Logger::systemError(GetLastError(), L"Error creating stdout write file");
+		return;
+	}
+
+	SetHandleInformation(hOutputWrite, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
+
+	OVERLAPPED oOverlap;
+	ZeroMemory(&oOverlap, sizeof(oOverlap));
+	HANDLE hEvent = NULL;
+
+	hEvent = CreateEvent(NULL, TRUE, TRUE, NULL);
+	
+	if (hEvent == NULL)
+	{
+		Logger::systemError(GetLastError(), L"Error creating event");
+		return;
+	}
+
+	oOverlap.hEvent = hEvent;
+
+	TCHAR szCmdline[] = TEXT(R"(D:\Projects\WxWidgets\YipPreview\StdErrOutWin\Debug\StdErrOutWin.exe)");
+	PROCESS_INFORMATION piProcInfo;
+	STARTUPINFO siStartInfo;
+	BOOL bSuccess = FALSE;
+
+	// Set up members of the PROCESS_INFORMATION structure. 
+
+	ZeroMemory(&piProcInfo, sizeof(PROCESS_INFORMATION));
+
+	// Set up members of the STARTUPINFO structure. 
+	// This structure specifies the STDIN and STDOUT handles for redirection.
+
+	ZeroMemory(&siStartInfo, sizeof(STARTUPINFO));
+	siStartInfo.cb = sizeof(STARTUPINFO);
+	siStartInfo.hStdError = NULL;
+	siStartInfo.hStdOutput = hOutputWrite;
+	siStartInfo.hStdInput = NULL; // g_hChildStd_IN_Rd;
+	siStartInfo.dwFlags |= STARTF_USESTDHANDLES;
+
+	// Create the child process. 
+
+	bSuccess = CreateProcess(
+		NULL,
+		szCmdline,     // command line 
+		NULL,          // process security attributes 
+		NULL,          // primary thread security attributes 
+		TRUE,          // handles are inherited 
+		0,             // creation flags 
+		NULL,          // use parent's environment 
+		NULL,          // use parent's current directory 
+		&siStartInfo,  // STARTUPINFO pointer 
+		&piProcInfo);  // receives PROCESS_INFORMATION 
+
+	char buff[1000];
+	DWORD bytesRead;
+
+	 // If an error occurs, exit the application. 
+	if (!bSuccess)
+	{
+		Logger::systemError(GetLastError(), L"Error CreateProcess");
+		return;
+	}
+
+	while (true)
+	{
+		// overlapped read
+		char buf[10000];
+		DWORD lenr;
+//		BOOL b = ReadFile(hPipe, buf, sizeof(buf), &lenr, &oOverlap);
+		BOOL b = ReadFile(hPipe, buf, sizeof(buf), &lenr, NULL);
+
+		if (b)
+		{
+			std::string s(buf, lenr);
+			Logger::info(L"rx1: %ls", SU::strToWStr(s).c_str());
+		}
+		else
+		{
+			int le = GetLastError();
+			if (le == ERROR_IO_PENDING)
+			{
+				while (true)
+				{
+					//std::cout << "IO pending " << lenr << std::endl;
+
+					DWORD wait = WaitForSingleObject(oOverlap.hEvent, 100);
+
+					if (wait == WAIT_OBJECT_0)
+					{
+						DWORD lenr;
+						BOOL b = GetOverlappedResult(hPipe, &oOverlap, &lenr, FALSE);
+						Logger::info(L"rx2: %ls", SU::strToWStr(buf).c_str());
+						break;
+					}
+					else if (wait == WAIT_TIMEOUT)
+					{
+						//std::cout << ".";
+					}
+				}
+			}
+			else if (le == ERROR_BROKEN_PIPE)
+			{
+				Logger::info(L"client closed pipe");
+				CloseHandle(piProcInfo.hProcess);
+				CloseHandle(piProcInfo.hThread);
+				DisconnectNamedPipe(hPipe);
+				return;
+			}
+			else
+			{
+				Logger::systemError(le, L"pipe read error");
+				CloseHandle(piProcInfo.hProcess);
+				CloseHandle(piProcInfo.hThread);
+				DisconnectNamedPipe(hPipe);
+				return;
+			}
+		}
+	}
+
+
+	CloseHandle(piProcInfo.hProcess);
+	CloseHandle(piProcInfo.hThread);
+	DisconnectNamedPipe(hPipe);
+	return;
+}
+
+void TryOut::ExecIt()
+{
+	ShellExecuteResult result;
+	ShellExecute::shellSync(LR"(D:\Projects\WxWidgets\YipPreview\StdErrOutWin\Debug\StdErrOutWin.exe)", result, 10000);
+	Logger::info(L"Shell result %ls", result.toString().c_str());
+
+	ShellExecute::shellSync(LR"(D:\_Ricks\c#\ZiPreview\Executable\ffmpeg.exe)", result, 10000);
+	Logger::info(L"Shell result %ls", result.toString().c_str());
+
+
+	return;
+
+
+	
+
+	/////////////////////////
+
+	SECURITY_ATTRIBUTES saAttr;
+	HANDLE g_hChildStd_IN_Rd = NULL;
+	HANDLE g_hChildStd_IN_Wr = NULL;
+	HANDLE g_hChildStd_OUT_Rd = NULL;
+	HANDLE g_hChildStd_OUT_Wr = NULL;
+
+	HANDLE g_hInputFile = NULL;
+
+	constexpr int BUFSIZE = 4096;
+
+	saAttr.nLength = sizeof(SECURITY_ATTRIBUTES);
+	saAttr.bInheritHandle = TRUE;
+	saAttr.lpSecurityDescriptor = NULL;
+
+
+	if (!CreatePipe(&g_hChildStd_OUT_Rd, &g_hChildStd_OUT_Wr, &saAttr, 0))
+	{
+		Logger::systemError(GetLastError(), L"Error CreatePipe");
+		return;
+	}
+
+	// Ensure the read handle to the pipe for STDOUT is not inherited.
+
+	if (!SetHandleInformation(g_hChildStd_OUT_Rd, HANDLE_FLAG_INHERIT, 0))
+	{
+		Logger::systemError(GetLastError(), L"Error SetHandleInformation");
+		return;
+	}
+
+	TCHAR szCmdline[] = TEXT(R"(D:\Projects\WxWidgets\YipPreview\StdErrOutWin\Debug\StdErrOutWin.exe)");
+	PROCESS_INFORMATION piProcInfo;
+	STARTUPINFO siStartInfo;
+	BOOL bSuccess = FALSE;
+
+	// Set up members of the PROCESS_INFORMATION structure. 
+
+	ZeroMemory(&piProcInfo, sizeof(PROCESS_INFORMATION));
+
+	// Set up members of the STARTUPINFO structure. 
+	// This structure specifies the STDIN and STDOUT handles for redirection.
+
+	ZeroMemory(&siStartInfo, sizeof(STARTUPINFO));
+	siStartInfo.cb = sizeof(STARTUPINFO);
+	siStartInfo.hStdError = g_hChildStd_OUT_Wr;
+	siStartInfo.hStdOutput = g_hChildStd_OUT_Wr;
+	//siStartInfo.hStdInput = g_hChildStd_IN_Rd;
+	siStartInfo.dwFlags |= STARTF_USESTDHANDLES;
+
+	// Create the child process. 
+
+	bSuccess = CreateProcess(NULL,
+		szCmdline,     // command line 
+		NULL,          // process security attributes 
+		NULL,          // primary thread security attributes 
+		TRUE,          // handles are inherited 
+		0,             // creation flags 
+		NULL,          // use parent's environment 
+		NULL,          // use parent's current directory 
+		&siStartInfo,  // STARTUPINFO pointer 
+		&piProcInfo);  // receives PROCESS_INFORMATION 
+
+	 // If an error occurs, exit the application. 
+	if (!bSuccess)
+	{
+		Logger::systemError(GetLastError(), L"Error CreateProcess");
+		return;
+	}
+	else
+	{
+		// Close handles to the child process and its primary thread.
+		// Some applications might keep these handles to monitor the status
+		// of the child process, for example. 
+
+		CloseHandle(piProcInfo.hProcess);
+		CloseHandle(piProcInfo.hThread);
+	}
+
+	CloseHandle(g_hChildStd_OUT_Wr);
+
+
+
+	DWORD dwRead, dwWritten;
+	CHAR chBuf[BUFSIZE];
+
+	//	HANDLE hParentStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+
+	for (;;)
+	{
+		bSuccess = ReadFile(g_hChildStd_OUT_Rd, chBuf, BUFSIZE, &dwRead, NULL);
+		if (!bSuccess || dwRead == 0) break;
+
+		std::string s(chBuf, dwRead);
+		Logger::info(L"read: %ls", SU::strToWStr(s).c_str());
+	}
+}
+
+DWORD WINAPI ThreadMainEntry(void*)
+{
+	for (int i = 0; i < 5; ++i)
+	{
+		Logger::info(L"In thread %d", i);
+		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+	}
+	return 0;
+}
+
+void TryOut::WorkerThread()
+{
+//	auto w = std::async(std::launch::async, [](){ ThreadMainEntry(); });
+	DWORD tid;
+	HANDLE hThread = CreateThread(NULL, 0, &ThreadMainEntry, NULL, 0, &tid);
+	Logger::info(L"thread started");
+}
+
+#elif LINUX_BUILD
+
 FILE * popen2(std::string command, std::string type, int & pid, int &rfd);
 int pclose2(FILE * fp, pid_t pid);
-
 
 void TryOut::ExecIt()
 {
@@ -337,6 +711,8 @@ void TryOut::WorkerThread()
 
 }
 
+#endif
+
 void ShelExecuteHandler(ShellExecuteResult &result)
 {
 
@@ -346,21 +722,24 @@ void ShelExecuteHandler(ShellExecuteResult &result)
 void TryOut::AsyncShell(wxEvtHandler *handler)
 {
 
+	ShellExecuteResult result;
+
 //	Logger::info(L"----------------------------------");
 //	Logger::info(L"Shell launched: firefox");
 //	ShellExecute::shell(L"/usr/bin/firefox");
 //	ShellExecute::shell(L"/bin/notepadqq");
 
-
-
-	ShellExecuteResult result;
-
-
-	// /bin/ffmpeg -i /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/f3.mp4 -af "volumedetect" -vn -sn -dn -f null NUL &2>1
 	Logger::info(L"----------------------------------");
-	Logger::info(L"Shell sync launched: ffmpeg -i /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/f3.mp4 -af \"volumedetect\" -vn -sn -dn -f null NUL");
-	ShellExecute::shellSync(L"/bin/ffmpeg -i /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/f3.mp4 -af \"volumedetect\" -vn -sn -dn -f null NUL &2>1", result, 10000);
+	Logger::info(L"Shell launched: StdOutErr");
+	ShellExecute::shellSync(L"/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/StdOutErr/Debug/StdOutErr", result);
 	Logger::info(result.toString().c_str());
+
+
+// /bin/ffmpeg -i /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/f3.mp4 -af "volumedetect" -vn -sn -dn -f null NUL &2>1
+//	Logger::info(L"----------------------------------");
+//	Logger::info(L"Shell sync launched: ffmpeg -i /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/f3.mp4 -af \"volumedetect\" -vn -sn -dn -f null NUL");
+//	ShellExecute::shellSync(L"/bin/ffmpeg -i /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/f3.mp4 -af \"volumedetect\" -vn -sn -dn -f null NUL &2>1", result, 10000);
+//	Logger::info(result.toString().c_str());
 
 //	Logger::info(L"----------------------------------");
 //	Logger::info(L"Shell sync launched: ffmpegbat");
@@ -392,9 +771,9 @@ void TryOut::AsyncShell(wxEvtHandler *handler)
 //	Logger::info(L"Shell async launched: /bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al, no event handler");
 //	ShellExecute::shellAsync(L"/bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al");
 
-//	Logger::info(L"----------------------------------");
-//	Logger::info(L"Shell async launched: /bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al");
-//	ShellExecute::shellAsync(L"/bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al", &ShelExecuteHandler, 200, nullptr, 10000);
+	Logger::info(L"----------------------------------");
+	Logger::info(L"Shell async launched: /bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al");
+	ShellExecute::shellAsync(L"/bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al", &ShelExecuteHandler, 200, nullptr, 10000);
 
 //	Logger::info(L"----------------------------------");
 //	Logger::info(L"Shell async launched: /bin/nonexistentprogram");

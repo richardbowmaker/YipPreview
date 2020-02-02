@@ -155,9 +155,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\CommonSource\CThread.h" />
     <ClInclude Include="..\..\..\CommonSource\Events.h" />
     <ClInclude Include="..\..\..\CommonSource\Logger.h" />
     <ClInclude Include="..\..\..\CommonSource\Main.h" />
+    <ClInclude Include="..\..\..\CommonSource\ShellExecute.h" />
     <ClInclude Include="..\..\..\CommonSource\Tryout.h" />
     <ClInclude Include="..\..\..\CommonSource\Utilities.h" />
     <ClInclude Include="framework.h" />
@@ -166,9 +168,11 @@
     <ClInclude Include="YipPreview.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\CommonSource\CThread.cpp" />
     <ClCompile Include="..\..\..\CommonSource\Events.cpp" />
     <ClCompile Include="..\..\..\CommonSource\Logger.cpp" />
     <ClCompile Include="..\..\..\CommonSource\Main.cpp" />
+    <ClCompile Include="..\..\..\CommonSource\ShellExecute.cpp" />
     <ClCompile Include="..\..\..\CommonSource\Tryout.cpp" />
     <ClCompile Include="..\..\..\CommonSource\Utilities.cpp" />
   </ItemGroup>

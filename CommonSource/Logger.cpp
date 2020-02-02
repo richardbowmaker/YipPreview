@@ -16,7 +16,7 @@ long Logger::tid_ = 0;
 long Logger::count_ = 0;
 bool Logger::lcEnable_ = false;
 
-#define BUFFER_MAX 100000
+#define BUFFER_MAX 40000
 
 Logger::Logger() : wxListBox()
 {
@@ -73,11 +73,14 @@ void Logger::append(const wchar_t* text)
 				wchar_t buf[BUFFER_MAX];
 				swprintf(buf,  sizeof(buf) / sizeof(wchar_t), L"%ld: %ls", count_, temp.c_str());
 				this_->Append(buf);
+				this_->Update();
 				++count_;
 			}
 			else
+			{
 				this_->Append(temp);
-
+				this_->Update();
+			}
 		}
 //			this_->Append(text);
 	}
@@ -95,7 +98,7 @@ void Logger::append(const wchar_t* text)
 void Logger::log(const LevelT level, const wchar_t* format, va_list vl)
 {
 	wchar_t buff[BUFFER_MAX];
-	vswprintf(buff, sizeof(buff), format, vl);
+	vswprintf(buff, sizeof(buff) / sizeof(wchar_t), format, vl);
 	append(buff);
 }
 
@@ -111,19 +114,21 @@ void Logger::log(const LevelT level, const wchar_t* format, ...)
 
 void Logger::systemError(const int err, const wchar_t* format, ...)
 {
-	wchar_t buff[BUFFER_MAX];
 #ifdef WINDOWS_BUILD
-	char* errStr;
+	wchar_t* errStr;
 	if (!FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
 		NULL,
 		err,
 		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // default language
-		(LPTSTR)& errStr,
+		reinterpret_cast<LPWSTR>(&errStr),
 		0,
 		NULL)) return;
-	swprintf(buff, sizeof(buff), L" [%ls: %d]", SU::strToWStr(errStr).c_str(), err);
+	std::wstring ws(errStr);
 	LocalFree(errStr);
+	wchar_t buff[BUFFER_MAX];
+	swprintf(buff, sizeof(buff) / sizeof(wchar_t), L" [%ls: %d]", ws.substr(0, ws.size() - 2).c_str(), err);
 #elif LINUX_BUILD
+	wchar_t buff[BUFFER_MAX];
 	swprintf(buff, sizeof(buff), L" [%ls: %d]", SU::strToWStr(strerror(err)).c_str(), err);
 #endif
 	va_list vl;

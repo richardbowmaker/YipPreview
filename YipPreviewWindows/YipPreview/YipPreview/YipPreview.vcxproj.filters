@@ -16,6 +16,12 @@
     <Filter Include="Common">
       <UniqueIdentifier>{585067c3-3f74-4e50-9718-58e31c2a0f81}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Common\Header Files">
+      <UniqueIdentifier>{cf6a4d22-9ae0-40ef-a1d9-fb98d27c46b7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Common\Source Files">
+      <UniqueIdentifier>{5408be86-c903-41f0-a8cf-742a134ad4a5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -30,37 +36,49 @@
     <ClInclude Include="YipPreview.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\CommonSource\Logger.h">
-      <Filter>Common</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\CommonSource\Tryout.h">
-      <Filter>Common</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\CommonSource\Events.h">
-      <Filter>Common</Filter>
+      <Filter>Common\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\CommonSource\Logger.h">
+      <Filter>Common\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\CommonSource\Main.h">
-      <Filter>Common</Filter>
+      <Filter>Common\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\CommonSource\ShellExecute.h">
+      <Filter>Common\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\CommonSource\Tryout.h">
+      <Filter>Common\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\CommonSource\Utilities.h">
-      <Filter>Common</Filter>
+      <Filter>Common\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\CommonSource\CThread.h">
+      <Filter>Common\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\CommonSource\Main.cpp">
-      <Filter>Common</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\CommonSource\Logger.cpp">
-      <Filter>Common</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\CommonSource\Tryout.cpp">
-      <Filter>Common</Filter>
+      <Filter>Common\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\CommonSource\Events.cpp">
-      <Filter>Common</Filter>
+      <Filter>Common\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\CommonSource\Main.cpp">
+      <Filter>Common\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\CommonSource\ShellExecute.cpp">
+      <Filter>Common\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\CommonSource\Utilities.cpp">
-      <Filter>Common</Filter>
+      <Filter>Common\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\CommonSource\Tryout.cpp">
+      <Filter>Common\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\CommonSource\CThread.cpp">
+      <Filter>Common\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

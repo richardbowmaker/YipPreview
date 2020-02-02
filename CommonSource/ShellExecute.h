@@ -8,8 +8,15 @@
 #ifndef COMMON_SHELLEXECUTE_H_
 #define COMMON_SHELLEXECUTE_H_
 
+
+#ifdef WINDOWS_BUILD
+#include <string>
+#include <Windows.h>
+#include <wx/wx.h>
+#elif LINUX_BUILD
 #include <string>
 #include <wx/wx.h>
+#endif
 
 
 //----------------------------------------------------------------------------
@@ -25,6 +32,7 @@ public:
 	ShellExecuteResult(ShellExecuteResult &&other);
 	virtual ~ShellExecuteResult();
 	ShellExecuteResult& operator=(const ShellExecuteResult &other);
+	ShellExecuteResult& operator=(ShellExecuteResult &&other);
 
 	std::wstring getCmd() const;
 	int  getPid() const;
@@ -32,6 +40,7 @@ public:
 	bool getSuccess() const;
 	int  getError() const;
 	std::wstring getStdout() const;
+
 	std::wstring getStderr() const;
 	bool getTimedOut() const;
 	int  getUserId() const;
@@ -110,7 +119,7 @@ public:
 			void *userData = nullptr,
 			const int timeoutms = -1);
 
-private:
+	static DWORD WINAPI shell_(void *pdata);
 
 	// data passed to pthread function via pointer
 	struct ShellThreadData
@@ -119,14 +128,23 @@ private:
 
 		ShellThreadData();
 
-		FILE				*fpStdout_;
-		FILE				*fpStderr_;
 		ShellExecuteResult 	result_;
 		int 				timeoutms_;
-		wxEvtHandler 		*wxHandler_;
+		wxEvtHandler*		wxHandler_;
 		int					wxid_;
-		ShellExecute::ShellExecuteEventHandlerPtr handler_;
+		ShellExecuteEventHandlerPtr handler_;
+
+#ifdef WINDOWS_BUILD
+		HANDLE completed_;
+#elif LINUX_BUILD
+		FILE* fpStdout_;
+		FILE* fpStderr_;
+#endif
+
 	};
+
+private:
+
 
 	static void *shellThreadWait(void *ptr);
 	static void *shellThreadWaitGui(void *ptr);

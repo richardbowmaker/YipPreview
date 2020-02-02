@@ -15,6 +15,8 @@ public:
 	static void ExecIt();
 	static void WorkerThread();
 	static void AsyncShell(wxEvtHandler *handler);
+	static void ReadAsync();
+	static void ShellAsync();
 
 };
 

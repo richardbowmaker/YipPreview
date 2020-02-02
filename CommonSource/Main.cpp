@@ -150,9 +150,9 @@ void MyFrame::OnHello(wxCommandEvent& event)
 
 void MyFrame::OnTryOut(wxCommandEvent& event)
 {
+	TryOut::ExecIt();
 
-
-	TryOut::AsyncShell(GetEventHandler());
+//	TryOut::AsyncShell(GetEventHandler());
 //	TryOut::WorkerThread();
 //	TryOut::ExecIt();
 
