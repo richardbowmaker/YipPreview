@@ -339,21 +339,6 @@ void TryOut::ShellAsync()
 
 void TryOut::ExecIt()
 {
-	ShellExecuteResult result;
-	ShellExecute::shellSync(LR"(D:\Projects\WxWidgets\YipPreview\StdErrOutWin\Debug\StdErrOutWin.exe)", result, 10000);
-	Logger::info(L"Shell result %ls", result.toString().c_str());
-
-	ShellExecute::shellSync(LR"(D:\_Ricks\c#\ZiPreview\Executable\ffmpeg.exe)", result, 10000);
-	Logger::info(L"Shell result %ls", result.toString().c_str());
-
-
-	return;
-
-
-	
-
-	/////////////////////////
-
 	SECURITY_ATTRIBUTES saAttr;
 	HANDLE g_hChildStd_IN_Rd = NULL;
 	HANDLE g_hChildStd_IN_Wr = NULL;
@@ -713,16 +698,32 @@ void TryOut::WorkerThread()
 
 #endif
 
-void ShelExecuteHandler(ShellExecuteResult &result)
-{
 
-	Logger::info(result.toString().c_str());
+void ShelExecuteHandler(ShellExecuteResult& result)
+{
+	Logger::info(L"ShelExecuteHandler\n %ls", result.toString().c_str());
 }
+
 
 void TryOut::AsyncShell(wxEvtHandler *handler)
 {
 
 	ShellExecuteResult result;
+
+
+	//	ShellExecute::shellAsync(LR"(D:\Projects\WxWidgets\YipPreview\StdErrOutWin\Debug\StdErrOutWin.exe)", ShelExecuteHandler, 1);
+	//	ShellExecute::shellAsync(LR"(D:\_Ricks\c#\ZiPreview\Executable\ffmpeg.exe)", ShelExecuteHandler, 2);
+
+//	ShellExecute::shellSync(LR"(cmd /c dir D:\_Ricks\c#\ZiPreview\Executable)", result);
+//	Logger::info(L"Shell result %ls", result.toString().c_str());
+//
+//	ShellExecute::shellAsync(LR"(cmd /c dir D:\_Ricks\c#\ZiPreview\Executable)", ShelExecuteHandler, 3);
+//	ShellExecute::shellAsync(LR"(D:\Projects\WxWidgets\YipPreview\StdErrOutWin\Debug\StdErrOutWin.exe)", ShelExecuteHandler, 4);
+//	ShellExecute::shellAsyncGui(LR"(cmd /c dir D:\_Ricks\c#\ZiPreview\Executable)", handler);
+//
+//	return;
+
+	/////////////////////////
 
 //	Logger::info(L"----------------------------------");
 //	Logger::info(L"Shell launched: firefox");

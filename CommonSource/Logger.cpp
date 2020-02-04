@@ -11,12 +11,16 @@
 
 // static members
 Logger::LevelT Logger::level_ = Logger::Error;
-Logger* Logger::this_ = nullptr;
-long Logger::tid_ = 0;
-long Logger::count_ = 0;
-bool Logger::lcEnable_ = false;
+Logger* Logger::this_	= nullptr;
+long Logger::tid_		= 0;
+long Logger::lineNo_	= 0;
+bool Logger::lcEnable_	= false;
+bool Logger::ideOut_	= false;
+long Logger::tzero_		= 0;
+bool Logger::showTime_	= false;
 
-#define BUFFER_MAX 40000
+constexpr int kBufferMax = 40000;
+constexpr int kMaxLines = 1000;
 
 Logger::Logger() : wxListBox()
 {
@@ -39,14 +43,23 @@ void Logger::OnLogger(wxLoggerEvent& event)
 {
 	// add to message box
 	wxListBox* lb = dynamic_cast<wxListBox*>(event.GetEventObject());
-	if (lb != nullptr) lb->Append(event.GetString().wc_str());
+	if (lb != nullptr) append(event.getLevel(), event.GetString().wc_str());
 }
 
-void Logger::setLevel(LevelT level)
+void Logger::setLevel(const LevelT level)
 {
 	level_ = level;
 }
 
+void Logger::enableIdeOutput(const bool enable)
+{
+	ideOut_ = enable;
+}
+
+void Logger::enableTime(const bool enable)
+{
+	showTime_ = enable;
+}
 void Logger::clear()
 {
 	this_->Clear();
@@ -57,9 +70,51 @@ void Logger::enableLineCount(const bool enable)
 	lcEnable_ = enable;
 }
 
-void Logger::append(const wchar_t* text)
+void Logger::append(const LevelT level, const wchar_t* text)
 {
 	if (this_ == nullptr) return;
+
+	wchar_t buf[kBufferMax];
+
+
+	// first call to set ticks at time zero
+	long t = Utilities::getMsCounter();
+	if (tzero_ == 0) tzero_ = t;
+
+	if (ideOut_)
+	{
+		int n = 0;
+
+		// show time
+		if (showTime_)
+			n = swprintf(buf, sizeof(buf) / sizeof(wchar_t), L"***** %08ld: ", t - tzero_);
+
+		// show line count
+		if (lcEnable_)
+			n += swprintf(&buf[n], (sizeof(buf) / sizeof(wchar_t)) - n, L"%05ld: ", lineNo_);
+
+		// show level
+		switch (level_)
+		{
+		case Error:
+			n += swprintf(&buf[n], (sizeof(buf) / sizeof(wchar_t)) - n, L"%ls: ", L"Error  ");
+			break;
+		case Warning:
+			n += swprintf(&buf[n], (sizeof(buf) / sizeof(wchar_t)) - n, L"%ls: ", L"Warning");
+			break;
+		case Info:
+			n += swprintf(&buf[n], (sizeof(buf) / sizeof(wchar_t)) - n, L"%ls: ", L"Info   ");
+			break;
+		}
+
+		// show message
+		swprintf(&buf[n], (sizeof(buf) / sizeof(wchar_t)) - n, L"%ls\n", text);
+#ifdef WINDOWS_BUILD
+		OutputDebugString(buf);
+#elif LINUX_BUILD
+		std::cout << SU::wStrToStr(buf);
+#endif
+	}
 
 	if (tid_ == Utilities::getThreadId())
 	{
@@ -68,28 +123,56 @@ void Logger::append(const wchar_t* text)
 		std::wstringstream wss(str);
 		while(std::getline(wss, temp, L'\n'))
 		{
+			int n = 0;
+
+			// display tick count
+			if (showTime_)
+				n = swprintf(buf, sizeof(buf) / sizeof(wchar_t), L"%08ld: ", t - tzero_);
+
+			// show line number
 			if (lcEnable_)
+				n += swprintf(&buf[n], (sizeof(buf) / sizeof(wchar_t)) - n, L"%05ld: ", lineNo_++);
+
+			// show level
+			switch (level_)
 			{
-				wchar_t buf[BUFFER_MAX];
-				swprintf(buf,  sizeof(buf) / sizeof(wchar_t), L"%ld: %ls", count_, temp.c_str());
-				this_->Append(buf);
-				this_->Update();
-				++count_;
+			case Error: 
+				n += swprintf(&buf[n], (sizeof(buf) / sizeof(wchar_t)) - n, L"%ls: ", L"Error  ");
+				break;
+			case Warning:
+				n += swprintf(&buf[n], (sizeof(buf) / sizeof(wchar_t)) - n, L"%ls: ", L"Warning");
+				break;
+			case Info:
+				n += swprintf(&buf[n], (sizeof(buf) / sizeof(wchar_t)) - n, L"%ls: ", L"Info   ");
+				break;
 			}
-			else
-			{
-				this_->Append(temp);
-				this_->Update();
-			}
+
+			// show message
+			swprintf(&buf[n], (sizeof(buf) / sizeof(wchar_t)) - n, L"%ls", temp.c_str());
+
+			// add to list box
+			this_->Append(buf);
+			this_->Update();
 		}
-//			this_->Append(text);
+
+		// limit the number of messages displayed
+		while (this_->GetCount() > kMaxLines)
+			this_->Delete(0);
+
+		// auto scroll so that list item is always displayed
+		int bitem = this_->HitTest(wxPoint(0, this_->GetClientSize().GetHeight() - 1));
+		if (bitem != -1)
+		{
+			int titem = this_->HitTest(wxPoint(0, 0));
+			int lc = this_->GetCount();
+			if (lc > bitem) this_->SetFirstItem(lc - (bitem - titem));
+		}
 	}
 	else
 	{
 		// post event to GUI thread
 		wxLoggerEvent evt;
 		evt.SetString(wxString(text));
-		evt.setLevel(22);
 		evt.SetEventObject(this_);
 		this_->GetEventHandler()->AddPendingEvent(evt);
 	}
@@ -97,9 +180,9 @@ void Logger::append(const wchar_t* text)
 
 void Logger::log(const LevelT level, const wchar_t* format, va_list vl)
 {
-	wchar_t buff[BUFFER_MAX];
+	wchar_t buff[kBufferMax];
 	vswprintf(buff, sizeof(buff) / sizeof(wchar_t), format, vl);
-	append(buff);
+	append(level, buff);
 }
 
 void Logger::log(const LevelT level, const wchar_t* format, ...)
@@ -125,10 +208,10 @@ void Logger::systemError(const int err, const wchar_t* format, ...)
 		NULL)) return;
 	std::wstring ws(errStr);
 	LocalFree(errStr);
-	wchar_t buff[BUFFER_MAX];
+	wchar_t buff[kBufferMax];
 	swprintf(buff, sizeof(buff) / sizeof(wchar_t), L" [%ls: %d]", ws.substr(0, ws.size() - 2).c_str(), err);
 #elif LINUX_BUILD
-	wchar_t buff[BUFFER_MAX];
+	wchar_t buff[kBufferMax];
 	swprintf(buff, sizeof(buff), L" [%ls: %d]", SU::strToWStr(strerror(err)).c_str(), err);
 #endif
 	va_list vl;
@@ -257,7 +340,7 @@ wxDEFINE_EVENT(wxEVT_LOGGER_EVENT, wxLoggerEvent);
 
 wxLoggerEvent::wxLoggerEvent() :
 	wxCommandEvent(wxEVT_LOGGER_EVENT, wxID_ANY),
-	level_(0)
+	level_(Logger::Info)
 {
 }
 
@@ -272,12 +355,12 @@ wxEvent *wxLoggerEvent::Clone() const
 	return new wxLoggerEvent(*this);
 };
 
-int wxLoggerEvent::getLevel() const
+Logger::LevelT wxLoggerEvent::getLevel() const
 {
 	return level_;
 }
 
-void wxLoggerEvent::setLevel(int level)
+void wxLoggerEvent::setLevel(const Logger::LevelT level)
 {
 	level_ = level;
 }

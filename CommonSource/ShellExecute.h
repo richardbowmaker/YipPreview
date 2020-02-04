@@ -38,9 +38,7 @@ public:
 	int  getPid() const;
 	int  getExitCode() const;
 	bool getSuccess() const;
-	int  getError() const;
 	std::wstring getStdout() const;
-
 	std::wstring getStderr() const;
 	bool getTimedOut() const;
 	int  getUserId() const;
@@ -60,7 +58,6 @@ private:
 								// which is the command being run. 0 if exited
 	int 			exitCode_;	// exit code from command
 	bool 			success_;	// executed successfully
-	int 			error_;		// system error code
 	std::wstring 	stdout_;	// stdout capture
 	std::wstring 	stderr_;
 	bool 			timedOut_;	// true if command timedout
@@ -119,8 +116,6 @@ public:
 			void *userData = nullptr,
 			const int timeoutms = -1);
 
-	static DWORD WINAPI shell_(void *pdata);
-
 	// data passed to pthread function via pointer
 	struct ShellThreadData
 	{
@@ -145,11 +140,16 @@ public:
 
 private:
 
-
+#ifdef WINDOWS_BUILD
+	static bool shellWin_(ShellThreadData& data);
+	static DWORD WINAPI shellWinThread1_(void* pdata);
+	static DWORD WINAPI shellWinThread2_(void* pdata);
+#elif LINUX_BUILD
 	static void *shellThreadWait(void *ptr);
 	static void *shellThreadWaitGui(void *ptr);
 	static bool shellStart(ShellThreadData &data);
 	static bool shellWait(ShellThreadData &data);
+#endif
 };
 
 

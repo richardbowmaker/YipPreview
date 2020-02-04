@@ -96,7 +96,9 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
 	wxBoxSizer* txt1sizer = new wxBoxSizer(wxVERTICAL);
 	Logger* lb1 = new Logger(pnl1, wxID_ANY);
 	Logger::setLevel(Logger::Info);
+	Logger::enableTime(true);
 	Logger::enableLineCount(true);
+	Logger::enableIdeOutput(true);
 	lb1->SetMinSize(wxSize(800, 500));
 	txt1sizer->Add(lb1, 1, wxEXPAND, 0);
 	pnl1->SetSizer(txt1sizer);
@@ -150,9 +152,7 @@ void MyFrame::OnHello(wxCommandEvent& event)
 
 void MyFrame::OnTryOut(wxCommandEvent& event)
 {
-	TryOut::ExecIt();
-
-//	TryOut::AsyncShell(GetEventHandler());
+	TryOut::AsyncShell(GetEventHandler());
 //	TryOut::WorkerThread();
 //	TryOut::ExecIt();
 
@@ -180,22 +180,19 @@ void MyFrame::OnLogger(wxLoggerEvent& event)
 
 void MyFrame::OnShellExecute1(wxShellExecuteResult& event)
 {
-	Logger::info(L"Shell execute notify via GUI thread 1");
-	Logger::info(event.getResult().toString().c_str());
+	Logger::info(L"Shell execute notify via GUI thread 1\n%ls", event.getResult().toString().c_str());
 	event.Skip();
 }
 
 void MyFrame::OnShellExecute2(wxShellExecuteResult& event)
 {
-	Logger::info(L"Shell execute notify via GUI thread 2");
-	Logger::info(event.getResult().toString().c_str());
+	Logger::info(L"Shell execute notify via GUI thread 2\n%ls", event.getResult().toString().c_str());
 	event.Skip();
 }
 
 void MyFrame::OnShellExecuteAny(wxShellExecuteResult& event)
 {
-	Logger::info(L"Shell execute notify via GUI thread any");
-	Logger::info(event.getResult().toString().c_str());
+	Logger::info(L"Shell execute notify via GUI thread any\n%ls", event.getResult().toString().c_str());
 	event.Skip();
 }
 

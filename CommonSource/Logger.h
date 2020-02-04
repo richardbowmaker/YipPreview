@@ -30,8 +30,10 @@ public:
 	//virtual ~Logger();
 
 
-	static void setLevel(LevelT level);
+	static void setLevel(const LevelT level);
 	static LevelT getLevel();
+	static void enableIdeOutput(const bool enable);
+	static void enableTime(const bool enable);
 	static void enableLineCount(const bool enable);
 
 	static void clear();
@@ -55,13 +57,16 @@ private:
 	void OnLogger(wxLoggerEvent& event);
 
 	static void log(const LevelT level, const wchar_t* format, va_list vl);
-	static void append(const wchar_t* text);
+	static void append(const LevelT level, const wchar_t* text);
 
 	static LevelT level_;
 	static Logger* this_;
 	static long tid_;		// main GUI thread ID
-	static long count_;
+	static long lineNo_;
 	static bool lcEnable_;
+	static bool ideOut_;
+	static long tzero_;
+	static bool showTime_;
 
 	wxDECLARE_DYNAMIC_CLASS(Logger);
 	wxDECLARE_EVENT_TABLE();
@@ -78,14 +83,14 @@ public:
 
 	virtual wxEvent *Clone() const;
 
-	int getLevel() const;
-	void setLevel(int level);
+	Logger::LevelT getLevel() const;
+	void setLevel(const Logger::LevelT level);
 
 	DECLARE_DYNAMIC_CLASS(wxLoggerEvent)
 
 private:
 
-	int level_;
+	Logger::LevelT level_;
 };
 
 

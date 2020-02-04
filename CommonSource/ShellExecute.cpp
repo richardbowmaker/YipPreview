@@ -61,10 +61,202 @@ ShellExecute::~ShellExecute()
 {
 }
 
-DWORD WINAPI ShellExecute::shell_(void *pdata)
+
+// shell
+bool ShellExecute::shell(const std::wstring &cmd)
 {
 #ifdef WINDOWS_BUILD
+	return false;
+#elif LINUX_BUILD
 
+	ShellThreadData data;
+	data.result_.cmd_ = cmd;
+	if (shellStart(data))
+	{
+		fclose(data.fpStdout_);
+		fclose(data.fpStderr_);
+		return true;
+	}
+	else
+		return false;
+#endif
+}
+
+// Synchronous shell execute
+bool ShellExecute::shellSync(
+		const std::wstring &cmd,
+		const int timeoutms /*= -1*/)
+{
+	ShellThreadData data;
+	data.result_.cmd_ = cmd;
+	data.timeoutms_ = timeoutms;
+#ifdef WINDOWS_BUILD
+	return shellWin_(data);
+#elif LINUX_BUILD
+	if (!shellStart(data)) return false;
+	return shellWait(data);
+#endif
+}
+
+// Synchronous shell execute that returns the result data
+bool ShellExecute::shellSync(
+	const std::wstring& cmd,
+	ShellExecuteResult& result,
+	const int timeoutms /*= -1 */)
+{
+	ShellThreadData data;
+	data.result_.cmd_ = cmd;
+	data.timeoutms_ = timeoutms;
+	bool res;
+#ifdef WINDOWS_BUILD
+	res = shellWin_(data);
+#elif LINUX_BUILD
+	if (!shellStart(data)) return false;
+	res = shellWait(data);
+#endif
+	result = std::move(data.result_);
+	return res;
+}
+
+// Asynch shell execute, notification is via user supplied handler on worker thread
+bool ShellExecute::shellAsync(
+	const std::wstring& cmd,
+	ShellExecuteEventHandlerPtr handler,
+	const int userId,
+	void* userData,
+	const int timeoutms)
+{
+	ShellThreadData *data = new ShellThreadData;
+	data->result_.cmd_ = cmd;
+	data->result_.userId_ = userId;
+	data->result_.userData_ = userData;
+	data->timeoutms_ = timeoutms;
+	data->handler_ = handler;
+
+#ifdef WINDOWS_BUILD
+	DWORD tid;
+	HANDLE hThread = CreateThread(
+		NULL,
+		0,
+		&ShellExecute::shellWinThread2_,
+		reinterpret_cast<void*>(data),
+		0,
+		&tid);
+	return true;
+#elif LINUX_BUILD	
+	if (!shellStart(*data)) return false;
+	pthread_t thread_;
+	if (pthread_create(&thread_, NULL, &ShellExecute::shellThreadWait, (void*)data) != 0)
+	{
+		Logger::systemError(errno, L"Error creating thread");
+		delete data;
+		return false;
+	}
+
+	// allow client to continue
+	return true;
+#endif
+}
+
+// Asynch shell execute, notification is via wxWidgets event handler on GUI thread
+bool ShellExecute::shellAsyncGui(
+	const std::wstring& cmd,
+	wxEvtHandler* wxHandler,
+	const int wxid,
+	const int userId,
+	void* userData,
+	const int timeoutms)
+{
+	ShellThreadData* data = new ShellThreadData;
+	data->result_.cmd_ = cmd;
+	data->result_.userId_ = userId;
+	data->result_.userData_ = userData;
+	data->timeoutms_ = timeoutms;
+	data->wxHandler_ = wxHandler;
+	data->wxid_ = wxid;
+
+#ifdef WINDOWS_BUILD
+	DWORD tid;
+	HANDLE hThread = CreateThread(
+		NULL,
+		0,
+		&ShellExecute::shellWinThread2_,
+		reinterpret_cast<void*>(data),
+		0,
+		&tid);
+	return true;
+#elif LINUX_BUILD	
+	if (!shellStart(*data)) return false;
+	pthread_t thread_;
+	if (pthread_create(&thread_, NULL, &ShellExecute::shellThreadWaitGui, (void*)data) != 0)
+	{
+		Logger::systemError(errno, L"Error creating thread");
+		delete data;
+		return false;
+	}
+	// allow client to continue
+	return true;
+#endif
+}
+
+#ifdef WINDOWS_BUILD
+bool ShellExecute::shellWin_(ShellThreadData& data)
+{
+	data.completed_ = CreateEvent(NULL, FALSE, FALSE, NULL);
+	if (data.completed_ == NULL)
+	{
+		Logger::systemError(GetLastError(), L"CreateEvent");
+		data.result_.success_ = false;
+		return false;
+	}
+
+	// start worker thread that executes the shell
+	DWORD tid;
+	HANDLE hThread = CreateThread(
+		NULL, 
+		0, 
+		&ShellExecute::shellWinThread1_,
+		reinterpret_cast<void *>(&data), 
+		0, 
+		&tid);
+
+	// wait for completion
+	DWORD res = WaitForSingleObject(
+		data.completed_, 
+		data.timeoutms_ == -1 ? INFINITE : data.timeoutms_);
+
+	if (res == WAIT_OBJECT_0)
+	{
+		CloseHandle(data.completed_);
+	}
+	else if (res == WAIT_TIMEOUT)
+	{
+		Logger::error(L"WaitForSingleObject timedout");
+		data.result_.timedOut_ = true;
+		data.result_.success_ = false;
+	}
+	else
+	{
+		Logger::systemError(GetLastError(), L"WaitForSingleObject");
+		data.result_.success_ = false;
+	}
+
+	// notify client
+	if (data.handler_ != nullptr)
+		data.handler_(data.result_);
+
+	// notify GUI
+	if (data.wxHandler_ != nullptr)
+	{
+		wxShellExecuteResult evt(data.result_, data.wxid_);
+		data.wxHandler_->AddPendingEvent(evt);
+	}
+
+	return data.result_.success_;
+}
+
+DWORD WINAPI ShellExecute::shellWinThread1_(void* pdata)
+{
 	ShellExecute::ShellThreadData& data = *reinterpret_cast<ShellExecute::ShellThreadData*>(pdata);
 
 	HANDLE hStdOutRd = NULL;
@@ -151,6 +343,8 @@ DWORD WINAPI ShellExecute::shell_(void *pdata)
 		Logger::systemError(GetLastError(), L"Error CreateProcess");
 		CloseHandle(hStdOutRd);
 		CloseHandle(hStdOutWr);
+		CloseHandle(hStdErrRd);
+		CloseHandle(hStdErrWr);
 		data.result_.success_ = false;
 		SetEvent(data.completed_);
 		return false;
@@ -171,10 +365,7 @@ DWORD WINAPI ShellExecute::shell_(void *pdata)
 		if (ReadFile(hStdOutRd, chBuf, BUFSIZE, &dwRead, NULL))
 		{
 			if (dwRead > 0)
-			{
-				std::wstring s(SU::strToWStr(chBuf, dwRead));
-				data.result_.stdout_ += s;
-			}
+				data.result_.stdout_ += SU::strToWStr(chBuf, dwRead);
 		}
 		else
 		{
@@ -194,6 +385,9 @@ DWORD WINAPI ShellExecute::shell_(void *pdata)
 		}
 	}
 
+	CloseHandle(hStdOutRd);
+	CloseHandle(hStdErrRd);
+
 	// get exit code
 	DWORD ec = 0;
 	GetExitCodeProcess(piProcInfo.hProcess, &ec);
@@ -206,182 +400,23 @@ DWORD WINAPI ShellExecute::shell_(void *pdata)
 	data.result_.success_ = ec == 0;
 	SetEvent(data.completed_);
 	return ec == 0;
-
-#elif LINUX_BUILD
-#endif
-
 }
 
-// shell
-bool ShellExecute::shell(const std::wstring &cmd)
+DWORD WINAPI ShellExecute::shellWinThread2_(void* pdata)
 {
-#ifdef WINDOWS_BUILD
-	return false;
-#elif LINUX_BUILD
+	ShellThreadData& data = *reinterpret_cast<ShellThreadData*>(pdata);
+	bool res = shellWin_(data);
 
-	ShellThreadData data;
-	data.result_.cmd_ = cmd;
-	if (shellStart(data))
-	{
-		fclose(data.fpStdout_);
-		fclose(data.fpStderr_);
-		return true;
-	}
+	if (!data.result_.timedOut_)
+		delete &data;
 	else
-		return false;
-#endif
+		// data cannot be deleted as child process is still running
+		Logger::warning(L"CreateProcess timedout, memory leak %ls", data.result_.cmd_.c_str());
+
+	return data.result_.success_ ? TRUE : FALSE;
 }
-
-// Synchronous shell execute
-bool ShellExecute::shellSync(
-		const std::wstring &cmd,
-		const int timeoutms /*= -1*/)
-{
-	ShellThreadData data;
-	data.result_.cmd_ = cmd;
-	data.timeoutms_   = timeoutms;
-
-	if (!shellStart(data)) return false;
-	return shellWait(data);
-}
-
-// Synchronous shell execute that returns the result data
-bool ShellExecute::shellSync(
-		const std::wstring &cmd,
-		ShellExecuteResult &result,
-		const int timeoutms /*= -1 */)
-{
-#ifdef WINDOWS_BUILD
-	ShellThreadData *data = new ShellThreadData();
-	data->result_.cmd_ = cmd;
-	data->timeoutms_ = timeoutms;
-
-	data->completed_ = CreateEvent(NULL, FALSE, FALSE, NULL);
-	if (data->completed_ == NULL)
-	{
-		Logger::systemError(GetLastError(), L"CreateEvent");
-		result.success_ = false;
-		return false;
-	}
-
-	// start worker thread that executes the shell
-	DWORD tid;
-	HANDLE hThread = CreateThread(
-		NULL, 
-		0, 
-		&ShellExecute::shell_, 
-		reinterpret_cast<void *>(data), 
-		0, 
-		&tid);
-
-	// wait for completion
-	DWORD res = WaitForSingleObject(data->completed_, timeoutms == -1 ? INFINITE : timeoutms);
-
-	if (res == WAIT_OBJECT_0)
-	{
-		result = data->result_;
-		CloseHandle(data->completed_);
-		delete data;
-		return true;
-	}
-	else if (res == WAIT_TIMEOUT)
-	{
-		Logger::error(L"WaitForSingleObject timedout");
-		data->result_.timedOut_ = true;
-		data->result_.success_ = false;
-		result = data->result_;
-		//  memory leak, cannot delete data as worker thread may still be use it
-		// e.g. if the timeout is set too short
-		Logger::warning(L"Memory leak! ShellExecute::shellSync()");
-		return false;
-	}
-	else
-	{
-		Logger::systemError(GetLastError(), L"WaitForSingleObject");
-		data->result_.success_ = false;
-		result = data->result_;
-		//  memory leak, cannot delete data as worker thread may still be use it
-		Logger::warning(L"Memory leak! ShellExecute::shellSync()");
-		return false;
-	}
 
 #elif LINUX_BUILD
-	ShellThreadData data;
-	data.result_.cmd_ = cmd;
-	data.timeoutms_ = timeoutms;
-
-	if (!shellStart(data)) return false;
-	bool res = shellWait(data);
-	result = std::move(data.result_);
-	return res;
-#endif
-}
-
-// Asynch shell execute, notification is via user supplied handler on worker thread
-bool ShellExecute::shellAsync(
-		const std::wstring &cmd,
-		ShellExecuteEventHandlerPtr handler,
-		const int userId,
-		void* userData,
-		const int timeoutms)
-{
-#ifdef WINDOWS_BUILD
-	return true;
-#elif LINUX_BUILD	ShellThreadData* data = new ShellThreadData;
-	data->result_.cmd_ 	    = cmd;
-	data->result_.userId_   = userId;
-	data->result_.userData_ = userData;
-	data->timeoutms_        = timeoutms;
-	data->handler_ 			= handler;
-
-	if (!shellStart(*data)) return false;
-
-	pthread_t thread_;
-	if (pthread_create(&thread_, NULL, &ShellExecute::shellThreadWait, (void*)data) != 0)
-	{
-		Logger::systemError(errno, L"Error creating thread");
-		delete data;
-		return false;
-	}
-
-	// allow client to continue
-	return true;
-#endif
-}
-
-// Asynch shell execute, notification is via wxWidgets event handler on GUI thread
-bool ShellExecute::shellAsyncGui(
-		const std::wstring &cmd,
-		wxEvtHandler *wxHandler,
-		const int wxid,
-		const int userId,
-		void *userData,
-		const int timeoutms)
-{
-#ifdef WINDOWS_BUILD
-	return true;
-#elif LINUX_BUILD	ShellThreadData* data = new ShellThreadData;
-	data->result_.cmd_ 	    = cmd;
-	data->result_.userId_   = userId;
-	data->result_.userData_ = userData;
-	data->timeoutms_        = timeoutms;
-	data->wxHandler_ 		= wxHandler;
-	data->wxid_ 		    = wxid;
-
-	if (!shellStart(*data)) return false;
-
-	pthread_t thread_;
-	if (pthread_create(&thread_, NULL, &ShellExecute::shellThreadWaitGui, (void*)data) != 0)
-	{
-		Logger::systemError(errno, L"Error creating thread");
-		delete data;
-		return false;
-	}
-
-	// allow client to continue
-	return true;
-#endif
-}
 
 //-----------------------------------------------------------
 
@@ -397,6 +432,7 @@ void *ShellExecute::shellThreadWait(void *ptr)
 	if (data->handler_ != nullptr)
 		data->handler_(data->result_);
 	delete data;
+	return 0;
 }
 
 void *ShellExecute::shellThreadWaitGui(void *ptr)
@@ -414,13 +450,11 @@ void *ShellExecute::shellThreadWaitGui(void *ptr)
 		data->wxHandler_->AddPendingEvent(evt);
 	}
 	delete data;
+	return 0;
 }
 
 bool ShellExecute::shellStart(ShellThreadData &data)
 {
-#ifdef WINDOWS_BUILD
-	return true;
-#elif LINUX_BUILD
 	pid_t pid;
 	constexpr int kFdRead = 0;
 	constexpr int kFdWrite = 1;
@@ -430,21 +464,18 @@ bool ShellExecute::shellStart(ShellThreadData &data)
 	if (pipe(fdStdout) == -1)
 	{
 	    Logger::systemError(errno, L"Error creating stdout pipe");
-	    data.result_.error_ = errno;
 	    return false;
 	}
 
 	if (pipe(fdStderr) == -1)
 	{
 	    Logger::systemError(errno, L"Error creating stderr pipe");
-	    data.result_.error_ = errno;
 	    return false;
 	}
 
 	if((pid = fork()) == -1)
 	{
 	    Logger::systemError(errno, L"Error forking process");
-	    data.result_.error_ = errno;
 	    data.result_.success_ = false;
 	    return false;
 	}
@@ -480,14 +511,10 @@ bool ShellExecute::shellStart(ShellThreadData &data)
 	fcntl(fdStderr[kFdRead], F_SETFL, flags | O_NONBLOCK);
 
 	return true;
-#endif
 }
 
 bool ShellExecute::shellWait(ShellThreadData &data)
 {
-#ifdef WINDOWS_BUILD
-	return true;
-#elif LINUX_BUILD
 	char buff[100000];
 
 	int rerr;
@@ -512,7 +539,6 @@ bool ShellExecute::shellWait(ShellThreadData &data)
 				fclose(data.fpStdout_);
 				fclose(data.fpStderr_);
 				Logger::systemError(errno, L"File stdout read error");
-				data.result_.error_   = errno;
 				data.result_.success_ = false;
 				return false;
 			}
@@ -536,7 +562,6 @@ bool ShellExecute::shellWait(ShellThreadData &data)
 				fclose(data.fpStdout_);
 				fclose(data.fpStderr_);
 				Logger::systemError(errno, L"File stderr read error");
-				data.result_.error_   = errno;
 				data.result_.success_ = false;
 				return false;
 			}
@@ -574,7 +599,6 @@ bool ShellExecute::shellWait(ShellThreadData &data)
 		if (errno != EINTR)
 		{
 			Logger::systemError(errno, L"Error closing pipe");
-			data.result_.error_ = errno;
 			data.result_.success_ = false;
 			return false;
 		}
@@ -588,8 +612,9 @@ bool ShellExecute::shellWait(ShellThreadData &data)
 	data.result_.exitCode_ 	= exit;
 	data.result_.success_ 	= exit == 0;
 	return data.result_.success_;
-#endif
 }
+
+#endif
 
 ShellExecute::ShellThreadData::ShellThreadData() :
 #ifdef WINDOWS_BUILD
@@ -645,7 +670,6 @@ ShellExecuteResult::ShellExecuteResult() :
 	pid_	 (0),
 	exitCode_(0),
 	success_ (false),
-	error_	 (0),
 	timedOut_(0),
 	userId_	 (0),
 	userData_(nullptr)
@@ -666,7 +690,6 @@ ShellExecuteResult::ShellExecuteResult(ShellExecuteResult &&other) :
 	pid_	 (std::exchange(other.pid_, 0)),
 	exitCode_(std::exchange(other.exitCode_, 0)),
 	success_ (std::exchange(other.success_, false)),
-	error_	 (std::exchange(other.error_, 0)),
 	stderr_	 (std::move(other.stderr_)),
 	stdout_	 (std::move(other.stdout_)),
 	timedOut_(std::exchange(other.timedOut_, 0)),
@@ -683,7 +706,6 @@ void ShellExecuteResult::clear()
 	pid_ 		= 0;
 	exitCode_ 	= 0;
 	success_ 	= false;
-	error_ 		= 0;
 	timedOut_ 	= false;
 	userId_ 	= 0;
 	userData_ 	= nullptr;
@@ -697,7 +719,6 @@ ShellExecuteResult& ShellExecuteResult::operator=(const ShellExecuteResult &othe
 		pid_ 		= other.pid_;
 		exitCode_	= other.exitCode_;
 		success_	= other.success_;
-		error_ 		= other.error_;
 		stdout_ 	= other.stdout_;
 		stderr_ 	= other.stderr_;
 		timedOut_	= other.timedOut_;
@@ -715,7 +736,6 @@ ShellExecuteResult& ShellExecuteResult::operator=(ShellExecuteResult &&other)
 		pid_ 		= other.pid_;
 		exitCode_	= other.exitCode_;
 		success_	= other.success_;
-		error_ 		= other.error_;
 		stdout_ 	= other.stdout_;
 		stderr_ 	= other.stderr_;
 		timedOut_	= other.timedOut_;
@@ -744,11 +764,6 @@ int ShellExecuteResult::getExitCode() const
 bool ShellExecuteResult::getSuccess() const
 {
 	return success_;
-}
-
-int ShellExecuteResult::getError() const
-{
-	return error_;
 }
 
 std::wstring ShellExecuteResult::getStdout() const
@@ -780,13 +795,12 @@ std::wstring ShellExecuteResult::toString() const
 {
 	wchar_t buf[4000];
 	swprintf(buf, sizeof(buf) / sizeof(wchar_t),
-			L"Shell result:\ncommand: %ls\n%ls, id %d, pid: %d, exit code: %d, error: %d%ls\nstdout:\n%ls\nstderr:\n%ls",
+			L"Shell result:\ncommand: %ls\n%ls, id %d, pid: %d, exit code: %d, %ls\nstdout:\n%ls\nstderr:\n%ls",
 			cmd_.c_str(),
 			(success_ ? L"Success" : L"Fail"),
 			userId_,
 			pid_,
 			exitCode_,
-			error_,
 			(timedOut_ ? L", TimedOut" : L""),
 			stdout_.c_str(),
 			stderr_.c_str());

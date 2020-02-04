@@ -7,7 +7,7 @@
 
 int main()
 {
-	for (int i = 0; i < 5; ++i)
+	for (int i = 0; i < 20; ++i)
 	{
 		std::this_thread::sleep_for(std::chrono::milliseconds(500));
 		std::cout << "Stdout: " << i << std::endl;
