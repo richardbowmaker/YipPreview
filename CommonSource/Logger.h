@@ -60,7 +60,7 @@ private:
 	static void append(const LevelT level, const wchar_t* text);
 
 	static LevelT level_;
-	static Logger* this_;
+	static Logger* lbox_;
 	static long tid_;		// main GUI thread ID
 	static long lineNo_;
 	static bool lcEnable_;

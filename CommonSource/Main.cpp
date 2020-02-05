@@ -29,6 +29,7 @@
 #include "Tryout.h"
 #include "Utilities.h"
 #include "ShellExecute.h"
+#include "ImagePanel.h"
 
 
 enum
@@ -66,6 +67,7 @@ bool MyApp::OnInit()
     return true;
 }
 
+
 MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
         : wxFrame(NULL, wxID_ANY, title, pos, size)
 {
@@ -84,39 +86,69 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
     SetMenuBar( menuBar );
     CreateStatusBar();
 
+	// the main frame sizer
+	wxBoxSizer* sizerMain = new wxBoxSizer(wxVERTICAL);
 
-	wxBoxSizer* sizermain = new wxBoxSizer(wxVERTICAL);
-	wxSplitterWindow* splittermain = new wxSplitterWindow(this, wxID_ANY);
-	splittermain->SetSashGravity(0.5);
-	splittermain->SetMinimumPaneSize(20); // Smalest size the
-	sizermain->Add(splittermain, 1, wxEXPAND, 0);
+	// create the vertical splitter and add to sizer
+	wxSplitterWindow* splitterVertical = new wxSplitterWindow(this, wxID_ANY);
+	splitterVertical->SetSashGravity(0.5);
+	splitterVertical->SetMinimumPaneSize(20); // Smallest size the
+	sizerMain->Add(splitterVertical, 1, wxEXPAND, 0);
 
-	wxPanel* pnl1 = new wxPanel(splittermain, wxID_ANY);
+	// create lh horizontal splitter
+	wxPanel* pnlLh = new wxPanel(splitterVertical, wxID_ANY);
 
-	wxBoxSizer* txt1sizer = new wxBoxSizer(wxVERTICAL);
-	Logger* lb1 = new Logger(pnl1, wxID_ANY);
+	wxSplitterWindow* splitterHorizontal = new wxSplitterWindow(pnlLh, wxID_ANY);
+	splitterHorizontal->SetSashGravity(0.5);
+	splitterHorizontal->SetMinimumPaneSize(20); // Smallest size the
+
+	wxBoxSizer* sizerLh = new wxBoxSizer(wxVERTICAL);
+	sizerLh->Add(splitterHorizontal, 1, wxEXPAND, 0);
+	pnlLh->SetSizer(sizerLh);
+
+	// create a top panel
+	wxPanel* pnlTop = new wxPanel(splitterHorizontal, wxID_ANY);
+	wxBoxSizer* sizerTop = new wxBoxSizer(wxVERTICAL);
+//	sizerTop->Add(pnlTop, 1, wxEXPAND, 0);
+	pnlTop->SetSizer(sizerTop);
+
+	// create a bottom panel with logger
+	wxPanel* pnlBot = new wxPanel(splitterHorizontal, wxID_ANY);
+	wxBoxSizer* sizerBot = new wxBoxSizer(wxVERTICAL);
+
+	Logger* lb1 = new Logger(pnlBot, wxID_ANY);
 	Logger::setLevel(Logger::Info);
 	Logger::enableTime(true);
 	Logger::enableLineCount(true);
 	Logger::enableIdeOutput(true);
 	lb1->SetMinSize(wxSize(800, 500));
-	txt1sizer->Add(lb1, 1, wxEXPAND, 0);
-	pnl1->SetSizer(txt1sizer);
 
-	wxPanel* pnl2 = new wxPanel(splittermain, wxID_ANY);
+	sizerBot->Add(lb1, 1, wxEXPAND, 0);
+	pnlBot->SetSizer(sizerBot);
 
-	wxBoxSizer* txt2sizer = new wxBoxSizer(wxVERTICAL);
-	wxListBox* lb2 = new wxListBox(pnl2, wxID_ANY);
-	txt2sizer->Add(lb2, 1, wxEXPAND, 0);
-	pnl2->SetSizer(txt2sizer);
+	// added panels to horizontal splitter
+	splitterHorizontal->SplitHorizontally(pnlTop, pnlBot);
 
-	splittermain->SplitVertically(pnl1, pnl2);
+	// create the RH pane, which is an image viewer
+	wxPanel* pnlRh = new wxPanel(splitterVertical, wxID_ANY);
+	ImagePanel* pnlIm = new ImagePanel(
+			pnlRh,
+			LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/a01.jpg)",
+			wxBITMAP_TYPE_JPEG);
 
-	this->SetSizer(sizermain);
-	sizermain->SetSizeHints(this);
+	wxBoxSizer* sizerRh = new wxBoxSizer(wxVERTICAL);
+	sizerRh->Add(pnlIm, 1, wxEXPAND, 0);
+	pnlRh->SetSizer(sizerRh);
+
+	// added panels to horizontal splitter
+	splitterVertical->SplitVertically(pnlLh, pnlRh);
+
+	this->SetSizer(sizerMain);
+	sizerMain->SetSizeHints(this);
+
+	this->SetClientSize(wxSize(1200, 800));
 
 	Logger::info(L"PID %d", (int)Utilities::getProcessId());
-
 
 	FILE* fp = std::fopen("test.txt", "r");
 #ifdef WINDOWS_BUILD
@@ -133,6 +165,8 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
 #endif
 
 }
+
+
 
 void MyFrame::OnExit(wxCommandEvent& event)
 {
@@ -152,6 +186,7 @@ void MyFrame::OnHello(wxCommandEvent& event)
 
 void MyFrame::OnTryOut(wxCommandEvent& event)
 {
+
 	TryOut::AsyncShell(GetEventHandler());
 //	TryOut::WorkerThread();
 //	TryOut::ExecIt();

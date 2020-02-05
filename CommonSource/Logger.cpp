@@ -5,13 +5,14 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <string>
+#include <wx/wx.h>
 
 #include "Events.h"
 #include "Utilities.h"
 
 // static members
 Logger::LevelT Logger::level_ = Logger::Error;
-Logger* Logger::this_	= nullptr;
+Logger* Logger::lbox_	= nullptr;
 long Logger::tid_		= 0;
 long Logger::lineNo_	= 0;
 bool Logger::lcEnable_	= false;
@@ -27,10 +28,10 @@ Logger::Logger() : wxListBox()
 }
 
 Logger::Logger(wxWindow* parent, wxWindowID id) :
-	wxListBox (parent, id)
+	wxListBox(parent, id, wxDefaultPosition, wxDefaultSize, 0, nullptr, wxLB_SINGLE)
 {
 	tid_ = Utilities::getThreadId();
-	this_ = this;
+	lbox_ = this;
 }
 
 wxIMPLEMENT_DYNAMIC_CLASS(Logger, wxListBox);
@@ -62,7 +63,7 @@ void Logger::enableTime(const bool enable)
 }
 void Logger::clear()
 {
-	this_->Clear();
+	lbox_->Clear();
 }
 
 void Logger::enableLineCount(const bool enable)
@@ -72,12 +73,9 @@ void Logger::enableLineCount(const bool enable)
 
 void Logger::append(const LevelT level, const wchar_t* text)
 {
-	if (this_ == nullptr) return;
-
 	wchar_t buf[kBufferMax];
 
-
-	// first call to set ticks at time zero
+	// first call, set ticks at time zero
 	long t = Utilities::getMsCounter();
 	if (tzero_ == 0) tzero_ = t;
 
@@ -116,6 +114,8 @@ void Logger::append(const LevelT level, const wchar_t* text)
 #endif
 	}
 
+	if (lbox_ == nullptr) return;
+
 	if (tid_ == Utilities::getThreadId())
 	{
 		// in GUI thread, so update list box
@@ -151,30 +151,26 @@ void Logger::append(const LevelT level, const wchar_t* text)
 			swprintf(&buf[n], (sizeof(buf) / sizeof(wchar_t)) - n, L"%ls", temp.c_str());
 
 			// add to list box
-			this_->Append(buf);
-			this_->Update();
+			lbox_->Append(buf);
+			lbox_->Update();
 		}
 
 		// limit the number of messages displayed
-		while (this_->GetCount() > kMaxLines)
-			this_->Delete(0);
+		while (lbox_->GetCount() > kMaxLines)
+			lbox_->Delete(0);
 
-		// auto scroll so that list item is always displayed
-		int bitem = this_->HitTest(wxPoint(0, this_->GetClientSize().GetHeight() - 1));
-		if (bitem != -1)
-		{
-			int titem = this_->HitTest(wxPoint(0, 0));
-			int lc = this_->GetCount();
-			if (lc > bitem) this_->SetFirstItem(lc - (bitem - titem));
-		}
+		// make last line visible
+		lbox_->SetSelection(lbox_->GetCount() - 1);
+		lbox_->Deselect(lbox_->GetCount() - 1);
+		lbox_->Update();
 	}
 	else
 	{
 		// post event to GUI thread
 		wxLoggerEvent evt;
 		evt.SetString(wxString(text));
-		evt.SetEventObject(this_);
-		this_->GetEventHandler()->AddPendingEvent(evt);
+		evt.SetEventObject(lbox_);
+		lbox_->GetEventHandler()->AddPendingEvent(evt);
 	}
 }
 
