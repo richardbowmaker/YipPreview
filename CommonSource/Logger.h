@@ -6,6 +6,7 @@
 #include <wx/wx.h>
 
 #include "Events.h"
+#include "Utilities.h"
 
 // This class is a hybrid wxListBox control and static class for providing
 // thread safe global static logging functions.
@@ -42,6 +43,9 @@ public:
 	static void error(const wchar_t* format, ...);
 	static void warning(const wchar_t* format, ...);
 	static void info(const wchar_t* format, ...);
+	static void error(const StringsT &strings, const wchar_t* format, ...);
+	static void warning(const StringsT &strings, const wchar_t* format, ...);
+	static void info(const StringsT &strings, const wchar_t* format, ...);
 
 	//static void logSourceSystemError(const char* file, const int line, const int err, const char* format, ...); // err = errno
 	//static void logSourceError(const char* file, const int line, const char* format, ...);

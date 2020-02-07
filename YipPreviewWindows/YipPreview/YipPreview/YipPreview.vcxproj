@@ -157,6 +157,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\..\CommonSource\CThread.h" />
     <ClInclude Include="..\..\..\CommonSource\Events.h" />
+    <ClInclude Include="..\..\..\CommonSource\ImagePanel.h" />
     <ClInclude Include="..\..\..\CommonSource\Logger.h" />
     <ClInclude Include="..\..\..\CommonSource\Main.h" />
     <ClInclude Include="..\..\..\CommonSource\ShellExecute.h" />
@@ -170,6 +171,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\CommonSource\CThread.cpp" />
     <ClCompile Include="..\..\..\CommonSource\Events.cpp" />
+    <ClCompile Include="..\..\..\CommonSource\ImagePanel.cpp" />
     <ClCompile Include="..\..\..\CommonSource\Logger.cpp" />
     <ClCompile Include="..\..\..\CommonSource\Main.cpp" />
     <ClCompile Include="..\..\..\CommonSource\ShellExecute.cpp" />

@@ -57,6 +57,9 @@
     <ClInclude Include="..\..\..\CommonSource\CThread.h">
       <Filter>Common\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\CommonSource\ImagePanel.h">
+      <Filter>Common\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\CommonSource\Logger.cpp">
@@ -78,6 +81,9 @@
       <Filter>Common\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\CommonSource\CThread.cpp">
+      <Filter>Common\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\CommonSource\ImagePanel.cpp">
       <Filter>Common\Source Files</Filter>
     </ClCompile>
   </ItemGroup>

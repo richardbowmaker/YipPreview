@@ -242,6 +242,35 @@ void Logger::info(const wchar_t* format, ...)
 	}
 }
 
+void Logger::error(const StringsT &strings, const wchar_t* format, ...)
+{
+	va_list vl;
+	va_start(vl, format);
+	log(Error, format, vl);
+	for (auto s : strings) append(Error, s.c_str());
+}
+
+void Logger::warning(const StringsT &strings, const wchar_t* format, ...)
+{
+	if (level_ <= Warning)
+	{
+		va_list vl;
+		va_start(vl, format);
+		log(Warning, format, vl);
+		for (auto s : strings) append(Warning, s.c_str());
+	}
+}
+
+void Logger::info(const StringsT &strings, const wchar_t* format, ...)
+{
+	if (level_ <= Info)
+	{
+		va_list vl;
+		va_start(vl, format);
+		log(Info, format, vl);
+		for (auto s : strings) append(Info, s.c_str());
+	}
+}
 /*
 void CLogger::LogSourceSystemError(const char* file, const int line, const int err, const char* format, ...)
 {

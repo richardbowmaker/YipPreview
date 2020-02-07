@@ -62,7 +62,9 @@ wxIMPLEMENT_APP(MyApp);
 
 bool MyApp::OnInit()
 {
-    MyFrame *frame = new MyFrame( "Hello World", wxPoint(50, 50), wxSize(450, 340) );
+	wxInitAllImageHandlers();
+	
+	MyFrame *frame = new MyFrame( "Hello World", wxPoint(50, 50), wxSize(450, 340) );
     frame->Show( true );
     return true;
 }
@@ -133,7 +135,11 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
 	wxPanel* pnlRh = new wxPanel(splitterVertical, wxID_ANY);
 	ImagePanel* pnlIm = new ImagePanel(
 			pnlRh,
-			LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/a01.jpg)",
+#ifdef WINDOWS_BUILD
+		LR"(D:\Projects\WxWidgets\YipPreview\Tryout\a12.jpg)",
+#elif LINUX_BUILD
+		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/a01.jpg)",
+#endif
 			wxBITMAP_TYPE_JPEG);
 
 	wxBoxSizer* sizerRh = new wxBoxSizer(wxVERTICAL);
@@ -146,7 +152,7 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
 	this->SetSizer(sizerMain);
 	sizerMain->SetSizeHints(this);
 
-	this->SetClientSize(wxSize(1200, 800));
+	this->SetClientSize(wxSize(1000, 600));
 
 	Logger::info(L"PID %d", (int)Utilities::getProcessId());
 
@@ -186,8 +192,16 @@ void MyFrame::OnHello(wxCommandEvent& event)
 
 void MyFrame::OnTryOut(wxCommandEvent& event)
 {
+//	StringsT files;
+//	FU::FindFiles(LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout)", files);
+//	Logger::info(files, L"All files");
+//
+//	files.clear();
+//	FU::FindMatchingFiles(LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout)", files, L"a1*.jpg");
+//	Logger::info(files, L"a1*.jpg files");
+//
 
-	TryOut::AsyncShell(GetEventHandler());
+//	TryOut::AsyncShell(GetEventHandler());
 //	TryOut::WorkerThread();
 //	TryOut::ExecIt();
 

@@ -9,6 +9,9 @@
 #define COMMON_UTILITIES_H_
 
 #include <string>
+#include <vector>
+
+typedef std::vector<std::wstring> StringsT;
 
 class Utilities
 {
@@ -24,7 +27,7 @@ private:
 
 	Utilities() = default;
 	Utilities(const Utilities&) = default;
-	Utilities(const Utilities&&);
+	Utilities(Utilities&&);
 };
 
 // String Utilities
@@ -35,16 +38,69 @@ public:
 	virtual ~SU();
 
 	static std::wstring strToWStr(const char* str, int len = 0);		// string to wide string
-	static std::string wStrToStr(const wchar_t* str, int len = 0);	    // wide string to string
+	static std::string  wStrToStr(const wchar_t* str, int len = 0);	    // wide string to string
 	static std::wstring strToWStr(const std::string str);
-	static std::string wStrToStr(const std::wstring str);
+	static std::string  wStrToStr(const std::wstring str);
 
 private:
 
 	SU() = default;
 	SU(const SU&) = default;
-	SU(const SU&&);
+	SU(SU&&);
 
+};
+
+class FU
+{
+public:
+
+	virtual ~FU();
+
+	static bool FindFiles(
+			const std::wstring directory,
+			StringsT &files,
+			const bool sort = false);
+	static bool FindMatchingFiles(
+			const std::wstring directory,
+			StringsT &files,
+			const std::wstring filter,
+			const bool sort = false);
+	static bool FindFilesDirs(
+			const std::wstring directory,
+			StringsT &files,
+			StringsT &dirs,
+			const bool sort = false);
+	static bool FindMatchingFilesDirs(
+			const std::wstring directory,
+			StringsT &files,
+			const std::wstring filter,
+			StringsT &dirs,
+			const bool sort = false);
+	static bool FindMatchingFilesRex(
+			const std::wstring directory,
+			StringsT &files,
+			const std::wstring regex,
+			const bool sort = false);
+	static bool FindMatchingFilesDirsRex(
+			const std::wstring directory,
+			StringsT &files,
+			const std::wstring regex,
+			StringsT &dirs,
+			const bool sort = false);
+
+private:
+
+	FU() = default;
+	FU(const FU&) = default;
+	FU(FU&&);
+
+	static bool FindFiles(
+			const std::wstring directory,
+			StringsT *files,
+			const std::wstring *filter,
+			const std::wstring *regex,
+			StringsT *dirs,
+			const bool sort);
 };
 
 #endif /* COMMON_UTILITIES_H_ */
