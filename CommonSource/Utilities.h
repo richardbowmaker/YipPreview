@@ -56,32 +56,36 @@ public:
 
 	virtual ~FU();
 
-	static bool FindFiles(
+	static bool deleteFile(const std::wstring file);
+	static bool fileExists(const std::wstring file);
+	static bool copyFile(const std::wstring src, const std::wstring dest, const bool overwrite = true);
+	static bool moveFile(const std::wstring src, const std::wstring dest, const bool overwrite = true);
+	static bool findFiles(
 			const std::wstring directory,
 			StringsT &files,
 			const bool sort = false);
-	static bool FindMatchingFiles(
+	static bool findMatchingFiles(
 			const std::wstring directory,
 			StringsT &files,
 			const std::wstring filter,
 			const bool sort = false);
-	static bool FindFilesDirs(
+	static bool findFilesDirs(
 			const std::wstring directory,
 			StringsT &files,
 			StringsT &dirs,
 			const bool sort = false);
-	static bool FindMatchingFilesDirs(
+	static bool findMatchingFilesDirs(
 			const std::wstring directory,
 			StringsT &files,
 			const std::wstring filter,
 			StringsT &dirs,
 			const bool sort = false);
-	static bool FindMatchingFilesRex(
+	static bool findMatchingFilesRex(
 			const std::wstring directory,
 			StringsT &files,
 			const std::wstring regex,
 			const bool sort = false);
-	static bool FindMatchingFilesDirsRex(
+	static bool findMatchingFilesDirsRex(
 			const std::wstring directory,
 			StringsT &files,
 			const std::wstring regex,
@@ -94,7 +98,7 @@ private:
 	FU(const FU&) = default;
 	FU(FU&&);
 
-	static bool FindFiles(
+	static bool findFiles(
 			const std::wstring directory,
 			StringsT *files,
 			const std::wstring *filter,

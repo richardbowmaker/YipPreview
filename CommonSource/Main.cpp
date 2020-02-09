@@ -192,6 +192,55 @@ void MyFrame::OnHello(wxCommandEvent& event)
 
 void MyFrame::OnTryOut(wxCommandEvent& event)
 {
+	bool b;
+	b = FU::moveFile(
+		LR"(D:\Projects\WxWidgets\YipPreview\Tryout\a01.jpg)",
+		LR"(D:\Projects\WxWidgets\YipPreview\Tryout1\a01.jpg)");
+	b = FU::moveFile(
+		LR"(D:\Projects\WxWidgets\YipPreview\Tryout\a01.jpg)",
+		LR"(D:\Projects\WxWidgets\YipPreview\Tryout1\a01.jpg)", false);
+	b = FU::moveFile(
+		LR"(D:\Projects\WxWidgets\YipPreview\Tryout\a01.jpg)",
+		LR"(D:\Projects\WxWidgets\YipPreview\Tryout1\a01.jpg)");
+	b = FU::moveFile(
+		LR"(D:\Projects\WxWidgets\YipPreview\Tryout\a03.jpg)",
+		LR"(D:\Projects\WxWidgets\YipPreview\Tryout1\a01.jpg)");
+	b = FU::moveFile(
+		LR"(D:\Projects\WxWidgets\YipPreview\Tryout\a03.jpg)",
+		LR"(D:\Projects\WxWidgets\YipPreview\Tryout2\a03.jpg)");
+	//b = FU::deleteFile(LR"(D:\IMAG0036_Copy.jpg)");
+	//b = FU::deleteFile(LR"(D:\IMAG0036_Copy.jpg)");
+//	bool b = FU::copyFile(LR"(D:\IMAG0036.jpg)", LR"(D:\IMAG0036_Copy.jpg)");
+//	b = FU::copyFile(LR"(D:\IMAG0036.jpg)", LR"(D:\IMAG0036_Copy.jpg)", false);
+	//b = FU::fileExists(LR"(D:\emails)");
+	//b = FU::fileExists(LR"(D:\myimage.jpg)");
+	//b = FU::fileExists(LR"(D:\xyz)");
+	b = false;
+
+// windows
+	//StringsT files;
+	//StringsT dirs;
+	//FU::findFilesDirs(LR"(D:\Projects\WxWidgets\YipPreview\Tryout)", files, dirs);
+	//Logger::info(files, L"All files");
+	//Logger::info(dirs, L"All directories");
+
+	//files.clear();
+	//FU::findMatchingFiles(LR"(D:\Projects\WxWidgets\YipPreview\Tryout)", files, L"*.mp4");
+	//Logger::info(files, L"mp4 files");
+
+	//files.clear();
+	//FU::findMatchingFilesRex(LR"(D:\Projects\WxWidgets\YipPreview\Tryout)", files, L"a0[1-6].jpg");
+	//Logger::info(files, L"regex a01.jpg to a06.jpg files");
+
+
+// linux
+
+
+	//	files.clear();
+//	FU::FindMatchingFiles(LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout)", files, L"a1*.jpg");
+//	Logger::info(files, L"a1*.jpg files");
+//
+
 //	StringsT files;
 //	FU::FindFiles(LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout)", files);
 //	Logger::info(files, L"All files");
