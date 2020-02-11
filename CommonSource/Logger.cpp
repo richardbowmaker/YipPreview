@@ -23,6 +23,10 @@ bool Logger::showTime_	= false;
 constexpr int kBufferMax = 40000;
 constexpr int kMaxLines = 1000;
 
+wxDECLARE_EVENT(wxEVT_LOGGER_EVENT, wxLoggerEvent);
+//wxDEFINE_EVENT(wxEVT_LOGGER_EVENT, wxLoggerEvent);
+
+
 Logger::Logger() : wxListBox()
 {
 }
@@ -32,15 +36,12 @@ Logger::Logger(wxWindow* parent, wxWindowID id) :
 {
 	tid_ = Utilities::getThreadId();
 	lbox_ = this;
+	Bind(wxEVT_LOGGER_EVENT, &Logger::onLogger, this);
 }
 
 wxIMPLEMENT_DYNAMIC_CLASS(Logger, wxListBox);
 
-wxBEGIN_EVENT_TABLE(Logger, wxListBox)
-	EVT_LOGGER_EVENT_COMMAND(wxID_ANY, Logger::OnLogger)
-wxEND_EVENT_TABLE()
-
-void Logger::OnLogger(wxLoggerEvent& event)
+void Logger::onLogger(wxLoggerEvent& event)
 {
 	// add to message box
 	wxListBox* lb = dynamic_cast<wxListBox*>(event.GetEventObject());

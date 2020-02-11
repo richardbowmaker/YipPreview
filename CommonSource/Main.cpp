@@ -21,8 +21,11 @@
 #include <stdio.h>
 #include <wx/splitter.h>
 #include <wx/sizer.h>
+#include <wx/mediactrl.h>
 #include <iterator>
 #include <wchar.h>
+#include <thread>
+#include <X11/Xlib.h>
 
 #include "Events.h"
 #include "Logger.h"
@@ -30,7 +33,7 @@
 #include "Utilities.h"
 #include "ShellExecute.h"
 #include "ImagePanel.h"
-
+#include "MediaPreviewPlayer.h"
 
 enum
 {
@@ -60,6 +63,14 @@ wxEND_EVENT_TABLE()
 
 wxIMPLEMENT_APP(MyApp);
 
+MyApp::MyApp()
+{
+#ifdef LINUX_BUILD
+	// required for the media player
+	XInitThreads();
+#endif
+}
+
 bool MyApp::OnInit()
 {
 	wxInitAllImageHandlers();
@@ -68,7 +79,6 @@ bool MyApp::OnInit()
     frame->Show( true );
     return true;
 }
-
 
 MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
         : wxFrame(NULL, wxID_ANY, title, pos, size)
@@ -108,11 +118,21 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
 	sizerLh->Add(splitterHorizontal, 1, wxEXPAND, 0);
 	pnlLh->SetSizer(sizerLh);
 
-	// create a top panel
-	wxPanel* pnlTop = new wxPanel(splitterHorizontal, wxID_ANY);
-	wxBoxSizer* sizerTop = new wxBoxSizer(wxVERTICAL);
-//	sizerTop->Add(pnlTop, 1, wxEXPAND, 0);
-	pnlTop->SetSizer(sizerTop);
+	// create a top panel, with a media player
+//	wxPanel* pnlTop = new wxPanel(splitterHorizontal, wxID_ANY);
+//	wxBoxSizer* sizerTop = new wxBoxSizer(wxVERTICAL);
+//	player_ = new wxMediaCtrl();
+//	player_->Create(this, wxID_ANY);
+//	player_->ShowPlayerControls(wxMEDIACTRLPLAYERCONTROLS_DEFAULT);
+//	Bind(wxEVT_MEDIA_LOADED, &MyFrame::OnMediaPlay, this, wxID_ANY);
+//
+//	sizerTop->Add(player_, 1, wxEXPAND, 0);
+
+	player_ = new MediaPreviewPlayer(splitterHorizontal);
+//	wxBoxSizer* sizerTop = new wxBoxSizer(wxVERTICAL);
+//	sizerTop->Add(player, 1, wxEXPAND, 0);
+//	pnlTop->SetSizer(sizerTop);
+
 
 	// create a bottom panel with logger
 	wxPanel* pnlBot = new wxPanel(splitterHorizontal, wxID_ANY);
@@ -129,7 +149,8 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
 	pnlBot->SetSizer(sizerBot);
 
 	// added panels to horizontal splitter
-	splitterHorizontal->SplitHorizontally(pnlTop, pnlBot);
+//	splitterHorizontal->SplitHorizontally(pnlTop, pnlBot);
+	splitterHorizontal->SplitHorizontally(player_, pnlBot);
 
 	// create the RH pane, which is an image viewer
 	wxPanel* pnlRh = new wxPanel(splitterVertical, wxID_ANY);
@@ -138,7 +159,7 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
 #ifdef WINDOWS_BUILD
 		LR"(D:\Projects\WxWidgets\YipPreview\Tryout\a12.jpg)",
 #elif LINUX_BUILD
-		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/a01.jpg)",
+		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/a04.jpg)",
 #endif
 			wxBITMAP_TYPE_JPEG);
 
@@ -172,8 +193,6 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
 
 }
 
-
-
 void MyFrame::OnExit(wxCommandEvent& event)
 {
     Close( true );
@@ -190,24 +209,66 @@ void MyFrame::OnHello(wxCommandEvent& event)
     wxLogMessage("Hello world from wxWidgets!");
 }
 
+//DWORD MyThread(void*)
+//{
+//	for (int i = 0; i < 10; ++i)
+//	{
+//		Logger::info(L"From thread %d", i);
+//		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+//	}
+//	return 0;
+//}
+
 void MyFrame::OnTryOut(wxCommandEvent& event)
 {
+	//CreateThread(NULL, 0, &MyThread, NULL, 0, NULL);
+	//Logger::info(L"thread started");
+	//return;
+
+	player_->setFile(LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/f3.mp4)");
+	player_->startPreview();
+//	player_->Load(LR"(D:\Projects\WxWidgets\YipPreview\Tryout\f3.mp4)");
+	return;
+
 	bool b;
+
+	// linux copy file
+	b = FU::copyFile(
+		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/a01.jpg)",
+		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout1/a01.jpg)");
+	b = FU::copyFile(
+		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/a01.jpg)",
+		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout1/a01.jpg)", false);
+	b = FU::copyFile(
+		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/a12345.jpg)",
+		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout1/a12345.jpg)");
+
+	// linux file exists
+	b = FU::fileExists(LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout1/a01.jpg)");
+	b = FU::fileExists(LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout1)");
+	b = FU::fileExists(LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout1/a12345.jpg)");
+
+	// linux delete file
+	b = FU::deleteFile(LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout1/a01.jpg)");
+	b = FU::deleteFile(LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout1/a01.jpg)");
+
+	// linux move file
 	b = FU::moveFile(
-		LR"(D:\Projects\WxWidgets\YipPreview\Tryout\a01.jpg)",
-		LR"(D:\Projects\WxWidgets\YipPreview\Tryout1\a01.jpg)");
+		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/a01.jpg)",
+		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout1/a01.jpg)");
 	b = FU::moveFile(
-		LR"(D:\Projects\WxWidgets\YipPreview\Tryout\a01.jpg)",
-		LR"(D:\Projects\WxWidgets\YipPreview\Tryout1\a01.jpg)", false);
+		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/a01.jpg)",
+		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout1/a01.jpg)", false);
 	b = FU::moveFile(
-		LR"(D:\Projects\WxWidgets\YipPreview\Tryout\a01.jpg)",
-		LR"(D:\Projects\WxWidgets\YipPreview\Tryout1\a01.jpg)");
+		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/a01.jpg)",
+		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout1/a01.jpg)");
 	b = FU::moveFile(
-		LR"(D:\Projects\WxWidgets\YipPreview\Tryout\a03.jpg)",
-		LR"(D:\Projects\WxWidgets\YipPreview\Tryout1\a01.jpg)");
+		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/a03.jpg)",
+		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout1/a01.jpg)");
 	b = FU::moveFile(
-		LR"(D:\Projects\WxWidgets\YipPreview\Tryout\a03.jpg)",
-		LR"(D:\Projects\WxWidgets\YipPreview\Tryout2\a03.jpg)");
+		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/a03.jpg)",
+		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout2/a03.jpg)");
+
 	//b = FU::deleteFile(LR"(D:\IMAG0036_Copy.jpg)");
 	//b = FU::deleteFile(LR"(D:\IMAG0036_Copy.jpg)");
 //	bool b = FU::copyFile(LR"(D:\IMAG0036.jpg)", LR"(D:\IMAG0036_Copy.jpg)");
@@ -292,6 +353,14 @@ void MyFrame::OnShellExecuteAny(wxShellExecuteResult& event)
 {
 	Logger::info(L"Shell execute notify via GUI thread any\n%ls", event.getResult().toString().c_str());
 	event.Skip();
+}
+
+void MyFrame::OnMediaPlay(wxMediaEvent& event)
+{
+//	int n1 = 0;
+//	Logger::info(L"Before play");
+//	player_->Play();
+//	Logger::info(L"After play");
 }
 
 

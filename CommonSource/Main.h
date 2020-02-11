@@ -10,18 +10,23 @@
 
 
 #include <iostream>
-
 #include <wx/wxprec.h>
 #ifndef WX_PRECOMP
     #include <wx/wx.h>
 #endif
 
+#include <wx/mediactrl.h>
+
 #include "Logger.h"
 #include "ShellExecute.h"
+#include "MediaPreviewPlayer.h"
 
 class MyApp: public wxApp
 {
 public:
+
+	MyApp();
+
     virtual bool OnInit();
 };
 
@@ -43,6 +48,10 @@ private:
 	void OnShellExecuteAny(wxShellExecuteResult& event);
 	void OnShellExecute1(wxShellExecuteResult& event);
 	void OnShellExecute2(wxShellExecuteResult& event);
+
+	MediaPreviewPlayer *player_;
+
+	void OnMediaPlay(wxMediaEvent& event);
 
     wxDECLARE_EVENT_TABLE();
 };

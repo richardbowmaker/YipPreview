@@ -58,7 +58,7 @@ public:
 
 private:
 
-	void OnLogger(wxLoggerEvent& event);
+	void onLogger(wxLoggerEvent& event);
 
 	static void log(const LevelT level, const wchar_t* format, va_list vl);
 	static void append(const LevelT level, const wchar_t* text);
@@ -73,7 +73,6 @@ private:
 	static bool showTime_;
 
 	wxDECLARE_DYNAMIC_CLASS(Logger);
-	wxDECLARE_EVENT_TABLE();
 };
 
 //----------------------------------------------------------------------------
@@ -96,24 +95,6 @@ private:
 
 	Logger::LevelT level_;
 };
-
-
-typedef void (wxEvtHandler::*wxLoggerEventFunction)(wxLoggerEvent&);
-#define wxLoggerEventHandler(func) \
-    wxEVENT_HANDLER_CAST(wxLoggerEventFunction, func)
-
-
-wxDECLARE_EVENT(wxEVT_LOGGER_EVENT, wxLoggerEvent);
-
-// for use in message maps
-#define EVT_LOGGER_EVENT_COMMAND(id, fn) \
-    DECLARE_EVENT_TABLE_ENTRY( \
-    	wxEVT_LOGGER_EVENT, id, wxID_ANY, \
-		wxLoggerEventHandler(fn), \
-        (wxObject *) NULL \
-    ),
-
-
 
 #endif
 

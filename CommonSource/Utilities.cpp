@@ -17,6 +17,8 @@
 #elif LINUX_BUILD
 	#include <dirent.h>
 	#include <fnmatch.h>
+	#include <fstream>
+	#include <iostream>
 	#include <regex>
 	#include <stdio.h>
 	#include <stdlib.h>
@@ -125,8 +127,8 @@ bool FU::fileExists(const std::wstring file)
 	else
 		return true;
 #elif LINUX_BUILD
-	struct stat   buffer;
-	return stat(name, &buffer) == 0;
+	struct stat buffer;
+	return stat(SU::wStrToStr(file).c_str(), &buffer) == 0;
 #endif
 }
 
@@ -144,6 +146,11 @@ bool FU::copyFile(const std::wstring src, const std::wstring dest, const bool ov
 		return false;
 	}
 #elif LINUX_BUILD
+	if (!fileExists(src))
+	{
+		Logger::error(L"copy file, no source file: %ls to % ls", src.c_str(), dest.c_str());
+		return false;
+	}
 	if (!overwrite && FU::fileExists(dest))
 	{
 		Logger::error(L"copy file already exists error, no overwrite: %ls to % ls", src.c_str(), dest.c_str());
@@ -151,10 +158,10 @@ bool FU::copyFile(const std::wstring src, const std::wstring dest, const bool ov
 	}
 	std::ifstream srcf;
 	std::ofstream dstf;
-	srcx.open("from", std::ios::in | std::ios::binary);
-	dstx.open("toto", std::ios::out | std::ios::binary);
-	dst << src.rdbuf();
-	bool res = src && dest;
+	srcf.open(SU::wStrToStr(src).c_str(), std::ios::in | std::ios::binary);
+	dstf.open(SU::wStrToStr(dest).c_str(), std::ios::out | std::ios::binary);
+	dstf << srcf.rdbuf();
+	bool res = srcf && dstf;
 	srcf.close();
 	dstf.close();
 	if (res)
@@ -190,14 +197,14 @@ bool FU::moveFile(const std::wstring src, const std::wstring dest, const bool ov
 		return false;
 	}
 #elif LINUX_BUILD
-	if (rename(src, dest) == 0)
+	if (rename(SU::wStrToStr(src).c_str(), SU::wStrToStr(dest).c_str()) == 0)
 	{
 		Logger::info(L"file moved: %ls to % ls", src.c_str(), dest.c_str());
 		return true;
 	}
 	else
 	{
-		Logger::systemError(GetLastError(), L"move file error: %ls to % ls", src.c_str(), dest.c_str());
+		Logger::systemError(errno, L"move file error: %ls to % ls", src.c_str(), dest.c_str());
 		return false;
 	}
 #endif
