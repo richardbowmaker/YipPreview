@@ -68,7 +68,7 @@ long Utilities::getMsCounter()
 std::wstring SU::strToWStr(const char* str, int len /*= 0*/)
 {
 	std::size_t l = (len == 0 ? strlen(str) : static_cast<std::size_t>(len));
-	std::wstring wc(l, L' ');
+	std::wstring wc(l + 1, L' ');
 	std::mbstowcs( &wc[0], str, l);
 	return wc;
 }
@@ -76,7 +76,7 @@ std::wstring SU::strToWStr(const char* str, int len /*= 0*/)
 std::string SU::wStrToStr(const wchar_t* str, int len /*= 0*/)
 {
 	std::size_t l = (len == 0 ? wcslen(str) : static_cast<std::size_t>(len));
-	std::string sc(l, L' ');
+	std::string sc(l + 1, L' ');
 	std::wcstombs( &sc[0], str, l);
 	return sc;
 }

@@ -26,7 +26,6 @@ constexpr int kMaxLines = 1000;
 wxDECLARE_EVENT(wxEVT_LOGGER_EVENT, wxLoggerEvent);
 //wxDEFINE_EVENT(wxEVT_LOGGER_EVENT, wxLoggerEvent);
 
-
 Logger::Logger() : wxListBox()
 {
 }

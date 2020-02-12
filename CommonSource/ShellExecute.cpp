@@ -248,7 +248,7 @@ bool ShellExecute::shellWin_(ShellThreadData& data)
 	// notify GUI
 	if (data.wxHandler_ != nullptr)
 	{
-		wxShellExecuteResult evt(data.result_, data.wxid_);
+		wxShellExecuteEvent evt(data.result_, data.wxid_);
 		data.wxHandler_->AddPendingEvent(evt);
 	}
 
@@ -331,7 +331,7 @@ DWORD WINAPI ShellExecute::shellWinThread1_(void* pdata)
 		&saAttr,       // process security attributes 
 		NULL,          // primary thread security attributes 
 		TRUE,          // handles are inherited 
-		0,             // creation flags 
+		CREATE_NO_WINDOW,     // creation flags 
 		NULL,          // use parent's environment 
 		NULL,          // use parent's current directory 
 		&siStartInfo,  // STARTUPINFO pointer 
@@ -632,33 +632,33 @@ ShellExecute::ShellThreadData::ShellThreadData() :
 //-----------------------------------------------------------
 // ShellExecuteEvent
 
-IMPLEMENT_DYNAMIC_CLASS(wxShellExecuteResult, wxCommandEvent)
+IMPLEMENT_DYNAMIC_CLASS(wxShellExecuteEvent, wxCommandEvent)
 
-wxDEFINE_EVENT(wxEVT_SHELL_EXECUTE_RESULT, wxShellExecuteResult);
+wxDEFINE_EVENT(wxEVT_SHELL_EXECUTE_RESULT, wxShellExecuteEvent);
 
-wxShellExecuteResult::wxShellExecuteResult() :
+wxShellExecuteEvent::wxShellExecuteEvent() :
 	wxCommandEvent(wxEVT_SHELL_EXECUTE_RESULT, wxID_ANY)
 {
 }
 
-wxShellExecuteResult::wxShellExecuteResult(ShellExecuteResult &result, int wxid) :
+wxShellExecuteEvent::wxShellExecuteEvent(ShellExecuteResult &result, int wxid) :
 	wxCommandEvent(wxEVT_SHELL_EXECUTE_RESULT, wxid),
 	result_(result)
 {
 }
 
-wxShellExecuteResult::wxShellExecuteResult(const wxShellExecuteResult &other) :
+wxShellExecuteEvent::wxShellExecuteEvent(const wxShellExecuteEvent &other) :
 	wxCommandEvent(other)
 {
 	result_ = other.result_;
 }
 
-wxEvent *wxShellExecuteResult::Clone() const
+wxEvent *wxShellExecuteEvent::Clone() const
 {
-	return new wxShellExecuteResult(*this);
+	return new wxShellExecuteEvent(*this);
 };
 
-ShellExecuteResult wxShellExecuteResult::getResult() const
+ShellExecuteResult wxShellExecuteEvent::getResult() const
 {
 	return result_;
 }

@@ -5,7 +5,6 @@
 #include <sys/types.h>
 #include <wx/wx.h>
 
-#include "Events.h"
 #include "Utilities.h"
 
 // This class is a hybrid wxListBox control and static class for providing

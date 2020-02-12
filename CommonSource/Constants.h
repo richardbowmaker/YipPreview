@@ -17,7 +17,8 @@ public:
 	Constants();
 	virtual ~Constants();
 
-	static std::wstring ffmpeg;
+    static std::wstring ffmpeg;
+    static std::wstring ffmpegEnd;
 
 };
 

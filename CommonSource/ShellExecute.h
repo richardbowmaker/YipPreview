@@ -8,7 +8,6 @@
 #ifndef COMMON_SHELLEXECUTE_H_
 #define COMMON_SHELLEXECUTE_H_
 
-
 #ifdef WINDOWS_BUILD
 #include <string>
 #include <Windows.h>
@@ -17,7 +16,6 @@
 #include <string>
 #include <wx/wx.h>
 #endif
-
 
 //----------------------------------------------------------------------------
 // Shell execute result, when a client is notified of shell execute completion
@@ -152,21 +150,12 @@ private:
 #endif
 };
 
-
 //----------------------------------------------------------------------------
 // Shell execute event, used to notify wxWidgets GUI of completion of shell execute
 //
-// add the following to the message map for the wxEventHandler (e.g. wxFrame)
+// add a handler either method as follows to the wxEvtHandler class, e.g. wxFrame
 //
-// 	wxBEGIN_EVENT_TABLE(MyFrame, wxFrame)
-//		...
-//		EVT_SHELL_EXECUTE_RESULT_COMMAND(wxID_ANY, MyFrame::OnShellExecute)
-//		...
-//	wxEND_EVENT_TABLE()
-//
-// where the handler method OnShellExecute() is;
-//
-//		void MyFrame::OnShellExecute(wxShellExecuteResult& event)
+//		void MyFrame::OnShellExecute(wxShellExecuteEvent& event)
 //		{
 //			ShellExecuteResult result = event.getResult();
 //
@@ -176,33 +165,53 @@ private:
 //			event.Skip();
 //		}
 //
-// To have more than one handler in the wxWidgets map, the wxid must be set to something other than wxID_ANY
+// map the handler to the event either via a message map, lambda or functor
+//
+// message map :-
+//
+// 	wxBEGIN_EVENT_TABLE(MyFrame, wxFrame)
+//		...
+//		EVT_SHELL_EXECUTE_RESULT_COMMAND(wxID_ANY, MyFrame::OnShellExecute)
+//		...
+//	wxEND_EVENT_TABLE()
+//
+// bind to lambda :-
+//
+// 	Bind(wxEVT_SHELL_EXECUTE_RESULT, [this](wxShellExecuteEvent& e) -> void {OnShellExecute(e);}, wxID_ANY);
+//
+// bind to a functor; (#include <functional>)
+//
+//	std::function< void(wxShellExecuteEvent&) >
+//	shellHandler(std::bind(&MyFrame::OnShellExecute, this, std::placeholders::_1));
+//	Bind(wxEVT_SHELL_EXECUTE_RESULT, shellHandler, wxID_ANY);
+//
+// To have more than one handler, the wxid must be set to something other than wxID_ANY
 // in the event table map and must be the the same as that set in the call to shellAsyncGui().
 //----------------------------------------------------------------------------
 
-class wxShellExecuteResult : public wxCommandEvent
+class wxShellExecuteEvent : public wxCommandEvent
 {
 public:
-	wxShellExecuteResult();
-	wxShellExecuteResult(ShellExecuteResult &result, int wxid = wxID_ANY);
-	wxShellExecuteResult(const wxShellExecuteResult &other);
+	wxShellExecuteEvent();
+	wxShellExecuteEvent(ShellExecuteResult &result, int wxid = wxID_ANY);
+	wxShellExecuteEvent(const wxShellExecuteEvent &other);
 
 	virtual wxEvent *Clone() const;
 
 	ShellExecuteResult getResult() const;
 
-	DECLARE_DYNAMIC_CLASS(wxShellExecuteResult)
+	DECLARE_DYNAMIC_CLASS(wxShellExecuteEvent)
 
 private:
 
 	ShellExecuteResult result_;
 };
 
-typedef void (wxEvtHandler::*wxShellExecuteEventFunction)(wxShellExecuteResult&);
+typedef void (wxEvtHandler::*wxShellExecuteEventFunction)(wxShellExecuteEvent&);
 #define wxShellExecuteResultHandler(func) \
     wxEVENT_HANDLER_CAST(wxShellExecuteEventFunction, func)
 
-wxDECLARE_EVENT(wxEVT_SHELL_EXECUTE_RESULT, wxShellExecuteResult);
+wxDECLARE_EVENT(wxEVT_SHELL_EXECUTE_RESULT, wxShellExecuteEvent);
 
 // for use in message maps
 #define EVT_SHELL_EXECUTE_RESULT_COMMAND(id, fn) \

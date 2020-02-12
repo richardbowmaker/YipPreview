@@ -21,6 +21,8 @@
 #include "ShellExecute.h"
 #include "MediaPreviewPlayer.h"
 
+class FileSet;
+
 class MyApp: public wxApp
 {
 public:
@@ -33,27 +35,38 @@ public:
 class MyFrame: public wxFrame
 {
 public:
+
     MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size);
 
-    //DECLARE_EVENT_TABLE()
+    static MyFrame& getMainFrame();
 
 private:
-    void OnHello(wxCommandEvent& event);
-    void OnTryOut(wxCommandEvent& event);
-    void OnExit(wxCommandEvent& event);
-    void OnAbout(wxCommandEvent& event);
+
+    // menus
+    void setupMenus();
+    void onFileDelete(wxCommandEvent& event);
+    void onFileExit(wxCommandEvent& event);
+    void onToolsTryout(wxCommandEvent& event);
+    void onHelpAbout(wxCommandEvent& event);
+
+    void deleteFile(FileSet& fileSet);
+    void tryout(FileSet& fileSet);
+
+
+    FileSet& getSelectedFileSet() const;
+
+    void OnClose(wxCloseEvent& event);
     void OnThread(wxCommandEvent& event);
 	void OnProcessCustom(wxCommandEvent& event);
-	void OnLogger(wxLoggerEvent& event);
-	void OnShellExecuteAny(wxShellExecuteResult& event);
-	void OnShellExecute1(wxShellExecuteResult& event);
-	void OnShellExecute2(wxShellExecuteResult& event);
+	void OnShellExecuteAny(wxShellExecuteEvent& event);
+	void OnShellExecute1(wxShellExecuteEvent& event);
+	void OnShellExecute2(wxShellExecuteEvent& event);
 
 	MediaPreviewPlayer *player_;
 
 	void OnMediaPlay(wxMediaEvent& event);
 
-    wxDECLARE_EVENT_TABLE();
+    static MyFrame* this_;
 };
 
 #endif /* COMMON_MAIN_H_ */

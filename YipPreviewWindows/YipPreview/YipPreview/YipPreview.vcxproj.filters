@@ -36,9 +36,6 @@
     <ClInclude Include="YipPreview.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\CommonSource\Events.h">
-      <Filter>Common\Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\CommonSource\Logger.h">
       <Filter>Common\Header Files</Filter>
     </ClInclude>
@@ -60,12 +57,18 @@
     <ClInclude Include="..\..\..\CommonSource\ImagePanel.h">
       <Filter>Common\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\CommonSource\Constants.h">
+      <Filter>Common\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\CommonSource\MediaPreviewPlayer.h">
+      <Filter>Common\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\CommonSource\FileSet.h">
+      <Filter>Common\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\CommonSource\Logger.cpp">
-      <Filter>Common\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\CommonSource\Events.cpp">
       <Filter>Common\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\CommonSource\Main.cpp">
@@ -84,6 +87,18 @@
       <Filter>Common\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\CommonSource\ImagePanel.cpp">
+      <Filter>Common\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\CommonSource\Constants.cpp">
+      <Filter>Common\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\CommonSource\MediaPreviewPlayer.cpp">
+      <Filter>Common\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MainFunctions.cpp">
+      <Filter>Common\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\CommonSource\FileSet.cpp">
       <Filter>Common\Source Files</Filter>
     </ClCompile>
   </ItemGroup>

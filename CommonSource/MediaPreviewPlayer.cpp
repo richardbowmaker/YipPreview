@@ -9,6 +9,7 @@
 
 
 #ifdef WINDOWS_BUILD
+	#include <stdlib.h>
 #elif LINUX_BUILD
 	#include <algorithm>
 	#include <cstdlib>
@@ -30,7 +31,13 @@ MediaPreviewPlayer::MediaPreviewPlayer(wxWindow *parent, wxWindowID id /*= wxID_
 {
 	// add media control to this panel
 	player_ = new wxMediaCtrl();
-	player_->Create(this, wxID_ANY);
+
+#ifdef WINDOWS_BUILD
+	// force windows media player
+	player_->Create(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, wxMEDIABACKEND_WMP10);
+#elif LINUX_BUILD
+	player_->Create(this);
+#endif
 	wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
 	sizer->Add(player_, 1, wxEXPAND, 0);
 	SetSizer(sizer);
@@ -48,24 +55,7 @@ MediaPreviewPlayer::~MediaPreviewPlayer()
 
 MediaPreviewPlayer &MediaPreviewPlayer::setFile(const std::wstring &file)
 {
-	// get duration
-	ShellExecuteResult res;
-	std::wstring cmd = Constants::ffmpeg + std::wstring(L" -i ") + file + std::wstring(L" &2>1");
-	if (!ShellExecute::shellSync(cmd, res, 2000)) return *this;
-
-	// get duration from ffmpeg output
-	std::wstring stderr = res.getStderr();
-	size_t pos = stderr.find(L"Duration:");
-
-	if (pos != std::wstring::npos)
-	{
-		// Duration: 00:02:46.49
-		int h = wcstol(stderr.substr(pos + 10, 2).c_str(), nullptr, 10);
-		int m = wcstol(stderr.substr(pos + 13, 2).c_str(), nullptr, 10);
-		int s = wcstol(stderr.substr(pos + 16, 2).c_str(), nullptr, 10);
-		duration_ = 3600 * h + 60 * m + s;
-		file_ = file;
-	}
+	file_ = file;
 	return *this;
 }
 
@@ -73,6 +63,12 @@ void MediaPreviewPlayer::onMediaPlay(wxMediaEvent& event)
 {
 	player_->Play();
 	player_->SetVolume(0);
+
+	// set the duration
+	int d = duration();
+	if (d != -1)
+		duration_ = d;
+
 	calculateClips();
 	doTimer();
 	timer_->Start(kTimer);
@@ -81,7 +77,9 @@ void MediaPreviewPlayer::onMediaPlay(wxMediaEvent& event)
 void MediaPreviewPlayer::play()
 {
 	if (file_.length() > 0)
+	{
 		player_->Load(file_.c_str());
+	}
 	else
 		Logger::error(L"MediaPreviewPlayer play file before file has been set");
 }
@@ -110,6 +108,7 @@ void MediaPreviewPlayer::onTimer(wxTimerEvent &event)
 void MediaPreviewPlayer::doTimer()
 {
 	player_->Seek(clips_[clipIx_] * 1000);
+	player_->Play();
 	clipIx_ = ++clipIx_ % kNoOfClips;
 
 	// on recycle calculate a new set of random clips
@@ -121,14 +120,39 @@ void MediaPreviewPlayer::calculateClips()
 {
 	clips_.clear();
 	clipIx_ = 0;
-#ifdef WINDOWS_BUILD
-#elif LINUX_BUILD
 	srand (time(NULL));
 	for (int i = 0; i < kNoOfClips; ++i)
 		clips_.emplace_back(rand() % duration_ + 1);
-#endif
 	std::sort(clips_.begin(), clips_.end());
 }
+
+// for the linux version we have to use ffmpeg to get the duration
+// as the media control does not provide it
+int MediaPreviewPlayer::duration()
+{
+#ifdef WINDOWS_BUILD
+	return static_cast<int>(player_->Length() / 1000);
+#elif LINUX_BUILD
+	// get duration
+	ShellExecuteResult res;
+	std::wstring cmd = Constants::ffmpeg + std::wstring(L" -i ") + file + Constants::ffmpegEnd;
+	if (!ShellExecute::shellSync(cmd, res, 10000)) return -1;
+
+	// get duration from ffmpeg output
+	std::wstring serr = res.getStderr();
+	size_t pos = serr.find(L"Duration:");
+
+	if (pos != std::wstring::npos)
+	{
+		// Duration: 00:02:46.49
+		int h = wcstol(serr.substr(pos + 10, 2).c_str(), nullptr, 10);
+		int m = wcstol(serr.substr(pos + 13, 2).c_str(), nullptr, 10);
+		int s = wcstol(serr.substr(pos + 16, 2).c_str(), nullptr, 10);
+		duration_ = 3600 * h + 60 * m + s;
+	}
+#endif
+}
+
 
 
 

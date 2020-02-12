@@ -34,6 +34,7 @@ private:
 	void onTimer(wxTimerEvent &event);
 	void doTimer();
 	void calculateClips();
+	int duration();
 
 	// the video file
 	std::wstring file_;
