@@ -52,7 +52,6 @@
 
 #include "Logger.h"
 #include "Tryout.h"
-#include "Events.h"
 #include "Utilities.h"
 #include "ShellExecute.h"
 

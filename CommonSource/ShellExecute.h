@@ -9,12 +9,12 @@
 #define COMMON_SHELLEXECUTE_H_
 
 #ifdef WINDOWS_BUILD
-#include <string>
-#include <Windows.h>
-#include <wx/wx.h>
+	#include <string>
+	#include <Windows.h>
+	#include <wx/wx.h>
 #elif LINUX_BUILD
-#include <string>
-#include <wx/wx.h>
+	#include <string>
+	#include <wx/wx.h>
 #endif
 
 //----------------------------------------------------------------------------
@@ -78,7 +78,7 @@ public:
 	ShellExecute();
 	virtual ~ShellExecute();
 
-	using ShellExecuteEventHandlerPtr = void (*)(ShellExecuteResult &result);
+	using ShellExecuteEventHandlerT = void (*)(ShellExecuteResult &result);
 
 	// simple synchronous, no result object returned
 	// returns true if command executed ok
@@ -100,7 +100,7 @@ public:
 	// asynchronous, event handler function optional
 	static bool shellAsync(
 			const std::wstring &cmd,
-			ShellExecuteEventHandlerPtr handler = nullptr,
+			ShellExecuteEventHandlerT handler = nullptr,
 			const int userId = 0,
 			void* userData = nullptr,
 			const int timeoutms = -1);
@@ -125,7 +125,7 @@ public:
 		int 				timeoutms_;
 		wxEvtHandler*		wxHandler_;
 		int					wxid_;
-		ShellExecuteEventHandlerPtr handler_;
+		ShellExecuteEventHandlerT handler_;
 
 #ifdef WINDOWS_BUILD
 		HANDLE completed_;

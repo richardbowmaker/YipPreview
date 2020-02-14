@@ -15,20 +15,18 @@
     #include <wx/wx.h>
 #endif
 
-#include <wx/mediactrl.h>
-
-#include "Logger.h"
-#include "ShellExecute.h"
-#include "MediaPreviewPlayer.h"
-
 class FileSet;
+class Logger;
+class MediaPreviewPlayer;
+class wxGrid;
+class wxShellExecuteEvent;
+class GridTable;
 
 class MyApp: public wxApp
 {
 public:
 
 	MyApp();
-
     virtual bool OnInit();
 };
 
@@ -42,29 +40,27 @@ public:
 
 private:
 
+    void setupGrid();
+    void populateGrid();
+    void refreshGrid();
+    Logger *setupLogger(wxPanel *panel);
+
     // menus
     void setupMenus();
-    void onFileDelete(wxCommandEvent& event);
-    void onFileExit(wxCommandEvent& event);
-    void onToolsTryout(wxCommandEvent& event);
-    void onHelpAbout(wxCommandEvent& event);
 
     void deleteFile(FileSet& fileSet);
     void tryout(FileSet& fileSet);
-
 
     FileSet& getSelectedFileSet() const;
 
     void OnClose(wxCloseEvent& event);
     void OnThread(wxCommandEvent& event);
 	void OnProcessCustom(wxCommandEvent& event);
-	void OnShellExecuteAny(wxShellExecuteEvent& event);
-	void OnShellExecute1(wxShellExecuteEvent& event);
-	void OnShellExecute2(wxShellExecuteEvent& event);
+	void OnShellExecute(wxShellExecuteEvent& event);
 
 	MediaPreviewPlayer *player_;
-
-	void OnMediaPlay(wxMediaEvent& event);
+	wxGrid *grid_;
+    GridTable* table_;
 
     static MyFrame* this_;
 };

@@ -36,7 +36,7 @@ MediaPreviewPlayer::MediaPreviewPlayer(wxWindow *parent, wxWindowID id /*= wxID_
 	// force windows media player
 	player_->Create(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, wxMEDIABACKEND_WMP10);
 #elif LINUX_BUILD
-	player_->Create(this);
+	player_->Create(this, wxID_ANY);
 #endif
 	wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
 	sizer->Add(player_, 1, wxEXPAND, 0);
@@ -135,7 +135,7 @@ int MediaPreviewPlayer::duration()
 #elif LINUX_BUILD
 	// get duration
 	ShellExecuteResult res;
-	std::wstring cmd = Constants::ffmpeg + std::wstring(L" -i ") + file + Constants::ffmpegEnd;
+	std::wstring cmd = Constants::ffmpeg + std::wstring(L" -i ") + file_ + Constants::ffmpegEnd;
 	if (!ShellExecute::shellSync(cmd, res, 10000)) return -1;
 
 	// get duration from ffmpeg output

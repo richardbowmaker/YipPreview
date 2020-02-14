@@ -15,6 +15,9 @@
     std::wstring Constants::ffmpegEnd = std::wstring(L" &2>1");
 #endif
 
+std::wstring Constants::title = std::wstring(L"YipPreview");
+
+
 Constants::Constants()
 {
 	// TODO Auto-generated constructor stub

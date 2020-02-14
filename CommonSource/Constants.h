@@ -19,6 +19,7 @@ public:
 
     static std::wstring ffmpeg;
     static std::wstring ffmpegEnd;
+    static std::wstring title;
 
 };
 

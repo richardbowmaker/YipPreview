@@ -66,6 +66,12 @@
     <ClInclude Include="..\..\..\CommonSource\FileSet.h">
       <Filter>Common\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\CommonSource\FileSetManager.h">
+      <Filter>Common\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\CommonSource\GridTable.h">
+      <Filter>Common\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\CommonSource\Logger.cpp">
@@ -95,10 +101,16 @@
     <ClCompile Include="..\..\..\CommonSource\MediaPreviewPlayer.cpp">
       <Filter>Common\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MainFunctions.cpp">
+    <ClCompile Include="..\..\..\CommonSource\FileSet.cpp">
       <Filter>Common\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\CommonSource\FileSet.cpp">
+    <ClCompile Include="..\..\..\CommonSource\FileSetManager.cpp">
+      <Filter>Common\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\CommonSource\GridTable.cpp">
+      <Filter>Common\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\CommonSource\MainFunctions.cpp">
       <Filter>Common\Source Files</Filter>
     </ClCompile>
   </ItemGroup>

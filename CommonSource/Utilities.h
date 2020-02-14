@@ -41,6 +41,8 @@ public:
 	static std::string  wStrToStr(const wchar_t* str, int len = 0);	    // wide string to string
 	static std::wstring strToWStr(const std::string str);
 	static std::string  wStrToStr(const std::wstring str);
+	static bool startsWith(const wchar_t *str, const wchar_t* prefix);
+	static bool startsWith(const std::wstring str, const std::wstring prefix);
 
 private:
 
@@ -60,6 +62,10 @@ public:
 	static bool fileExists(const std::wstring file);
 	static bool copyFile(const std::wstring src, const std::wstring dest, const bool overwrite = true);
 	static bool moveFile(const std::wstring src, const std::wstring dest, const bool overwrite = true);
+	static std::wstring getFileStem(const std::wstring path);
+	static std::wstring getPathNoExt(const std::wstring path);
+	static std::wstring getExt(const std::wstring path);
+	static std::wstring getPathSeparator();
 	static bool findFiles(
 			const std::wstring directory,
 			StringsT &files,
@@ -91,6 +97,7 @@ public:
 			const std::wstring regex,
 			StringsT &dirs,
 			const bool sort = false);
+	static std::wstring pathToLocal(const wchar_t *path);
 
 private:
 

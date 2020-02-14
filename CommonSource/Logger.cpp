@@ -7,7 +7,6 @@
 #include <string>
 #include <wx/wx.h>
 
-#include "Events.h"
 #include "Utilities.h"
 
 // static members

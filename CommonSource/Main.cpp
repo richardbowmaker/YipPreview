@@ -14,29 +14,24 @@
 #ifndef WX_PRECOMP
     #include <wx/wx.h>
 #endif
+
 #include <cstdlib>
-#include <functional>
-#include <iostream>
-#include <stdarg.h>
-#include <stdio.h>
+#include <wx/grid.h>
 #include <wx/splitter.h>
 #include <wx/sizer.h>
-#include <wx/mediactrl.h>
-#include <iterator>
-#include <wchar.h>
-#include <thread>
 #ifdef LINUX_BUILD
 	#include <X11/Xlib.h>
 #endif
 
 #include "FileSet.h"
+#include "FileSetManager.h"
 #include "Logger.h"
 #include "Tryout.h"
 #include "Utilities.h"
 #include "ShellExecute.h"
 #include "ImagePanel.h"
 #include "MediaPreviewPlayer.h"
-
+#include "GridTable.h"
 
 wxIMPLEMENT_APP(MyApp);
 
@@ -71,7 +66,6 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
 
 	Bind(wxEVT_CLOSE_WINDOW, &MyFrame::OnClose, this, wxID_ANY);
 
-
 	// the main frame sizer
 	wxBoxSizer* sizerMain = new wxBoxSizer(wxVERTICAL);
 
@@ -92,39 +86,22 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
 	sizerLh->Add(splitterHorizontal, 1, wxEXPAND, 0);
 	pnlLh->SetSizer(sizerLh);
 
-	// create a top panel, with a media player
-//	wxPanel* pnlTop = new wxPanel(splitterHorizontal, wxID_ANY);
-//	wxBoxSizer* sizerTop = new wxBoxSizer(wxVERTICAL);
-//	player_ = new wxMediaCtrl();
-//	player_->Create(this, wxID_ANY);
-//	player_->ShowPlayerControls(wxMEDIACTRLPLAYERCONTROLS_DEFAULT);
-//	Bind(wxEVT_MEDIA_LOADED, &MyFrame::OnMediaPlay, this, wxID_ANY);
-//
-//	sizerTop->Add(player_, 1, wxEXPAND, 0);
+	// add grid to top left panel
+	wxPanel* pnlTop = new wxPanel(splitterHorizontal, wxID_ANY);
+	wxBoxSizer* sizerTop = new wxBoxSizer(wxVERTICAL);
+	setupGrid();
+	sizerTop->Add(grid_, 1, wxEXPAND, 0);
+	pnlTop->SetSizer(sizerTop);
 
-	player_ = new MediaPreviewPlayer(splitterHorizontal);
-//	wxBoxSizer* sizerTop = new wxBoxSizer(wxVERTICAL);
-//	sizerTop->Add(player, 1, wxEXPAND, 0);
-//	pnlTop->SetSizer(sizerTop);
-
-
-	// create a bottom panel with logger
+	// create a bottom left panel with logger
 	wxPanel* pnlBot = new wxPanel(splitterHorizontal, wxID_ANY);
 	wxBoxSizer* sizerBot = new wxBoxSizer(wxVERTICAL);
-
-	Logger* lb1 = new Logger(pnlBot, wxID_ANY);
-	Logger::setLevel(Logger::Info);
-	Logger::enableTime(true);
-	Logger::enableLineCount(true);
-	Logger::enableIdeOutput(true);
-	lb1->SetMinSize(wxSize(800, 500));
-
-	sizerBot->Add(lb1, 1, wxEXPAND, 0);
+	Logger* logger = setupLogger(pnlBot);
+	sizerBot->Add(logger, 1, wxEXPAND, 0);
 	pnlBot->SetSizer(sizerBot);
 
 	// added panels to horizontal splitter
-//	splitterHorizontal->SplitHorizontally(pnlTop, pnlBot);
-	splitterHorizontal->SplitHorizontally(player_, pnlBot);
+	splitterHorizontal->SplitHorizontally(pnlTop, pnlBot);
 
 	// create the RH pane, which is an image viewer
 	wxPanel* pnlRh = new wxPanel(splitterVertical, wxID_ANY);
@@ -149,34 +126,54 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
 
 	this->SetClientSize(wxSize(1000, 600));
 
-	Logger::info(L"PID %d", (int)Utilities::getProcessId());
+	Bind(wxEVT_SHELL_EXECUTE_RESULT, [this](wxShellExecuteEvent& e) {OnShellExecute(e);}, wxID_ANY);
 
-	FILE* fp = std::fopen("test.txt", "r");
-#ifdef WINDOWS_BUILD
-	int err = ::GetLastError();
-#elif LINUX_BUILD
-	int err = errno;
-#endif
-	Logger::systemError(err, L"my error message %d", 67);
-
-#ifdef WINDOWS_BUILD
-    SetStatusText( "Welcome to wxWidgets for Windows!" );
-#elif LINUX_BUILD
-    SetStatusText("Welcome to wxWidgets for Linux!");
-#endif
-
-//	Bind(wxEVT_SHELL_EXECUTE_RESULT, [this](wxShellExecuteResult& e) -> void {OnShellExecute1(e); }, wxID_ANY);
-	Bind(wxEVT_SHELL_EXECUTE_RESULT, [this](wxShellExecuteEvent& e) {OnShellExecute1(e);}, wxID_ANY);
+	populateGrid();
 }
 
-MyFrame & MyFrame::getMainFrame()
+MyFrame &MyFrame::getMainFrame()
 {
 	return *this_;
 }
 
+void MyFrame::setupGrid()
+{
+	grid_ = new wxGrid(this, wxID_ANY);
+	table_ = new GridTable();
+	table_->initialise();
+	grid_->SetTable(table_);
+	grid_->SetSelectionMode(wxGrid::wxGridSelectRows);
+	grid_->HideRowLabels();
+}
+
+void MyFrame::populateGrid()
+{
+	FileSetManager::addFiles(FU::pathToLocal(LR"(D:\Projects\WxWidgets\YipPreview\Tryout)").c_str());
+	refreshGrid();
+}
+
+void MyFrame::refreshGrid()
+{
+	wxGridTableMessage push(table_,
+		wxGRIDTABLE_NOTIFY_ROWS_APPENDED,
+		FileSetManager::getNoOfFileSets());
+	grid_->ProcessTableMessage(push);
+	grid_->ForceRefresh();
+}
+
+Logger *MyFrame::setupLogger(wxPanel *panel)
+{
+	Logger* logger = new Logger(panel, wxID_ANY);
+	logger->SetMinSize(wxSize(800, 500));
+	Logger::setLevel(Logger::Info);
+	Logger::enableTime(true);
+	Logger::enableLineCount(true);
+	Logger::enableIdeOutput(true);
+	return logger;
+}
+
 void MyFrame::OnClose(wxCloseEvent& event)
 {
-	player_->stopPreview();
 	Destroy();  // you may also do:  event.Skip();
 				// since the default event handler does call Destroy(), too
 }
@@ -198,31 +195,12 @@ void MyFrame::OnProcessCustom(wxCommandEvent& event)
 	Logger::info(event.GetString());
 }
 
-void MyFrame::OnShellExecute1(wxShellExecuteEvent& event)
+void MyFrame::OnShellExecute(wxShellExecuteEvent& event)
 {
-	Logger::info(L"Shell execute notify via GUI thread 1\n%ls", event.getResult().toString().c_str());
+	Logger::info(L"Shell execute notify via GUI thread\n%ls", event.getResult().toString().c_str());
 	event.Skip();
 }
 
-void MyFrame::OnShellExecute2(wxShellExecuteEvent& event)
-{
-	Logger::info(L"Shell execute notify via GUI thread 2\n%ls", event.getResult().toString().c_str());
-	event.Skip();
-}
-
-void MyFrame::OnShellExecuteAny(wxShellExecuteEvent& event)
-{
-	Logger::info(L"Shell execute notify via GUI thread any\n%ls", event.getResult().toString().c_str());
-	event.Skip();
-}
-
-void MyFrame::OnMediaPlay(wxMediaEvent& event)
-{
-//	int n1 = 0;
-//	Logger::info(L"Before play");
-//	player_->Play();
-//	Logger::info(L"After play");
-}
 
 
 

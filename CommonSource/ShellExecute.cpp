@@ -121,7 +121,7 @@ bool ShellExecute::shellSync(
 // Asynch shell execute, notification is via user supplied handler on worker thread
 bool ShellExecute::shellAsync(
 	const std::wstring& cmd,
-	ShellExecuteEventHandlerPtr handler,
+	ShellExecuteEventHandlerT handler,
 	const int userId,
 	void* userData,
 	const int timeoutms)
@@ -446,7 +446,7 @@ void *ShellExecute::shellThreadWaitGui(void *ptr)
 	// notify client
 	if (data->wxHandler_ != nullptr)
 	{
-		wxShellExecuteResult evt(data->result_, data->wxid_);
+		wxShellExecuteEvent evt(data->result_, data->wxid_);
 		data->wxHandler_->AddPendingEvent(evt);
 	}
 	delete data;

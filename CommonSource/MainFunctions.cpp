@@ -24,6 +24,8 @@
 #include <wchar.h>
 #include <thread>
 
+
+#include "Constants.h"
 #include "FileSet.h"
 #include "Logger.h"
 #include "Tryout.h"
@@ -31,6 +33,7 @@
 #include "ShellExecute.h"
 #include "ImagePanel.h"
 #include "MediaPreviewPlayer.h"
+#include "FileSetManager.h"
 
 enum MenuIDsT
 {
@@ -45,10 +48,11 @@ void MyFrame::setupMenus()
 	// file menu
 	wxMenu* menuFile = new wxMenu;
 	menuFile->Append(ID_FileDelete, "Delete...\tCtrl-D", "Delete items in a file set");
-	Bind(wxEVT_MENU, &MyFrame::onFileDelete, this, ID_FileDelete);
+	Bind(wxEVT_MENU, [this](wxCommandEvent& event) -> void {deleteFile(getSelectedFileSet());}, ID_FileDelete);
+
 	menuFile->AppendSeparator();
 	menuFile->Append(wxID_EXIT);
-	Bind(wxEVT_MENU, &MyFrame::onFileExit, this, wxID_EXIT);
+	Bind(wxEVT_MENU, [this](wxCommandEvent& event) -> void {Close(true);}, wxID_EXIT);
 
 	// view menu
 	wxMenu* menuView = new wxMenu;
@@ -56,12 +60,15 @@ void MyFrame::setupMenus()
 	// tools menu
 	wxMenu* menuTools = new wxMenu;
 	menuTools->Append(ID_ToolsTryout, "&TryOut...\tCtrl-T", "Hook for experimental code");
-	Bind(wxEVT_MENU, &MyFrame::onToolsTryout, this, ID_ToolsTryout);
+//	Bind(wxEVT_MENU, &MyFrame::onToolsTryout, this, ID_ToolsTryout);
+	Bind(wxEVT_MENU, [this](wxCommandEvent& event) -> void {tryout(getSelectedFileSet());}, ID_ToolsTryout);
 
 	// help menu
 	wxMenu* menuHelp = new wxMenu;
 	menuHelp->Append(wxID_ABOUT);
-	Bind(wxEVT_MENU, &MyFrame::onHelpAbout, this, wxID_ABOUT);
+	Bind(wxEVT_MENU, [this](wxCommandEvent& event) -> void {
+		wxMessageBox("This is a wxWidgets' Hello world sample",
+			"About Hello World", wxOK | wxICON_INFORMATION);}, wxID_ABOUT);
 
 	// setup menu bar
 	wxMenuBar* menuBar = new wxMenuBar;
@@ -73,36 +80,13 @@ void MyFrame::setupMenus()
 }
 
 //--------------------------------------------------------------------------
-// menu handlers 
-//--------------------------------------------------------------------------
-
-void MyFrame::onFileExit(wxCommandEvent& event)
-{
-	Close(true);
-}
-
-void MyFrame::onFileDelete(wxCommandEvent& event)
-{
-	deleteFile(getSelectedFileSet());
-}
-
-void MyFrame::onToolsTryout(wxCommandEvent& event)
-{
-	tryout(getSelectedFileSet());
-}
-
-void MyFrame::onHelpAbout(wxCommandEvent& event)
-{
-	wxMessageBox("This is a wxWidgets' Hello world sample",
-		"About Hello World", wxOK | wxICON_INFORMATION);
-}
-
-//--------------------------------------------------------------------------
 // functions 
 //--------------------------------------------------------------------------
 
 void MyFrame::deleteFile(FileSet& fileSet)
 {
+	wxMessageBox(L"Delete file", Constants::title, wxOK | wxICON_INFORMATION);
+
 }
 
 //--------------------------------------------------------------------------
@@ -121,6 +105,71 @@ void MyFrame::deleteFile(FileSet& fileSet)
 
 void MyFrame::tryout(FileSet& fileSet)
 {
+	bool b;
+
+	b = FileSetManager::addFiles(FU::pathToLocal(LR"(D:\Projects\WxWidgets\YipPreview\Tryout)").c_str());
+	Logger::info(L"Files %ls", FileSetManager::toString().c_str());
+	return;
+
+	b = SU::startsWith(L"abcde", L"abc");
+	b = SU::startsWith(L"ab", L"abc");
+	b = SU::startsWith(L"ab", L"");
+	b = SU::startsWith(L"", L"abc");
+	b = SU::startsWith(L"", L"");
+
+
+
+#ifdef WINDOWS_BUILD
+	std::wstring s;
+	s = FU::getFileStem(LR"(abc)");
+	s = FU::getFileStem(LR"(abc.txt)");
+	s = FU::getFileStem(LR"(\home\me\abc)");
+	s = FU::getFileStem(LR"(\home\me\abc.txt)");
+	s = FU::getFileStem(LR"(\home\me.you\abc)");
+	s = FU::getFileStem(LR"(\home\me.you\abc.txt)");
+	s = FU::getFileStem(LR"(\home\me\abc.txt.exe)");
+
+	s = FU::getPathNoExt(LR"(abc.txt)");
+	s = FU::getPathNoExt(LR"(abc)");
+	s = FU::getPathNoExt(LR"(\home\me\abc)");
+	s = FU::getPathNoExt(LR"(\home\me\abc.txt)");
+	s = FU::getPathNoExt(LR"(\home\me.you\abc.txt)");
+	s = FU::getPathNoExt(LR"(\home\me.you\abc)");
+
+	s = FU::getExt(LR"(abc.txt)");
+	s = FU::getExt(LR"(abc)");
+	s = FU::getExt(LR"(\home\me\abc)");
+	s = FU::getExt(LR"(\home\me\abc.txt)");
+	s = FU::getExt(LR"(\home\me.you\abc)");
+	s = FU::getExt(LR"(\home\me.you\abc.txt)");
+	return;
+#elif LINUX_BUILD
+	std::wstring s;
+	s = FU::getFileStem(LR"(abc)");
+	s = FU::getFileStem(LR"(abc.txt)");
+	s = FU::getFileStem(LR"(/home/me/abc)");
+	s = FU::getFileStem(LR"(/home/me/abc.txt)");
+	s = FU::getFileStem(LR"(/home/me.you/abc)");
+	s = FU::getFileStem(LR"(/home/me.you/abc.txt)");
+	s = FU::getFileStem(LR"(/home/me/abc.txt.exe)");
+
+	s = FU::getPathNoExt(LR"(abc.txt)");
+	s = FU::getPathNoExt(LR"(abc)");
+	s = FU::getPathNoExt(LR"(/home/me/abc)");
+	s = FU::getPathNoExt(LR"(/home/me/abc.txt)");
+	s = FU::getPathNoExt(LR"(/home/me.you/abc.txt)");
+	s = FU::getPathNoExt(LR"(/home/me.you/abc)");
+
+	s = FU::getExt(LR"(abc.txt)");
+	s = FU::getExt(LR"(abc)");
+	s = FU::getExt(LR"(/home/me/abc)");
+	s = FU::getExt(LR"(/home/me/abc.txt)");
+	s = FU::getExt(LR"(/home/me.you/abc)");
+	s = FU::getExt(LR"(/home/me.you/abc.txt)");
+	return;
+#endif
+
+
 	ShellExecute::shellAsyncGui(LR"(cmd /c dir D:\_Ricks\c#\ZiPreview\Executable)", 
 		MyFrame::getMainFrame().GetEventHandler());
 	return;
@@ -138,7 +187,6 @@ void MyFrame::tryout(FileSet& fileSet)
 	//	player_->Load(LR"(D:\Projects\WxWidgets\YipPreview\Tryout\f3.mp4)");
 	return;
 
-	bool b;
 
 	// linux copy file
 	b = FU::copyFile(
@@ -186,6 +234,20 @@ void MyFrame::tryout(FileSet& fileSet)
 	//b = FU::fileExists(LR"(D:\xyz)");
 	b = false;
 
+	// linux
+
+//	StringsT files;
+//	FU::findFiles(LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout)", files);
+//	Logger::info(files, L"All files");
+//
+//	files.clear();
+//	FU::findMatchingFiles(LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout)", files, L"a1*.jpg");
+//	Logger::info(files, L"a1*.jpg files");
+//
+//
+//	return;
+
+
 	// windows
 		//StringsT files;
 		//StringsT dirs;
@@ -202,22 +264,7 @@ void MyFrame::tryout(FileSet& fileSet)
 		//Logger::info(files, L"regex a01.jpg to a06.jpg files");
 
 
-	// linux
 
-
-		//	files.clear();
-	//	FU::FindMatchingFiles(LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout)", files, L"a1*.jpg");
-	//	Logger::info(files, L"a1*.jpg files");
-	//
-
-	//	StringsT files;
-	//	FU::FindFiles(LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout)", files);
-	//	Logger::info(files, L"All files");
-	//
-	//	files.clear();
-	//	FU::FindMatchingFiles(LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout)", files, L"a1*.jpg");
-	//	Logger::info(files, L"a1*.jpg files");
-	//
 
 	//	TryOut::AsyncShell(GetEventHandler());
 	//	TryOut::WorkerThread();
