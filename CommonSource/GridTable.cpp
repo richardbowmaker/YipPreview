@@ -9,6 +9,7 @@
 
 #include "FileSet.h"
 #include "FileSetManager.h"
+#include "Logger.h"
 
 GridTable::GridTable()
 {
@@ -20,20 +21,19 @@ GridTable::~GridTable()
 
 void GridTable::initialise()
 {
-	//wxGridCellAttrProvider *ap = new wxGridCellAttrProvider();
+	wxGridCellAttrProvider *ap = new wxGridCellAttrProvider();
 
-	//// all columns are read only
-	//wxGridCellAttr*  a = new wxGridCellAttr();
-	//a->SetReadOnly(true);
-	//for (int c = 0; c < GetNumberCols(); c++)
-	//	ap->SetColAttr(a, c);
+	// all columns are read only
+	wxGridCellAttr*  a = new wxGridCellAttr();
+	a->SetReadOnly(true);
+	for (int c = 0; c < GetNumberCols(); c++)
+		ap->SetColAttr(a, c);
 
-	//SetAttrProvider(ap);
+	SetAttrProvider(ap);
 }
 
 int GridTable::GetNumberRows()
 {
-	return 2;
 	return FileSetManager::getNoOfFileSets();
 }
 
@@ -44,7 +44,11 @@ int GridTable::GetNumberCols()
 
 wxString GridTable::GetValue(int row, int col)
 {
-	return L"XX";
+	if (row >= FileSetManager::getNoOfFileSets() || row < 0 || col < 0 || col > 2)
+	{
+		Logger::error(L"GridTable::GetValue invalid row %d, col %d", row, col);
+		return L"";
+	}
 
 	FileSetT fs = FileSetManager::getFileSet(row);
 	
@@ -53,7 +57,6 @@ wxString GridTable::GetValue(int row, int col)
 	case 0: return fs->getShortName();
 	case 1: return fs->typesToString();
 	}
-	
 }
 
 void GridTable::SetValue(int row, int col, const wxString& value)

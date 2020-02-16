@@ -21,6 +21,7 @@ class MediaPreviewPlayer;
 class wxGrid;
 class wxShellExecuteEvent;
 class GridTable;
+class GridTableTest;
 
 class MyApp: public wxApp
 {
@@ -40,9 +41,14 @@ public:
 
 private:
 
+    // grid functions
     void setupGrid(wxPanel* panel);
     void populateGrid();
-    void refreshGrid();
+    void refreshGridRowsAppended(const int noOfRows) const;
+    void refreshGridRowsDeleted(const int atRow, const int noOfRows) const;
+    void refreshGridRowsInserted(const int atRow, const int noOfRows) const;
+    void refreshGrid() const;
+
     Logger *setupLogger(wxPanel *panel);
 
     // menus

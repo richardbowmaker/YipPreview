@@ -32,6 +32,7 @@
 #include "ImagePanel.h"
 #include "MediaPreviewPlayer.h"
 #include "GridTable.h"
+#include "GridTableTest.h"
 
 wxIMPLEMENT_APP(MyApp);
 
@@ -134,11 +135,14 @@ MyFrame &MyFrame::getMainFrame()
 	return *this_;
 }
 
+//--------------------------------------------------------------
+// grid functions
+//--------------------------------------------------------------
+
 void MyFrame::setupGrid(wxPanel* panel)
 {
 	grid_ = new wxGrid(panel, wxID_ANY);
 	table_ = new GridTable();
-	table_->initialise();
 	grid_->SetTable(table_);
 	grid_->SetSelectionMode(wxGrid::wxGridSelectRows);
 	grid_->HideRowLabels();
@@ -147,17 +151,47 @@ void MyFrame::setupGrid(wxPanel* panel)
 void MyFrame::populateGrid()
 {
 	FileSetManager::addFiles(FU::pathToLocal(LR"(\YipPreview\Tryout)").c_str());
-	refreshGrid();
+	grid_->SetTable(table_);
+	grid_->SetSelectionMode(wxGrid::wxGridSelectRows);
+	grid_->HideRowLabels();
+	grid_->EnableEditing(false);
 }
 
-void MyFrame::refreshGrid()
+void MyFrame::refreshGridRowsAppended(const int noOfRows) const
 {
 	wxGridTableMessage push(table_,
 		wxGRIDTABLE_NOTIFY_ROWS_APPENDED,
-		FileSetManager::getNoOfFileSets());
+		noOfRows);
 	grid_->ProcessTableMessage(push);
 	grid_->ForceRefresh();
 }
+
+void MyFrame::refreshGridRowsDeleted(const int atRow, const int noOfRows) const
+{
+	wxGridTableMessage push(table_,
+		wxGRIDTABLE_NOTIFY_ROWS_DELETED,
+		atRow, noOfRows);
+	grid_->ProcessTableMessage(push);
+	grid_->ForceRefresh();
+}
+
+void MyFrame::refreshGridRowsInserted(const int atRow, const int noOfRows) const
+{
+	wxGridTableMessage push(table_,
+		wxGRIDTABLE_NOTIFY_ROWS_INSERTED,
+		atRow, noOfRows);
+	grid_->ProcessTableMessage(push);
+	grid_->ForceRefresh();
+}
+
+void MyFrame::refreshGrid() const
+{
+    grid_->ForceRefresh();
+}
+
+//--------------------------------------------------------------
+//
+//--------------------------------------------------------------
 
 Logger *MyFrame::setupLogger(wxPanel *panel)
 {

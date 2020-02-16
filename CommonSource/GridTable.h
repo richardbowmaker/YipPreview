@@ -8,6 +8,7 @@
 #ifndef COMMON_GRIDTABLE_H_
 #define COMMON_GRIDTABLE_H_
 
+#include <string>
 #include <wx/grid.h>
 #include <wx/wx.h>
 
@@ -26,8 +27,6 @@ public:
 	virtual wxString GetColLabelValue (int col);
 
 	void initialise();
-
-private:
 
 };
 

@@ -27,6 +27,8 @@
 
 #include "Constants.h"
 #include "FileSet.h"
+#include "GridTable.h"
+#include "GridTableTest.h"
 #include "Logger.h"
 #include "Tryout.h"
 #include "Utilities.h"
@@ -105,143 +107,146 @@ void MyFrame::deleteFile(FileSet& fileSet)
 
 void MyFrame::tryout(FileSet& fileSet)
 {
+
+	return;
+
 	bool b;
 
-
-	std::wstring afn;
-	int n;
-
-	afn = FU::abbreviateFilename(LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout1/a0123456789.jpg)", 30);
-	n = afn.size();
-	afn = FU::abbreviateFilename(LR"(/media/nas_share/Top/Data/Proects/WxWidgets/YipPreview/Tryout1/a0123456789.jpg)", 30);
-	n = afn.size();
-	afn = FU::abbreviateFilename(LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout1/a123456789.jpg)", 30);
-	n = afn.size();
-	afn = FU::abbreviateFilename(LR"(/media/nas_share/Top/Data/Projcts/WxWidgets/YipPreview/Tryout1/a012456789.jpg)", 29);
-	n = afn.size();
-	afn = FU::abbreviateFilename(LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/a0123456789.jpg)", 5);
-	afn = FU::abbreviateFilename(LR"(/media/012345678901234567890123456789.jpg)", 30);
-	afn = FU::abbreviateFilename(LR"(a0123456789.jpg)", 30);
-
-
-
-	b = FileSetManager::addFiles(FU::pathToLocal(LR"(\YipPreview\Tryout)").c_str());
-	Logger::info(L"Files %ls", FileSetManager::toString().c_str());
-	return;
-
-
-
-	b = SU::startsWith(L"abcde", L"abc");
-	b = SU::startsWith(L"ab", L"abc");
-	b = SU::startsWith(L"ab", L"");
-	b = SU::startsWith(L"", L"abc");
-	b = SU::startsWith(L"", L"");
-
-
-
-#ifdef WINDOWS_BUILD
-	std::wstring s;
-	s = FU::getFileStem(LR"(abc)");
-	s = FU::getFileStem(LR"(abc.txt)");
-	s = FU::getFileStem(LR"(\home\me\abc)");
-	s = FU::getFileStem(LR"(\home\me\abc.txt)");
-	s = FU::getFileStem(LR"(\home\me.you\abc)");
-	s = FU::getFileStem(LR"(\home\me.you\abc.txt)");
-	s = FU::getFileStem(LR"(\home\me\abc.txt.exe)");
-
-	s = FU::getPathNoExt(LR"(abc.txt)");
-	s = FU::getPathNoExt(LR"(abc)");
-	s = FU::getPathNoExt(LR"(\home\me\abc)");
-	s = FU::getPathNoExt(LR"(\home\me\abc.txt)");
-	s = FU::getPathNoExt(LR"(\home\me.you\abc.txt)");
-	s = FU::getPathNoExt(LR"(\home\me.you\abc)");
-
-	s = FU::getExt(LR"(abc.txt)");
-	s = FU::getExt(LR"(abc)");
-	s = FU::getExt(LR"(\home\me\abc)");
-	s = FU::getExt(LR"(\home\me\abc.txt)");
-	s = FU::getExt(LR"(\home\me.you\abc)");
-	s = FU::getExt(LR"(\home\me.you\abc.txt)");
-	return;
-#elif LINUX_BUILD
-	std::wstring s;
-	s = FU::getFileStem(LR"(abc)");
-	s = FU::getFileStem(LR"(abc.txt)");
-	s = FU::getFileStem(LR"(/home/me/abc)");
-	s = FU::getFileStem(LR"(/home/me/abc.txt)");
-	s = FU::getFileStem(LR"(/home/me.you/abc)");
-	s = FU::getFileStem(LR"(/home/me.you/abc.txt)");
-	s = FU::getFileStem(LR"(/home/me/abc.txt.exe)");
-
-	s = FU::getPathNoExt(LR"(abc.txt)");
-	s = FU::getPathNoExt(LR"(abc)");
-	s = FU::getPathNoExt(LR"(/home/me/abc)");
-	s = FU::getPathNoExt(LR"(/home/me/abc.txt)");
-	s = FU::getPathNoExt(LR"(/home/me.you/abc.txt)");
-	s = FU::getPathNoExt(LR"(/home/me.you/abc)");
-
-	s = FU::getExt(LR"(abc.txt)");
-	s = FU::getExt(LR"(abc)");
-	s = FU::getExt(LR"(/home/me/abc)");
-	s = FU::getExt(LR"(/home/me/abc.txt)");
-	s = FU::getExt(LR"(/home/me.you/abc)");
-	s = FU::getExt(LR"(/home/me.you/abc.txt)");
-	return;
-#endif
-
-
-	ShellExecute::shellAsyncGui(LR"(cmd /c dir D:\_Ricks\c#\ZiPreview\Executable)", 
-		MyFrame::getMainFrame().GetEventHandler());
-	return;
-
-	//CreateThread(NULL, 0, &MyThread, NULL, 0, NULL);
-	//Logger::info(L"thread started");
-	//return;
-
-	player_->setFile(FU::pathToLocal(LR"(\YipPreview\Tryout\f3.mp4)"));
-	player_->startPreview();
-	//	player_->Load(LR"(D:\Projects\WxWidgets\YipPreview\Tryout\f3.mp4)");
-	return;
-
-
-	// linux copy file
-	b = FU::copyFile(
-		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/a01.jpg)",
-		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout1/a01.jpg)");
-	b = FU::copyFile(
-		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/a01.jpg)",
-		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout1/a01.jpg)", false);
-	b = FU::copyFile(
-		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/a12345.jpg)",
-		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout1/a12345.jpg)");
-
-	// linux file exists
-	b = FU::fileExists(LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout1/a01.jpg)");
-	b = FU::fileExists(LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout1)");
-	b = FU::fileExists(LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout1/a12345.jpg)");
-
-	// linux delete file
-	b = FU::deleteFile(LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout1/a01.jpg)");
-	b = FU::deleteFile(LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout1/a01.jpg)");
-
-	// linux move file
-	b = FU::moveFile(
-		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/a01.jpg)",
-		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout1/a01.jpg)");
-	b = FU::moveFile(
-		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/a01.jpg)",
-		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout1/a01.jpg)", false);
-	b = FU::moveFile(
-		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/a01.jpg)",
-		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout1/a01.jpg)");
-	b = FU::moveFile(
-		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/a03.jpg)",
-		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout1/a01.jpg)");
-	b = FU::moveFile(
-		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/a03.jpg)",
-		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout2/a03.jpg)");
-
-	//b = FU::deleteFile(LR"(D:\IMAG0036_Copy.jpg)");
+//
+//	std::wstring afn;
+//	int n;
+//
+//	afn = FU::abbreviateFilename(LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout1/a0123456789.jpg)", 30);
+//	n = afn.size();
+//	afn = FU::abbreviateFilename(LR"(/media/nas_share/Top/Data/Proects/WxWidgets/YipPreview/Tryout1/a0123456789.jpg)", 30);
+//	n = afn.size();
+//	afn = FU::abbreviateFilename(LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout1/a123456789.jpg)", 30);
+//	n = afn.size();
+//	afn = FU::abbreviateFilename(LR"(/media/nas_share/Top/Data/Projcts/WxWidgets/YipPreview/Tryout1/a012456789.jpg)", 29);
+//	n = afn.size();
+//	afn = FU::abbreviateFilename(LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/a0123456789.jpg)", 5);
+//	afn = FU::abbreviateFilename(LR"(/media/012345678901234567890123456789.jpg)", 30);
+//	afn = FU::abbreviateFilename(LR"(a0123456789.jpg)", 30);
+//
+//
+//
+//	b = FileSetManager::addFiles(FU::pathToLocal(LR"(\YipPreview\Tryout)").c_str());
+//	Logger::info(L"Files %ls", FileSetManager::toString().c_str());
+//	return;
+//
+//
+//
+//	b = SU::startsWith(L"abcde", L"abc");
+//	b = SU::startsWith(L"ab", L"abc");
+//	b = SU::startsWith(L"ab", L"");
+//	b = SU::startsWith(L"", L"abc");
+//	b = SU::startsWith(L"", L"");
+//
+//
+//
+//#ifdef WINDOWS_BUILD
+//	std::wstring s;
+//	s = FU::getFileStem(LR"(abc)");
+//	s = FU::getFileStem(LR"(abc.txt)");
+//	s = FU::getFileStem(LR"(\home\me\abc)");
+//	s = FU::getFileStem(LR"(\home\me\abc.txt)");
+//	s = FU::getFileStem(LR"(\home\me.you\abc)");
+//	s = FU::getFileStem(LR"(\home\me.you\abc.txt)");
+//	s = FU::getFileStem(LR"(\home\me\abc.txt.exe)");
+//
+//	s = FU::getPathNoExt(LR"(abc.txt)");
+//	s = FU::getPathNoExt(LR"(abc)");
+//	s = FU::getPathNoExt(LR"(\home\me\abc)");
+//	s = FU::getPathNoExt(LR"(\home\me\abc.txt)");
+//	s = FU::getPathNoExt(LR"(\home\me.you\abc.txt)");
+//	s = FU::getPathNoExt(LR"(\home\me.you\abc)");
+//
+//	s = FU::getExt(LR"(abc.txt)");
+//	s = FU::getExt(LR"(abc)");
+//	s = FU::getExt(LR"(\home\me\abc)");
+//	s = FU::getExt(LR"(\home\me\abc.txt)");
+//	s = FU::getExt(LR"(\home\me.you\abc)");
+//	s = FU::getExt(LR"(\home\me.you\abc.txt)");
+//	return;
+//#elif LINUX_BUILD
+//	std::wstring s;
+//	s = FU::getFileStem(LR"(abc)");
+//	s = FU::getFileStem(LR"(abc.txt)");
+//	s = FU::getFileStem(LR"(/home/me/abc)");
+//	s = FU::getFileStem(LR"(/home/me/abc.txt)");
+//	s = FU::getFileStem(LR"(/home/me.you/abc)");
+//	s = FU::getFileStem(LR"(/home/me.you/abc.txt)");
+//	s = FU::getFileStem(LR"(/home/me/abc.txt.exe)");
+//
+//	s = FU::getPathNoExt(LR"(abc.txt)");
+//	s = FU::getPathNoExt(LR"(abc)");
+//	s = FU::getPathNoExt(LR"(/home/me/abc)");
+//	s = FU::getPathNoExt(LR"(/home/me/abc.txt)");
+//	s = FU::getPathNoExt(LR"(/home/me.you/abc.txt)");
+//	s = FU::getPathNoExt(LR"(/home/me.you/abc)");
+//
+//	s = FU::getExt(LR"(abc.txt)");
+//	s = FU::getExt(LR"(abc)");
+//	s = FU::getExt(LR"(/home/me/abc)");
+//	s = FU::getExt(LR"(/home/me/abc.txt)");
+//	s = FU::getExt(LR"(/home/me.you/abc)");
+//	s = FU::getExt(LR"(/home/me.you/abc.txt)");
+//	return;
+//#endif
+//
+//
+//	ShellExecute::shellAsyncGui(LR"(cmd /c dir D:\_Ricks\c#\ZiPreview\Executable)",
+//		MyFrame::getMainFrame().GetEventHandler());
+//	return;
+//
+//	//CreateThread(NULL, 0, &MyThread, NULL, 0, NULL);
+//	//Logger::info(L"thread started");
+//	//return;
+//
+//	player_->setFile(FU::pathToLocal(LR"(\YipPreview\Tryout\f3.mp4)"));
+//	player_->startPreview();
+//	//	player_->Load(LR"(D:\Projects\WxWidgets\YipPreview\Tryout\f3.mp4)");
+//	return;
+//
+//
+//	// linux copy file
+//	b = FU::copyFile(
+//		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/a01.jpg)",
+//		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout1/a01.jpg)");
+//	b = FU::copyFile(
+//		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/a01.jpg)",
+//		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout1/a01.jpg)", false);
+//	b = FU::copyFile(
+//		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/a12345.jpg)",
+//		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout1/a12345.jpg)");
+//
+//	// linux file exists
+//	b = FU::fileExists(LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout1/a01.jpg)");
+//	b = FU::fileExists(LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout1)");
+//	b = FU::fileExists(LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout1/a12345.jpg)");
+//
+//	// linux delete file
+//	b = FU::deleteFile(LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout1/a01.jpg)");
+//	b = FU::deleteFile(LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout1/a01.jpg)");
+//
+//	// linux move file
+//	b = FU::moveFile(
+//		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/a01.jpg)",
+//		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout1/a01.jpg)");
+//	b = FU::moveFile(
+//		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/a01.jpg)",
+//		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout1/a01.jpg)", false);
+//	b = FU::moveFile(
+//		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/a01.jpg)",
+//		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout1/a01.jpg)");
+//	b = FU::moveFile(
+//		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/a03.jpg)",
+//		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout1/a01.jpg)");
+//	b = FU::moveFile(
+//		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/a03.jpg)",
+//		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout2/a03.jpg)");
+//
+//	//b = FU::deleteFile(LR"(D:\IMAG0036_Copy.jpg)");
 	//b = FU::deleteFile(LR"(D:\IMAG0036_Copy.jpg)");
 //	bool b = FU::copyFile(LR"(D:\IMAG0036.jpg)", LR"(D:\IMAG0036_Copy.jpg)");
 //	b = FU::copyFile(LR"(D:\IMAG0036.jpg)", LR"(D:\IMAG0036_Copy.jpg)", false);
