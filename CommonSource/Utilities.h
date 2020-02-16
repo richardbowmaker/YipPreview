@@ -98,6 +98,7 @@ public:
 			StringsT &dirs,
 			const bool sort = false);
 	static std::wstring pathToLocal(const wchar_t *path);
+	static std::wstring abbreviateFilename(const std::wstring &file, const int max);
 
 private:
 

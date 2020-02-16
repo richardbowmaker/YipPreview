@@ -61,73 +61,71 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
 	this_ = this;
 
 	setupMenus();
-
 	CreateStatusBar();
 
 	Bind(wxEVT_CLOSE_WINDOW, &MyFrame::OnClose, this, wxID_ANY);
 
-	// the main frame sizer
-	wxBoxSizer* sizerMain = new wxBoxSizer(wxVERTICAL);
-
-	// create the vertical splitter and add to sizer
+	// create vertical splitter, images in rh pane, grid and logger in lh
 	wxSplitterWindow* splitterVertical = new wxSplitterWindow(this, wxID_ANY);
 	splitterVertical->SetSashGravity(0.5);
 	splitterVertical->SetMinimumPaneSize(20); // Smallest size the
+
+	// create main frame sizer and add vertical splitter to it
+	wxBoxSizer* sizerMain = new wxBoxSizer(wxVERTICAL);
+	SetSizer(sizerMain);
 	sizerMain->Add(splitterVertical, 1, wxEXPAND, 0);
 
-	// create lh horizontal splitter
+	// create lh panel and its sizer
 	wxPanel* pnlLh = new wxPanel(splitterVertical, wxID_ANY);
+	wxBoxSizer* sizerLh = new wxBoxSizer(wxVERTICAL);
+	pnlLh->SetSizer(sizerLh);
 
+	// create rh panel and its sizer
+	wxPanel* pnlRh = new wxPanel(splitterVertical, wxID_ANY);
+	wxBoxSizer* sizerRh = new wxBoxSizer(wxVERTICAL);
+	pnlRh->SetSizer(sizerRh);
+
+	// the lh pane has a horizontal splitter, grid top and logger bottom
 	wxSplitterWindow* splitterHorizontal = new wxSplitterWindow(pnlLh, wxID_ANY);
 	splitterHorizontal->SetSashGravity(0.5);
 	splitterHorizontal->SetMinimumPaneSize(20); // Smallest size the
-
-	wxBoxSizer* sizerLh = new wxBoxSizer(wxVERTICAL);
 	sizerLh->Add(splitterHorizontal, 1, wxEXPAND, 0);
-	pnlLh->SetSizer(sizerLh);
 
-	// add grid to top left panel
+	// create top left panel and its sizer
 	wxPanel* pnlTop = new wxPanel(splitterHorizontal, wxID_ANY);
 	wxBoxSizer* sizerTop = new wxBoxSizer(wxVERTICAL);
-	setupGrid();
-	sizerTop->Add(grid_, 1, wxEXPAND, 0);
 	pnlTop->SetSizer(sizerTop);
 
-	// create a bottom left panel with logger
+	// create grid and add it to top panel
+	setupGrid(pnlTop);
+	populateGrid();
+	sizerTop->Add(grid_, 1, wxEXPAND, 0);
+
+	// create a bottom panel 
 	wxPanel* pnlBot = new wxPanel(splitterHorizontal, wxID_ANY);
 	wxBoxSizer* sizerBot = new wxBoxSizer(wxVERTICAL);
+	pnlBot->SetSizer(sizerBot);
+
+	// create logger and add it to bottom panel
 	Logger* logger = setupLogger(pnlBot);
 	sizerBot->Add(logger, 1, wxEXPAND, 0);
-	pnlBot->SetSizer(sizerBot);
 
 	// added panels to horizontal splitter
 	splitterHorizontal->SplitHorizontally(pnlTop, pnlBot);
 
-	// create the RH pane, which is an image viewer
-	wxPanel* pnlRh = new wxPanel(splitterVertical, wxID_ANY);
+	// create the RH pane image viewer
 	ImagePanel* pnlIm = new ImagePanel(
 			pnlRh,
-#ifdef WINDOWS_BUILD
-		LR"(D:\Projects\WxWidgets\YipPreview\Tryout\a12.jpg)",
-#elif LINUX_BUILD
-		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/a04.jpg)",
-#endif
+			FU::pathToLocal(LR"(\YipPreview\Tryout\a12.jpg)"),
 			wxBITMAP_TYPE_JPEG);
 
-	wxBoxSizer* sizerRh = new wxBoxSizer(wxVERTICAL);
 	sizerRh->Add(pnlIm, 1, wxEXPAND, 0);
-	pnlRh->SetSizer(sizerRh);
 
 	// added panels to horizontal splitter
 	splitterVertical->SplitVertically(pnlLh, pnlRh);
 
-	this->SetSizer(sizerMain);
-	sizerMain->SetSizeHints(this);
-
-	this->SetClientSize(wxSize(1000, 600));
-
+	SetClientSize(wxSize(1000, 600));
 	Bind(wxEVT_SHELL_EXECUTE_RESULT, [this](wxShellExecuteEvent& e) {OnShellExecute(e);}, wxID_ANY);
-
 	populateGrid();
 }
 
@@ -136,9 +134,9 @@ MyFrame &MyFrame::getMainFrame()
 	return *this_;
 }
 
-void MyFrame::setupGrid()
+void MyFrame::setupGrid(wxPanel* panel)
 {
-	grid_ = new wxGrid(this, wxID_ANY);
+	grid_ = new wxGrid(panel, wxID_ANY);
 	table_ = new GridTable();
 	table_->initialise();
 	grid_->SetTable(table_);
@@ -148,7 +146,7 @@ void MyFrame::setupGrid()
 
 void MyFrame::populateGrid()
 {
-	FileSetManager::addFiles(FU::pathToLocal(LR"(D:\Projects\WxWidgets\YipPreview\Tryout)").c_str());
+	FileSetManager::addFiles(FU::pathToLocal(LR"(\YipPreview\Tryout)").c_str());
 	refreshGrid();
 }
 

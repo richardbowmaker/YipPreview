@@ -20,19 +20,20 @@ GridTable::~GridTable()
 
 void GridTable::initialise()
 {
-	wxGridCellAttrProvider *ap = new wxGridCellAttrProvider();
+	//wxGridCellAttrProvider *ap = new wxGridCellAttrProvider();
 
-	// all columns are read only
-	wxGridCellAttr*  a = new wxGridCellAttr();
-	a->SetReadOnly(true);
-	for (int c = 0; c < GetNumberCols(); c++)
-		ap->SetColAttr(a, c);
+	//// all columns are read only
+	//wxGridCellAttr*  a = new wxGridCellAttr();
+	//a->SetReadOnly(true);
+	//for (int c = 0; c < GetNumberCols(); c++)
+	//	ap->SetColAttr(a, c);
 
-	SetAttrProvider(ap);
+	//SetAttrProvider(ap);
 }
 
 int GridTable::GetNumberRows()
 {
+	return 2;
 	return FileSetManager::getNoOfFileSets();
 }
 
@@ -43,11 +44,13 @@ int GridTable::GetNumberCols()
 
 wxString GridTable::GetValue(int row, int col)
 {
+	return L"XX";
+
 	FileSetT fs = FileSetManager::getFileSet(row);
 	
 	switch (col)
 	{
-	case 0: return fs->getId();
+	case 0: return fs->getShortName();
 	case 1: return fs->typesToString();
 	}
 	
@@ -62,7 +65,7 @@ wxString GridTable::GetColLabelValue(int col)
 	switch (col)
 	{
 	case 0: return L"File";
-	case 1: return L"Other";
+	case 1: return L"Type";
 	}
 }
 

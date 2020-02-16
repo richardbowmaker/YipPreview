@@ -40,7 +40,7 @@ public:
 
 private:
 
-    void setupGrid();
+    void setupGrid(wxPanel* panel);
     void populateGrid();
     void refreshGrid();
     Logger *setupLogger(wxPanel *panel);
@@ -60,7 +60,7 @@ private:
 
 	MediaPreviewPlayer *player_;
 	wxGrid *grid_;
-    GridTable* table_;
+    GridTable *table_;
 
     static MyFrame* this_;
 };

@@ -107,9 +107,29 @@ void MyFrame::tryout(FileSet& fileSet)
 {
 	bool b;
 
-	b = FileSetManager::addFiles(FU::pathToLocal(LR"(D:\Projects\WxWidgets\YipPreview\Tryout)").c_str());
+
+	std::wstring afn;
+	int n;
+
+	afn = FU::abbreviateFilename(LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout1/a0123456789.jpg)", 30);
+	n = afn.size();
+	afn = FU::abbreviateFilename(LR"(/media/nas_share/Top/Data/Proects/WxWidgets/YipPreview/Tryout1/a0123456789.jpg)", 30);
+	n = afn.size();
+	afn = FU::abbreviateFilename(LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout1/a123456789.jpg)", 30);
+	n = afn.size();
+	afn = FU::abbreviateFilename(LR"(/media/nas_share/Top/Data/Projcts/WxWidgets/YipPreview/Tryout1/a012456789.jpg)", 29);
+	n = afn.size();
+	afn = FU::abbreviateFilename(LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/a0123456789.jpg)", 5);
+	afn = FU::abbreviateFilename(LR"(/media/012345678901234567890123456789.jpg)", 30);
+	afn = FU::abbreviateFilename(LR"(a0123456789.jpg)", 30);
+
+
+
+	b = FileSetManager::addFiles(FU::pathToLocal(LR"(\YipPreview\Tryout)").c_str());
 	Logger::info(L"Files %ls", FileSetManager::toString().c_str());
 	return;
+
+
 
 	b = SU::startsWith(L"abcde", L"abc");
 	b = SU::startsWith(L"ab", L"abc");
@@ -178,11 +198,7 @@ void MyFrame::tryout(FileSet& fileSet)
 	//Logger::info(L"thread started");
 	//return;
 
-#ifdef WINDOWS_BUILD
-	player_->setFile(LR"(D:\Projects\WxWidgets\YipPreview\Tryout\f3.mp4)");
-#elif LINUX_BUILD
-	player_->setFile(LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/f3.mp4)");
-#endif
+	player_->setFile(FU::pathToLocal(LR"(\YipPreview\Tryout\f3.mp4)"));
 	player_->startPreview();
 	//	player_->Load(LR"(D:\Projects\WxWidgets\YipPreview\Tryout\f3.mp4)");
 	return;

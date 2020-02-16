@@ -27,6 +27,7 @@ public:
 	bool hasVideo() const;
 	bool hasLink() const;
 	std::wstring typesToString() const;
+	std::wstring getShortName() const;
 
 	static bool isValidType(const std::wstring filename);
 	static std::wstring filenameToId(const std::wstring filename);
@@ -36,7 +37,10 @@ private:
 	enum TypeT { InvalidFile, ImageFile, LinkFile, VideoFile };
 	static TypeT filenameToType(const std::wstring filename);
 
+	bool setId(const std::wstring filename);
+
 	std::wstring id_;
+	std::wstring short_;
 	std::wstring image_;
 	std::wstring video_;
 	std::wstring link_;

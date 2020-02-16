@@ -72,7 +72,7 @@ long Utilities::getMsCounter()
 std::wstring SU::strToWStr(const char* str, int len /*= 0*/)
 {
 	std::size_t l = (len == 0 ? strlen(str) : static_cast<std::size_t>(len));
-	std::wstring wc(l + 1, 0);
+	std::wstring wc(l, 0);
 	std::mbstowcs( &wc[0], str, l);
 	return wc;
 }
@@ -80,7 +80,7 @@ std::wstring SU::strToWStr(const char* str, int len /*= 0*/)
 std::string SU::wStrToStr(const wchar_t* str, int len /*= 0*/)
 {
 	std::size_t l = (len == 0 ? wcslen(str) : static_cast<std::size_t>(len));
-	std::string sc(l + 1, 0);
+	std::string sc(l, 0);
 	std::wcstombs(&sc[0], str, l);
 	return sc;
 }
@@ -316,8 +316,9 @@ bool FU::findFiles(
 				}
 
 				if (match)
-					add in path name
-					files->push_back(SU::strToWStr(ent->d_name));
+				{
+					files->push_back(directory + std::wstring(L"/") + SU::strToWStr(ent->d_name));
+				}
 			}
 			break;
 		}
@@ -452,7 +453,7 @@ std::wstring FU::getExt(const std::wstring path)
 	if (n == std::string::npos || n < m)
 		return L"";
 	else
-		return path.substr(n + 1);
+		return path.substr(n + 1, path.size() - n - 1);
 }
 
 std::wstring FU::getPathSeparator()
@@ -468,8 +469,21 @@ std::wstring FU::getPathSeparator()
 // convert file path to window or linux build version
 std::wstring FU::pathToLocal(const wchar_t* path)
 {
-	// convert path separator
+	constexpr const wchar_t* sW = LR"(D:\)";
+	constexpr const wchar_t* sL = LR"(/media/nas_share/Top/Data/)";
 	std::wstring p(path);
+
+#ifdef WINDOWS_BUILD
+	// substitute linux absolute path with windows
+	if (SU::startsWith(p.c_str(), sL))
+		p = std::wstring(sW) + p.substr(wcslen(sL));
+#elif LINUX_BUILD
+	// substitute windows absolute path with linux
+	if (SU::startsWith(p.c_str(), sW))
+		p = std::wstring(sL) + p.substr(wcslen(sW));
+#endif
+
+	// convert path separator
 	for (auto it = p.begin(); it != p.end(); ++it)
 	{
 #ifdef WINDOWS_BUILD
@@ -479,24 +493,43 @@ std::wstring FU::pathToLocal(const wchar_t* path)
 #endif
 	}
 
-	constexpr const wchar_t* sW = LR"(D:\)";
-	constexpr const wchar_t* sL = LR"(\media\nas_share\Top\Data\)";
-	constexpr const wchar_t* sP = LR"(\Projects)";
-
-	// adjust start of filename to match windows/linux environment
 #ifdef WINDOWS_BUILD
-	if (SU::startsWith(p.c_str(), sL))
-		p = std::wstring(sW) + p.substr(wcslen(sL));
-	else if (SU::startsWith(p.c_str(), sP))
-		p = std::wstring(sW) + p.substr(1);
+	// convert relative path to absolute
+	if (SU::startsWith(p.c_str(), LR"(\YipPreview)"))
+		p = std::wstring(LR"(D:\Projects\WxWidgets)") + p;
 #elif LINUX_BUILD
-	if (SU::startsWith(p.c_str(), sW))
-		p = std::wstring(sL) + p.substr(wcslen(sW));
-	else if (SU::startsWith(p.c_str(), sP))
-		p = std::wstring(sL) + p.substr(1);
+	if (SU::startsWith(p.c_str(), L"/YipPreview"))
+		p = std::wstring(LR"(/media/nas_share/Top/Data/Projects/WxWidgets)") + p;
 #endif
+
 	return p;
 }
+
+// abbreviate filename to /abc/de ... xyz/filename
+std::wstring FU::abbreviateFilename(const std::wstring &file, const int max)
+{
+	// return whole thing if less than max characters
+	size_t len = file.size();
+	if (len <= max) return file;
+
+	// if no path in file name show the whole file id
+	std::size_t m = file.find_last_of(FU::getPathSeparator());
+	if (m == std::string::npos) return file;
+
+	// length of filename part
+	int l = file.size() - m;
+	if (l > max)
+	{
+		// if file name part is greater than max characters
+		// show the whole file name
+		return file.substr(m + 1);
+	}
+
+	// chars less file name and elipsis part
+	int n = max - l - 3;
+	return file.substr(0, (n/2) + (n%2)) + std::wstring(L"...") + file.substr(m - (n/2));
+}
+
 
 
 

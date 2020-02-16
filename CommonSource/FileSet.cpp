@@ -2,6 +2,7 @@
 #include "FileSet.h"
 
 #include <filesystem>
+#include <string>
 
 #include "Logger.h"
 #include "Utilities.h"
@@ -40,21 +41,42 @@ bool FileSet::isValidType(const std::wstring filename)
 
 void FileSet::set(const std::wstring filename)
 {
-	std::wstring ext = FU::getExt(filename);
-
-	if (ext.compare(L"jpg") == 0 || ext.compare(L"jpeg") == 0 )
-		setImage(filename);
-	else if (ext.compare(L"mp4") == 0 || ext.compare(L"avi") == 0 )
-		setVideo(filename);
-	else if (ext.compare(L"lnk") == 0)
-		setLink(filename);
-	else
+	switch (filenameToType(filename))
+	{
+	case ImageFile: setImage(filename); return;
+	case VideoFile: setVideo(filename); return;
+	case LinkFile:  setLink(filename);  return;
+	default:
 		Logger::error(L"FileSet::setFilename, unhandled file type");
+		break;
+	}
 }
 
 std::wstring FileSet::getId() const
 {
 	return id_;
+}
+
+bool FileSet::setId(const std::wstring filename)
+{
+	std::wstring s = FU::getPathNoExt(filename);
+	if (id_.size() == 0)
+	{
+		// first time a file is set, capture the id and short name
+		id_ = s;
+		short_ = FU::abbreviateFilename(id_, 30);
+		return true;
+	}
+	if (s.compare(id_) == 0)
+	{
+		// file matches id ok
+		return true;
+	}
+	else
+	{
+		Logger::error(L"FileSet::setId mismatch, id = %ls, fn = %ls", id_.c_str(), filename.c_str());
+		return false;
+	}
 }
 
 std::wstring FileSet::getImage() const
@@ -64,12 +86,7 @@ std::wstring FileSet::getImage() const
 
 void FileSet::setImage(const std::wstring filename)
 {
-	std::wstring s = FU::getPathNoExt(filename);
-	if (id_.size() == 0)
-		id_ = s;
-	else if (!s.compare(id_) == 0)
-		Logger::error(L"FileSet::setImageFilename, id = %ls, fn = %ls", id_.c_str(), filename.c_str());
-	image_ = filename;
+	if (setId(filename)) image_ = filename;
 }
 
 std::wstring FileSet::getVideo() const
@@ -79,12 +96,7 @@ std::wstring FileSet::getVideo() const
 
 void FileSet::setVideo(const std::wstring filename)
 {
-	std::wstring s = FU::getPathNoExt(filename);
-	if (id_.size() == 0)
-		id_ = s;
-	else if (!s.compare(id_) == 0)
-		Logger::error(L"FileSet::setVideoFilename, id = %ls, fn = %ls", id_.c_str(), filename.c_str());
-	video_ = filename;
+	if (setId(filename)) video_ = filename;
 }
 
 std::wstring FileSet::getLink() const
@@ -94,12 +106,7 @@ std::wstring FileSet::getLink() const
 
 void FileSet::setLink(const std::wstring filename)
 {
-	std::wstring s = FU::getPathNoExt(filename);
-	if (id_.size() == 0)
-		id_ = s;
-	else if (!s.compare(id_) == 0)
-		Logger::error(L"FileSet::setLinkFilename, id = %ls, fn = %ls", id_.c_str(), filename.c_str());
-	link_ = filename;
+	if (setId(filename)) link_ = filename;
 }
 
 bool FileSet::hasImage() const
@@ -124,6 +131,11 @@ std::wstring FileSet::typesToString() const
 	if (hasImage()) s += L"I";
 	if (hasLink())  s += L"L";
 	return s;
+}
+
+std::wstring FileSet::getShortName() const
+{
+	return short_;
 }
 
 std::wstring FileSet::toString() const
