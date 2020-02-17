@@ -50,12 +50,12 @@ wxString GridTable::GetValue(int row, int col)
 		return L"";
 	}
 
-	FileSetT fs = FileSetManager::getFileSet(row);
+	FileSet fs = FileSetManager::getFileSet(row);
 	
 	switch (col)
 	{
-	case 0: return fs->getShortName();
-	case 1: return fs->typesToString();
+	case 0: return fs.getShortName();
+	case 1: return fs.typesToString();
 	}
 }
 

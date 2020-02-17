@@ -15,6 +15,8 @@
     #include <wx/wx.h>
 #endif
 
+#include <map>
+
 class FileSet;
 class Logger;
 class MediaPreviewPlayer;
@@ -22,6 +24,7 @@ class wxGrid;
 class wxShellExecuteEvent;
 class GridTable;
 class GridTableTest;
+class wxMenuItem;
 
 class MyApp: public wxApp
 {
@@ -41,6 +44,8 @@ public:
 
 private:
 
+    void openMenuEvent(wxMenuEvent& event, int menuId);
+
     // grid functions
     void setupGrid(wxPanel* panel);
     void populateGrid();
@@ -48,14 +53,19 @@ private:
     void refreshGridRowsDeleted(const int atRow, const int noOfRows) const;
     void refreshGridRowsInserted(const int atRow, const int noOfRows) const;
     void refreshGrid() const;
+    int getSelectedRow();
 
     Logger *setupLogger(wxPanel *panel);
 
     // menus
     void setupMenus();
 
-    void deleteFile(FileSet& fileSet);
-    void tryout(FileSet& fileSet);
+    using MenuHandlerFuncT = void (MyFrame::*)(wxCommandEvent &, const int, FileSet&);
+    void menuHandler(wxCommandEvent& event, MenuHandlerFuncT f);
+
+    void deleteFile(wxCommandEvent& event, const int row, FileSet& fileset);
+    void play(wxCommandEvent& event, const int row, FileSet& fileset);
+    void tryout(wxCommandEvent& event, const int row, FileSet &fileset);
 
     FileSet& getSelectedFileSet() const;
 
@@ -68,6 +78,7 @@ private:
 	wxGrid *grid_;
     GridTable *table_;
 
+    std::map<int, wxMenuItem*> menus_;
     static MyFrame* this_;
 };
 

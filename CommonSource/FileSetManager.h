@@ -27,7 +27,7 @@ public:
 	static bool addFiles(const std::wstring directory);
 	static std::wstring toString();
 	static int getNoOfFileSets();
-	static FileSetT getFileSet(const int n);
+	static FileSet& getFileSet(const int n);
 
 private:
 
@@ -37,7 +37,7 @@ private:
 	std::wstring toStringImpl();
 	bool addFilesImpl(const std::wstring directory);
 	int getNoOfFileSetsImpl() const;
-	FileSetT getFileSetImpl(const int n) const;
+	FileSet& getFileSetImpl(const int n) const;
 
 	FileSetsT fileSets_;
 };

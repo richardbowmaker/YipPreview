@@ -40,44 +40,99 @@
 enum MenuIDsT
 {
 	ID_Dummy = 0,
-	ID_FileDelete,
-	ID_FileImport,
-	ID_ToolsTryout
+	ID_MenuFile,
+	ID_MenuFileDelete,
+	ID_MenuFileExit,
+	ID_MenuFileImport,
+	ID_MenuView,
+	ID_MenuViewPlay,
+	ID_MenuTools,
+	ID_MenuToolsTryout,
+	ID_MenuHelp,
+	ID_MenuHelpAbout
 };
+
+// only invokes menu handler if there is a row selected in the grid
+void MyFrame::menuHandler(wxCommandEvent &event, MenuHandlerFuncT f)
+{
+	int row = getSelectedRow();
+	if (row != -1) 
+		(this->*f)(event, row, FileSetManager::getFileSet(row));
+}
+
+void MyFrame::openMenuEvent(wxMenuEvent& event, int menuId)
+{
+	// is there a row selected
+	bool isSelected = (getSelectedRow() != -1);
+	
+	switch (menuId)
+	{
+	case ID_MenuFile:
+		menus_[ID_MenuFileDelete]->Enable(isSelected);
+		break;
+
+	case ID_MenuView:
+		menus_[ID_MenuViewPlay]->Enable(isSelected);
+		break;
+
+	case ID_MenuTools:
+		break;
+
+	case ID_MenuHelp:
+		break;
+	}
+}
 
 void MyFrame::setupMenus()
 {
 	// file menu
 	wxMenu* menuFile = new wxMenu;
-	menuFile->Append(ID_FileDelete, "Delete...\tCtrl-D", "Delete items in a file set");
-	Bind(wxEVT_MENU, [this](wxCommandEvent& event) -> void {deleteFile(getSelectedFileSet());}, ID_FileDelete);
+	menuFile->Bind(wxEVT_MENU_OPEN, [this](wxMenuEvent& e) -> void { openMenuEvent(e, ID_MenuFile); }, wxID_ANY);
+	
+	// file delete
+	menus_[ID_MenuFileDelete] = 
+		menuFile->Append(ID_MenuFileDelete, "Delete...\tCtrl-D", "Delete file");
+	Bind(wxEVT_MENU, [this](wxCommandEvent& e) -> void { menuHandler(e, &MyFrame::deleteFile); }, ID_MenuFileDelete);
 
 	menuFile->AppendSeparator();
-	menuFile->Append(wxID_EXIT);
+
+	// file exit
+	menus_[ID_MenuFileExit] = menuFile->Append(wxID_EXIT);
 	Bind(wxEVT_MENU, [this](wxCommandEvent& event) -> void {Close(true);}, wxID_EXIT);
 
 	// view menu
 	wxMenu* menuView = new wxMenu;
+	menuView->Bind(wxEVT_MENU_OPEN, [this](wxMenuEvent& e) -> void { openMenuEvent(e, ID_MenuView); }, wxID_ANY);
+
+	// view play
+	menus_[ID_MenuViewPlay] =
+		menuView->Append(ID_MenuViewPlay, "Play\tF1", "Play file");
+	Bind(wxEVT_MENU, [this](wxCommandEvent& e) -> void { menuHandler(e, &MyFrame::play); }, ID_MenuViewPlay);
 
 	// tools menu
 	wxMenu* menuTools = new wxMenu;
-	menuTools->Append(ID_ToolsTryout, "&TryOut...\tCtrl-T", "Hook for experimental code");
-//	Bind(wxEVT_MENU, &MyFrame::onToolsTryout, this, ID_ToolsTryout);
-	Bind(wxEVT_MENU, [this](wxCommandEvent& event) -> void {tryout(getSelectedFileSet());}, ID_ToolsTryout);
+	menuTools->Bind(wxEVT_MENU_OPEN, [this](wxMenuEvent& e) -> void { openMenuEvent(e, ID_MenuTools); }, wxID_ANY);
+
+	// tools tryout
+	menus_[ID_MenuToolsTryout] =
+		menuTools->Append(ID_MenuToolsTryout, "&TryOut...\tCtrl-T", "Hook for experimental code");
+	Bind(wxEVT_MENU, [this](wxCommandEvent& e) -> void { menuHandler(e, &MyFrame::tryout); }, ID_MenuToolsTryout);
 
 	// help menu
 	wxMenu* menuHelp = new wxMenu;
-	menuHelp->Append(wxID_ABOUT);
-	Bind(wxEVT_MENU, [this](wxCommandEvent& event) -> void {
+	menuHelp->Bind(wxEVT_MENU_OPEN, [this](wxMenuEvent& e) -> void { openMenuEvent(e, ID_MenuHelp); }, wxID_ANY);
+	
+	menus_[ID_MenuHelpAbout] = menuHelp->Append(wxID_ABOUT);
+	Bind(wxEVT_MENU, [this](wxCommandEvent& e) -> void {
 		wxMessageBox("This is a wxWidgets' Hello world sample",
 			"About Hello World", wxOK | wxICON_INFORMATION);}, wxID_ABOUT);
 
 	// setup menu bar
 	wxMenuBar* menuBar = new wxMenuBar;
-	menuBar->Append(menuFile, "File");
-	menuBar->Append(menuView, "View");
+	menuBar->Append(menuFile,  "File");
+	menuBar->Append(menuView,  "View");
 	menuBar->Append(menuTools, "Tools");
-	menuBar->Append(menuHelp, "Help");
+	menuBar->Append(menuHelp,  "Help");
 	SetMenuBar(menuBar);
 }
 
@@ -85,10 +140,14 @@ void MyFrame::setupMenus()
 // functions 
 //--------------------------------------------------------------------------
 
-void MyFrame::deleteFile(FileSet& fileSet)
+void MyFrame::deleteFile(wxCommandEvent& event, const int row, FileSet& fileset)
 {
-	wxMessageBox(L"Delete file", Constants::title, wxOK | wxICON_INFORMATION);
+	Logger::info(L"Delete file %ls, %d", fileset.getId().c_str(), row);
+}
 
+void MyFrame::play(wxCommandEvent& event, const int row, FileSet& fileset)
+{
+	Logger::info(L"Play %ls, %d", fileset.getId().c_str(), row);
 }
 
 //--------------------------------------------------------------------------
@@ -105,7 +164,7 @@ void MyFrame::deleteFile(FileSet& fileSet)
 //	return 0;
 //}
 
-void MyFrame::tryout(FileSet& fileSet)
+void MyFrame::tryout(wxCommandEvent& event, const int row, FileSet& fileset)
 {
 
 	return;

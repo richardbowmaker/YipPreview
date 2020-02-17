@@ -36,7 +36,7 @@ int FileSetManager::getNoOfFileSets()
 	return get().getNoOfFileSetsImpl();
 }
 
-FileSetT FileSetManager::getFileSet(const int n)
+FileSet& FileSetManager::getFileSet(const int n)
 {
 	return get().getFileSetImpl(n);
 }
@@ -92,9 +92,9 @@ int FileSetManager::getNoOfFileSetsImpl() const
 	return static_cast<int>(fileSets_.size());
 }
 
-FileSetT FileSetManager::getFileSetImpl(const int n) const
+FileSet& FileSetManager::getFileSetImpl(const int n) const
 {
-	return fileSets_[n].second;
+	return *fileSets_[n].second;
 }
 
 

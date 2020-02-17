@@ -189,6 +189,15 @@ void MyFrame::refreshGrid() const
     grid_->ForceRefresh();
 }
 
+int MyFrame::getSelectedRow()
+{
+	wxArrayInt rows = grid_->GetSelectedRows();
+	if (rows.GetCount() == 1)
+		return rows.Item(0);
+	else
+		return -1;
+}
+
 //--------------------------------------------------------------
 //
 //--------------------------------------------------------------
