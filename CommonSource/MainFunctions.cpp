@@ -52,15 +52,7 @@ enum MenuIDsT
 	ID_MenuHelpAbout
 };
 
-// only invokes menu handler if there is a row selected in the grid
-void MyFrame::menuHandler(wxCommandEvent &event, MenuHandlerFuncT f)
-{
-	int row = getSelectedRow();
-	if (row != -1) 
-		(this->*f)(event, row, FileSetManager::getFileSet(row));
-}
-
-void MyFrame::openMenuEvent(wxMenuEvent& event, int menuId)
+void MyFrame::menuOpenDispatch(wxMenuEvent& event, int menuId)
 {
 	// is there a row selected
 	bool isSelected = (getSelectedRow() != -1);
@@ -83,49 +75,70 @@ void MyFrame::openMenuEvent(wxMenuEvent& event, int menuId)
 	}
 }
 
+void MyFrame::menuSelectedDispatch(wxCommandEvent& event)
+{
+	int id = event.GetId();
+
+	FileSetT fs;
+	int row = getSelectedRow();
+	if (row != -1)
+		fs = FileSetManager::getFileSet(row);
+
+	switch (event.GetId())
+	{
+	case ID_MenuFileDelete:
+		if (row != -1) deleteFile(event, row, *fs.get());
+		break;
+
+	case ID_MenuViewPlay:
+		if (row != -1) play(event, row, *fs.get());
+		break;
+
+	case ID_MenuToolsTryout:
+		tryout(event, row);
+		break;
+
+	case ID_MenuHelpAbout:
+		break;
+	}
+}
+
 void MyFrame::setupMenus()
 {
 	// file menu
 	wxMenu* menuFile = new wxMenu;
-	menuFile->Bind(wxEVT_MENU_OPEN, [this](wxMenuEvent& e) -> void { openMenuEvent(e, ID_MenuFile); }, wxID_ANY);
+	menuFile->Bind(wxEVT_MENU_OPEN, [this](wxMenuEvent& e) -> void { menuOpenDispatch(e, ID_MenuFile); }, wxID_ANY);
 	
 	// file delete
 	menus_[ID_MenuFileDelete] = 
 		menuFile->Append(ID_MenuFileDelete, "Delete...\tCtrl-D", "Delete file");
-	Bind(wxEVT_MENU, [this](wxCommandEvent& e) -> void { menuHandler(e, &MyFrame::deleteFile); }, ID_MenuFileDelete);
 
 	menuFile->AppendSeparator();
 
 	// file exit
 	menus_[ID_MenuFileExit] = menuFile->Append(wxID_EXIT);
-	Bind(wxEVT_MENU, [this](wxCommandEvent& event) -> void {Close(true);}, wxID_EXIT);
 
 	// view menu
 	wxMenu* menuView = new wxMenu;
-	menuView->Bind(wxEVT_MENU_OPEN, [this](wxMenuEvent& e) -> void { openMenuEvent(e, ID_MenuView); }, wxID_ANY);
+	menuView->Bind(wxEVT_MENU_OPEN, [this](wxMenuEvent& e) -> void { menuOpenDispatch(e, ID_MenuView); }, wxID_ANY);
 
 	// view play
 	menus_[ID_MenuViewPlay] =
 		menuView->Append(ID_MenuViewPlay, "Play\tF1", "Play file");
-	Bind(wxEVT_MENU, [this](wxCommandEvent& e) -> void { menuHandler(e, &MyFrame::play); }, ID_MenuViewPlay);
 
 	// tools menu
 	wxMenu* menuTools = new wxMenu;
-	menuTools->Bind(wxEVT_MENU_OPEN, [this](wxMenuEvent& e) -> void { openMenuEvent(e, ID_MenuTools); }, wxID_ANY);
+	menuTools->Bind(wxEVT_MENU_OPEN, [this](wxMenuEvent& e) -> void { menuOpenDispatch(e, ID_MenuTools); }, wxID_ANY);
 
 	// tools tryout
 	menus_[ID_MenuToolsTryout] =
 		menuTools->Append(ID_MenuToolsTryout, "&TryOut...\tCtrl-T", "Hook for experimental code");
-	Bind(wxEVT_MENU, [this](wxCommandEvent& e) -> void { menuHandler(e, &MyFrame::tryout); }, ID_MenuToolsTryout);
 
 	// help menu
 	wxMenu* menuHelp = new wxMenu;
-	menuHelp->Bind(wxEVT_MENU_OPEN, [this](wxMenuEvent& e) -> void { openMenuEvent(e, ID_MenuHelp); }, wxID_ANY);
+	menuHelp->Bind(wxEVT_MENU_OPEN, [this](wxMenuEvent& e) -> void { menuOpenDispatch(e, ID_MenuHelp); }, wxID_ANY);
 	
 	menus_[ID_MenuHelpAbout] = menuHelp->Append(wxID_ABOUT);
-	Bind(wxEVT_MENU, [this](wxCommandEvent& e) -> void {
-		wxMessageBox("This is a wxWidgets' Hello world sample",
-			"About Hello World", wxOK | wxICON_INFORMATION);}, wxID_ABOUT);
 
 	// setup menu bar
 	wxMenuBar* menuBar = new wxMenuBar;
@@ -134,6 +147,25 @@ void MyFrame::setupMenus()
 	menuBar->Append(menuTools, "Tools");
 	menuBar->Append(menuHelp,  "Help");
 	SetMenuBar(menuBar);
+
+	// bind the menu selected event to the dispatch function
+	Bind(wxEVT_MENU, &MyFrame::menuSelectedDispatch, this, wxID_ANY);
+}
+
+wxMenu *MyFrame::getGridPopupMenu()
+{
+	bool isSelected = (getSelectedRow() != -1);
+
+	wxMenu *menu = new wxMenu();
+	wxMenuItem *menuItem;
+	menuItem = menu->Append(ID_MenuFileDelete, L"Delete ...");
+	menuItem->Enable(isSelected);
+
+	menuItem = menu->Append(ID_MenuViewPlay,   L"Play");
+	menuItem->Enable(isSelected);
+
+	menu->Bind(wxEVT_MENU, &MyFrame::menuSelectedDispatch, this, wxID_ANY);
+	return menu;
 }
 
 //--------------------------------------------------------------------------
@@ -164,7 +196,7 @@ void MyFrame::play(wxCommandEvent& event, const int row, FileSet& fileset)
 //	return 0;
 //}
 
-void MyFrame::tryout(wxCommandEvent& event, const int row, FileSet& fileset)
+void MyFrame::tryout(wxCommandEvent& event, const int row)
 {
 
 	return;

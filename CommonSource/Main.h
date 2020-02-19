@@ -17,14 +17,18 @@
 
 #include <map>
 
+#include "ImagesBrowser.h"
+
 class FileSet;
+class GridTable;
+class GridTableTest;
 class Logger;
 class MediaPreviewPlayer;
 class wxGrid;
-class wxShellExecuteEvent;
-class GridTable;
-class GridTableTest;
+class wxGridEvent;
 class wxMenuItem;
+class wxMenu;
+class wxShellExecuteEvent;
 
 class MyApp: public wxApp
 {
@@ -34,7 +38,7 @@ public:
     virtual bool OnInit();
 };
 
-class MyFrame: public wxFrame
+class MyFrame: public wxFrame, ImagesBrowserData
 {
 public:
 
@@ -42,37 +46,43 @@ public:
 
     static MyFrame& getMainFrame();
 
+    virtual int getNoOfRows();
+    virtual int getNoOfCols();
+    virtual int getNoOfImages();
+    virtual int getSelected();
+    virtual std::wstring getImage(const int n);
+
 private:
 
-    void openMenuEvent(wxMenuEvent& event, int menuId);
-
     // grid functions
-    void setupGrid(wxPanel* panel);
+    void initialiseGrid(wxPanel* panel);
+    void uninitialiseGrid();
     void populateGrid();
     void refreshGridRowsAppended(const int noOfRows) const;
     void refreshGridRowsDeleted(const int atRow, const int noOfRows) const;
     void refreshGridRowsInserted(const int atRow, const int noOfRows) const;
     void refreshGrid() const;
-    int getSelectedRow();
+    int  getSelectedRow();
+    void gridEventDispatch(wxGridEvent &event);
 
     Logger *setupLogger(wxPanel *panel);
 
     // menus
     void setupMenus();
-
-    using MenuHandlerFuncT = void (MyFrame::*)(wxCommandEvent &, const int, FileSet&);
-    void menuHandler(wxCommandEvent& event, MenuHandlerFuncT f);
+    void menuSelectedDispatch(wxCommandEvent &event);
+    void menuOpenDispatch(wxMenuEvent &event, int menuId);
+    wxMenu *getGridPopupMenu();
 
     void deleteFile(wxCommandEvent& event, const int row, FileSet& fileset);
     void play(wxCommandEvent& event, const int row, FileSet& fileset);
-    void tryout(wxCommandEvent& event, const int row, FileSet &fileset);
+    void tryout(wxCommandEvent& event, const int row);
 
     FileSet& getSelectedFileSet() const;
 
-    void OnClose(wxCloseEvent& event);
-    void OnThread(wxCommandEvent& event);
-	void OnProcessCustom(wxCommandEvent& event);
-	void OnShellExecute(wxShellExecuteEvent& event);
+    void OnClose(wxCloseEvent &event);
+    void OnThread(wxCommandEvent &event);
+	void OnProcessCustom(wxCommandEvent &event);
+	void OnShellExecute(wxShellExecuteEvent &event);
 
 	MediaPreviewPlayer *player_;
 	wxGrid *grid_;

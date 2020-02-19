@@ -23,16 +23,18 @@
 	#include <X11/Xlib.h>
 #endif
 
+#include "Constants.h"
 #include "FileSet.h"
 #include "FileSetManager.h"
-#include "Logger.h"
-#include "Tryout.h"
-#include "Utilities.h"
-#include "ShellExecute.h"
-#include "ImagePanel.h"
-#include "MediaPreviewPlayer.h"
 #include "GridTable.h"
 #include "GridTableTest.h"
+#include "ImagePanel.h"
+#include "ImagesBrowser.h"
+#include "Logger.h"
+#include "MediaPreviewPlayer.h"
+#include "ShellExecute.h"
+#include "Tryout.h"
+#include "Utilities.h"
 
 wxIMPLEMENT_APP(MyApp);
 
@@ -60,6 +62,9 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
 {
 	// keep static pointer to main frame
 	this_ = this;
+
+	Constants::initialise();
+	FileSetManager::initialise();
 
 	setupMenus();
 	CreateStatusBar();
@@ -98,7 +103,7 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
 	pnlTop->SetSizer(sizerTop);
 
 	// create grid and add it to top panel
-	setupGrid(pnlTop);
+	initialiseGrid(pnlTop);
 	populateGrid();
 	sizerTop->Add(grid_, 1, wxEXPAND, 0);
 
@@ -115,19 +120,25 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
 	splitterHorizontal->SplitHorizontally(pnlTop, pnlBot);
 
 	// create the RH pane image viewer
-	ImagePanel* pnlIm = new ImagePanel(
-			pnlRh,
-			FU::pathToLocal(LR"(\YipPreview\Tryout\a12.jpg)"),
-			wxBITMAP_TYPE_JPEG);
+	//ImagePanel* pnlIm = new ImagePanel(
+	//		pnlRh,
+	//		FU::pathToLocal(LR"(\YipPreview\Tryout\a12.jpg)"),
+	//		wxBITMAP_TYPE_JPEG,
+	//		10);
 
-	sizerRh->Add(pnlIm, 1, wxEXPAND, 0);
+	//sizerRh->Add(pnlIm, 1, wxEXPAND, 0);
+	//pnlIm->setBorderColour(Constants::lightBlue);
+
+	ImagesBrowser* imgBr = new ImagesBrowser(pnlRh, this);
+	sizerRh->Add(imgBr, 1, wxEXPAND, 0);
+	imgBr->initialise();
+	imgBr->setTop(0);
 
 	// added panels to horizontal splitter
 	splitterVertical->SplitVertically(pnlLh, pnlRh);
 
 	SetClientSize(wxSize(1000, 600));
-	Bind(wxEVT_SHELL_EXECUTE_RESULT, [this](wxShellExecuteEvent& e) {OnShellExecute(e);}, wxID_ANY);
-	populateGrid();
+	Bind(wxEVT_SHELL_EXECUTE_RESULT, &MyFrame::OnShellExecute, this, wxID_ANY);
 }
 
 MyFrame &MyFrame::getMainFrame()
@@ -139,13 +150,21 @@ MyFrame &MyFrame::getMainFrame()
 // grid functions
 //--------------------------------------------------------------
 
-void MyFrame::setupGrid(wxPanel* panel)
+void MyFrame::initialiseGrid(wxPanel* panel)
 {
 	grid_ = new wxGrid(panel, wxID_ANY);
 	table_ = new GridTable();
 	grid_->SetTable(table_);
 	grid_->SetSelectionMode(wxGrid::wxGridSelectRows);
 	grid_->HideRowLabels();
+
+	grid_->Bind(wxEVT_GRID_CELL_RIGHT_CLICK, &MyFrame::gridEventDispatch, this, wxID_ANY);
+}
+
+void MyFrame::uninitialiseGrid()
+{
+	grid_->SetTable(nullptr);
+	delete table_;
 }
 
 void MyFrame::populateGrid()
@@ -198,6 +217,57 @@ int MyFrame::getSelectedRow()
 		return -1;
 }
 
+void MyFrame::gridEventDispatch(wxGridEvent &event)
+{
+	int row = grid_->YToRow(
+			event.GetPosition().y - grid_->GetColLabelSize());
+
+	if (row >= 0 && row < grid_->GetNumberRows())
+	{
+		grid_->SelectRow(row);
+		grid_->PopupMenu(getGridPopupMenu());
+	}
+
+
+//	switch (event.GetEventType())
+//	{
+//	case EVT_GRID_CELL_RIGHT_CLICK:
+//	{
+//		wxMenu *menu = getGridPopupMenu();
+//		grid_->PopupMenu(menu);
+//	}
+//	}
+}
+
+//--------------------------------------------------------------
+// ImagesBrowserData interface
+//--------------------------------------------------------------
+
+int MyFrame::getNoOfRows()
+{
+	return 2;
+}
+
+int MyFrame::getNoOfCols()
+{
+	return 2;
+}
+
+int MyFrame::getNoOfImages()
+{
+	return FileSetManager::getNoOfFileSets();
+}
+
+int MyFrame::getSelected()
+{
+	return getSelectedRow();
+}
+
+std::wstring MyFrame::getImage(const int n)
+{
+	return FileSetManager::getFileSet(n)->getImage();
+}
+
 //--------------------------------------------------------------
 //
 //--------------------------------------------------------------
@@ -215,6 +285,9 @@ Logger *MyFrame::setupLogger(wxPanel *panel)
 
 void MyFrame::OnClose(wxCloseEvent& event)
 {
+	FileSetManager::uninitialise();
+	uninitialiseGrid();
+
 	Destroy();  // you may also do:  event.Skip();
 				// since the default event handler does call Destroy(), too
 }

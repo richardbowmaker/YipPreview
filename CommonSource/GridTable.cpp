@@ -50,12 +50,13 @@ wxString GridTable::GetValue(int row, int col)
 		return L"";
 	}
 
-	FileSet fs = FileSetManager::getFileSet(row);
+	FileSetT fs = FileSetManager::getFileSet(row);
 	
 	switch (col)
 	{
-	case 0: return fs.getShortName();
-	case 1: return fs.typesToString();
+	case 0: return fs->getShortName();
+	case 1: return fs->typesToString();
+	default: return L"";
 	}
 }
 
@@ -69,6 +70,7 @@ wxString GridTable::GetColLabelValue(int col)
 	{
 	case 0: return L"File";
 	case 1: return L"Type";
+	default: return L"";
 	}
 }
 

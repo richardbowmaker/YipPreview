@@ -161,6 +161,7 @@
     <ClInclude Include="..\..\..\CommonSource\FileSetManager.h" />
     <ClInclude Include="..\..\..\CommonSource\GridTable.h" />
     <ClInclude Include="..\..\..\CommonSource\ImagePanel.h" />
+    <ClInclude Include="..\..\..\CommonSource\ImagesBrowser.h" />
     <ClInclude Include="..\..\..\CommonSource\Logger.h" />
     <ClInclude Include="..\..\..\CommonSource\Main.h" />
     <ClInclude Include="..\..\..\CommonSource\MediaPreviewPlayer.h" />
@@ -179,6 +180,7 @@
     <ClCompile Include="..\..\..\CommonSource\FileSetManager.cpp" />
     <ClCompile Include="..\..\..\CommonSource\GridTable.cpp" />
     <ClCompile Include="..\..\..\CommonSource\ImagePanel.cpp" />
+    <ClCompile Include="..\..\..\CommonSource\ImagesBrowser.cpp" />
     <ClCompile Include="..\..\..\CommonSource\Logger.cpp" />
     <ClCompile Include="..\..\..\CommonSource\Main.cpp" />
     <ClCompile Include="..\..\..\CommonSource\MainFunctions.cpp" />

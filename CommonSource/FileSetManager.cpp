@@ -20,6 +20,16 @@ FileSetManager::~FileSetManager()
 {
 }
 
+void FileSetManager::initialise()
+{
+	get().initialiseImpl();
+}
+
+void FileSetManager::uninitialise()
+{
+	get().uninitialiseImpl();
+}
+
 FileSetManager& FileSetManager::get()
 {
 	static FileSetManager instance;
@@ -36,7 +46,7 @@ int FileSetManager::getNoOfFileSets()
 	return get().getNoOfFileSetsImpl();
 }
 
-FileSet& FileSetManager::getFileSet(const int n)
+FileSetT FileSetManager::getFileSet(const int n)
 {
 	return get().getFileSetImpl(n);
 }
@@ -44,6 +54,15 @@ FileSet& FileSetManager::getFileSet(const int n)
 std::wstring FileSetManager::toString()
 {
 	return get().toStringImpl();
+}
+
+void FileSetManager::initialiseImpl()
+{
+}
+
+void FileSetManager::uninitialiseImpl()
+{
+	fileSets_.clear();
 }
 
 bool FileSetManager::addFilesImpl(const std::wstring directory)
@@ -92,9 +111,9 @@ int FileSetManager::getNoOfFileSetsImpl() const
 	return static_cast<int>(fileSets_.size());
 }
 
-FileSet& FileSetManager::getFileSetImpl(const int n) const
+FileSetT FileSetManager::getFileSetImpl(const int n) const
 {
-	return *fileSets_[n].second;
+	return fileSets_[n].second;
 }
 
 

@@ -9,7 +9,7 @@
 #define COMMON_CONSTANTS_H_
 
 #include <string>
-
+#include <wx\wx.h>
 
 class Constants
 {
@@ -17,9 +17,17 @@ public:
 	Constants();
 	virtual ~Constants();
 
+    static void initialise();
+
     static std::wstring ffmpeg;
     static std::wstring ffmpegEnd;
     static std::wstring title;
+
+    // colours
+    static wxColour blue;
+    static wxColour lightBlue;
+    static wxColour white;
+    static wxColour systemBackground;
 
 };
 

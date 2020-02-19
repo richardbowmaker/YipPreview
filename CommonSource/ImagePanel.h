@@ -16,36 +16,29 @@ class ImagePanel : public wxPanel
 {
 public:
 
+    ImagePanel(wxWindow *parent, const int border = 0);
 	virtual ~ImagePanel();
 
-    ImagePanel(wxWindow *parent, wxString file, wxBitmapType format);
-
-	void paintEvent(wxPaintEvent & evt);
-	void paintNow();
-
-	void render(wxDC& dc);
-
-	// some useful events
-
-	void mouseMoved(wxMouseEvent& event);
-//	void mouseWheelMoved(wxMouseEvent& event);
-	void leftClickDown(wxMouseEvent& event);
-	void leftClickUp(wxMouseEvent& event);
-	void rightClickDown(wxMouseEvent& event);
-	void rightClickUp(wxMouseEvent& event);
-	void mouseLeftWindow(wxMouseEvent& event);
-//	void keyPressed(wxKeyEvent& event);
-//	void keyReleased(wxKeyEvent& event);
-	void onSize(wxSizeEvent &event);
-
-	DECLARE_EVENT_TABLE()
+	void setBorderColour(const wxColour &colour);
+	void setImage(const wxString file, const wxBitmapType format);
 
 private:
 
+	void onPaint(wxPaintEvent &evt);
+	void render(wxDC &dc);
+	void mouseMoved(wxMouseEvent &event);
+	void leftClickDown(wxMouseEvent &event);
+	void leftClickUp(wxMouseEvent &event);
+	void rightClickDown(wxMouseEvent &event);
+	void rightClickUp(wxMouseEvent &event);
+	void mouseLeftWindow(wxMouseEvent &event);
+	void onSize(wxSizeEvent &event);
+	void onKeyUp(wxKeyEvent &event);
+
 	void zoomImage(wxPoint pt, float scalex);
-	wxPoint screenToImageCoords(const wxPoint& spt);
+	wxPoint screenToImageCoords(const wxPoint &spt);
 	wxPoint imageToScreenCoords(const wxPoint &ipt);
-	bool imageCoordsValid(const wxPoint& ipt);
+	bool imageCoordsValid(const wxPoint &ipt);
 
 	 wxBitmap image_;
 	 std::unique_ptr<wxMemoryDC> memDc_;
@@ -64,6 +57,10 @@ private:
 	 bool leftDown_;
 	 bool moved_;
 	 wxPoint start_;
+
+	 // panel within the image panel to give a border
+	 wxPanel* panel_;
+	 int border_;
 
 };
 
