@@ -23,7 +23,7 @@ GridTableTest::~GridTableTest()
 
 int GridTableTest::GetNumberRows()
 {
-	vals_.size();
+	return vals_.size();
 }
 
 int GridTableTest::GetNumberCols()
@@ -35,6 +35,8 @@ wxString GridTableTest::GetValue(int row, int col)
 {
 	if (row >= 0 && row < GetNumberRows())
 		return vals_[row];
+	else
+		return L"";
 }
 
 void GridTableTest::SetValue(int row, int col, const wxString& value)

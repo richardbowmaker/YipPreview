@@ -57,8 +57,14 @@ bool MyApp::OnInit()
 
 MyFrame *MyFrame::this_;
 
-MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
-        : wxFrame(NULL, wxID_ANY, title, pos, size)
+MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size) :
+	wxFrame(NULL, wxID_ANY, title, pos, size),
+	player_(nullptr),
+	grid_(nullptr),
+	table_(nullptr),
+	images_(nullptr),
+	browserRows_(2),
+	browserCols_(2)
 {
 	// keep static pointer to main frame
 	this_ = this;
@@ -119,20 +125,10 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
 	// added panels to horizontal splitter
 	splitterHorizontal->SplitHorizontally(pnlTop, pnlBot);
 
-	// create the RH pane image viewer
-	//ImagePanel* pnlIm = new ImagePanel(
-	//		pnlRh,
-	//		FU::pathToLocal(LR"(\YipPreview\Tryout\a12.jpg)"),
-	//		wxBITMAP_TYPE_JPEG,
-	//		10);
-
-	//sizerRh->Add(pnlIm, 1, wxEXPAND, 0);
-	//pnlIm->setBorderColour(Constants::lightBlue);
-
-	ImagesBrowser* imgBr = new ImagesBrowser(pnlRh, this);
-	sizerRh->Add(imgBr, 1, wxEXPAND, 0);
-	imgBr->initialise();
-	imgBr->setTop(0);
+	images_ = new ImagesBrowser(pnlRh, this);
+	sizerRh->Add(images_, 1, wxEXPAND, 0);
+	images_->initialise();
+	images_->setTop(0);
 
 	// added panels to horizontal splitter
 	splitterVertical->SplitVertically(pnlLh, pnlRh);
@@ -159,6 +155,7 @@ void MyFrame::initialiseGrid(wxPanel* panel)
 	grid_->HideRowLabels();
 
 	grid_->Bind(wxEVT_GRID_CELL_RIGHT_CLICK, &MyFrame::gridEventDispatch, this, wxID_ANY);
+	grid_->Bind(wxEVT_GRID_SELECT_CELL, &MyFrame::gridEventDispatch, this, wxID_ANY);
 }
 
 void MyFrame::uninitialiseGrid()
@@ -208,7 +205,7 @@ void MyFrame::refreshGrid() const
     grid_->ForceRefresh();
 }
 
-int MyFrame::getSelectedRow()
+int MyFrame::getSelectedRow() const
 {
 	wxArrayInt rows = grid_->GetSelectedRows();
 	if (rows.GetCount() == 1)
@@ -217,26 +214,32 @@ int MyFrame::getSelectedRow()
 		return -1;
 }
 
+int MyFrame::getTopRow() const
+{
+	int x, y;
+	grid_->CalcUnscrolledPosition(0, 0, &x, &y);
+	return grid_->YToRow(y);
+}
+
 void MyFrame::gridEventDispatch(wxGridEvent &event)
 {
-	int row = grid_->YToRow(
-			event.GetPosition().y - grid_->GetColLabelSize());
+	int id = event.GetEventType();
 
-	if (row >= 0 && row < grid_->GetNumberRows())
+	if (id == wxEVT_GRID_CELL_RIGHT_CLICK)
 	{
-		grid_->SelectRow(row);
-		grid_->PopupMenu(getGridPopupMenu());
+		int row = grid_->YToRow(event.GetPosition().y - grid_->GetColLabelSize()) +
+				  getTopRow();
+
+		if (row >= 0 && row < grid_->GetNumberRows())
+		{
+			grid_->SelectRow(row);
+			grid_->PopupMenu(getGridPopupMenu());
+		}
 	}
-
-
-//	switch (event.GetEventType())
-//	{
-//	case EVT_GRID_CELL_RIGHT_CLICK:
-//	{
-//		wxMenu *menu = getGridPopupMenu();
-//		grid_->PopupMenu(menu);
-//	}
-//	}
+	if (id == wxEVT_GRID_SELECT_CELL)
+	{
+		images_->setSelected(getSelectedRow());
+	}
 }
 
 //--------------------------------------------------------------
@@ -245,12 +248,12 @@ void MyFrame::gridEventDispatch(wxGridEvent &event)
 
 int MyFrame::getNoOfRows()
 {
-	return 2;
+	return browserRows_;
 }
 
 int MyFrame::getNoOfCols()
 {
-	return 2;
+	return browserCols_;
 }
 
 int MyFrame::getNoOfImages()
@@ -261,6 +264,11 @@ int MyFrame::getNoOfImages()
 int MyFrame::getSelected()
 {
 	return getSelectedRow();
+}
+
+void MyFrame::setSelected(const int selected)
+{
+	grid_->SelectRow(selected);
 }
 
 std::wstring MyFrame::getImage(const int n)

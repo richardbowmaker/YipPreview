@@ -527,7 +527,7 @@ void TryOut::ExecIt()
 //-------------------------------------------------
 
     int pid;
-    int timeout = 5;
+//    int timeout = 5;
 //    std::string command = "/bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al";
     std::string command = "nonexistentprogram";
 //    std::string command = "/bin/notepadqq";
@@ -536,20 +536,20 @@ void TryOut::ExecIt()
     char command_out[100] = {0};
     std::stringstream output;
 
-    int flags = fcntl(rfd, F_GETFL);
-    int fderr = fcntl(rfd, F_SETFL, flags | O_NONBLOCK);
+ //   int flags = fcntl(rfd, F_GETFL);
+  //  int fderr = fcntl(rfd, F_SETFL, flags | O_NONBLOCK);
 
     errno = 0;
     int rerr;
 
-    timespec ts;
-    long startt = static_cast<long>(time(nullptr));
+ //   timespec ts;
+ //   long startt = static_cast<long>(time(nullptr));
 
-    while (rerr = read(fileno(fp), command_out, sizeof(command_out)-1))
+    while ((rerr = read(fileno(fp), command_out, sizeof(command_out)-1)) != 0)
     {
     	if (rerr == EAGAIN)
     	{
-    		int nn = 0;
+    		//int nn = 0;
     	}
     	else if (rerr <= 0)
     	{
@@ -582,9 +582,9 @@ void TryOut::ExecIt()
     while (getline(output, token, '\n'))
         printf("OUT: %s\n", token.c_str());
 
-    int nn = pclose2(fp, pid);
+ //   int nn = pclose2(fp, pid);
 
-    int zzz =  0;
+ //   int zzz =  0;
 
 
 
@@ -650,7 +650,7 @@ int pclose2(FILE * fp, pid_t pid)
 {
     int stat;
 
-    int err = fclose(fp);
+ //   int err = fclose(fp);
     while (waitpid(pid, &stat, 0) == -1)
     {
         if (errno != EINTR)

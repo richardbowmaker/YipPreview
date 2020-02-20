@@ -56,8 +56,8 @@ wxString GridTable::GetValue(int row, int col)
 	{
 	case 0: return fs->getShortName();
 	case 1: return fs->typesToString();
-	default: return L"";
 	}
+	return L"";
 }
 
 void GridTable::SetValue(int row, int col, const wxString& value)

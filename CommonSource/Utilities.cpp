@@ -509,7 +509,7 @@ std::wstring FU::pathToLocal(const wchar_t* path)
 std::wstring FU::abbreviateFilename(const std::wstring &file, const int max)
 {
 	// return whole thing if less than max characters
-	size_t len = file.size();
+	int len = file.size();
 	if (len <= max) return file;
 
 	// if no path in file name show the whole file id

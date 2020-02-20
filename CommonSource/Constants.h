@@ -9,7 +9,7 @@
 #define COMMON_CONSTANTS_H_
 
 #include <string>
-#include <wx\wx.h>
+#include <wx/wx.h>
 
 class Constants
 {

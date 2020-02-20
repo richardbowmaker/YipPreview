@@ -617,15 +617,16 @@ bool ShellExecute::shellWait(ShellThreadData &data)
 #endif
 
 ShellExecute::ShellThreadData::ShellThreadData() :
-#ifdef WINDOWS_BUILD
-#elif LINUX_BUILD
-	fpStdout_ (0),
-	fpStderr_ (0),
-#endif
 	timeoutms_(0),
 	wxHandler_(nullptr),
 	wxid_     (wxID_ANY),
-	handler_  (nullptr)
+	handler_  (nullptr),
+#ifdef WINDOWS_BUILD
+	completed_(NULL)
+#elif LINUX_BUILD
+	fpStdout_ (0),
+	fpStderr_ (0)
+#endif
 {
 }
 

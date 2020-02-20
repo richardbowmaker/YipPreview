@@ -43,13 +43,16 @@ class MyFrame: public wxFrame, ImagesBrowserData
 public:
 
     MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size);
+    ~MyFrame() = default;
 
     static MyFrame& getMainFrame();
 
+    // ImagesBrowserData interface
     virtual int getNoOfRows();
     virtual int getNoOfCols();
     virtual int getNoOfImages();
     virtual int getSelected();
+    virtual void setSelected(const int selected);
     virtual std::wstring getImage(const int n);
 
 private:
@@ -62,7 +65,8 @@ private:
     void refreshGridRowsDeleted(const int atRow, const int noOfRows) const;
     void refreshGridRowsInserted(const int atRow, const int noOfRows) const;
     void refreshGrid() const;
-    int  getSelectedRow();
+    int  getSelectedRow() const;
+    int  getTopRow() const;
     void gridEventDispatch(wxGridEvent &event);
 
     Logger *setupLogger(wxPanel *panel);
@@ -87,6 +91,11 @@ private:
 	MediaPreviewPlayer *player_;
 	wxGrid *grid_;
     GridTable *table_;
+
+    // images browser
+    ImagesBrowser *images_;
+    int browserRows_;
+    int browserCols_;
 
     std::map<int, wxMenuItem*> menus_;
     static MyFrame* this_;

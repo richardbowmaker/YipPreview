@@ -12,15 +12,23 @@
 #include "Constants.h"
 #include "Logger.h"
 
-ImagePanel::ImagePanel(wxWindow* parent, const int border /*= 0*/) :
-	wxPanel(parent),
-	off_(wxPoint(0, 0)),
-	scale_(0.0f),
-	scalei_(0.0f),
-	leftDown_(false),
-	moved_(false),
-	start_(wxPoint(0, 0)),
-	border_(border)
+ImagePanel::ImagePanel(
+	wxWindow* parent,
+	ImagePanelEvents *notify /*= nullptr*/,
+	const int eventId /*= 0*/,
+	const int border /*= 0*/,
+	const bool zoomable /*= false*/) : 
+	wxPanel		(parent),
+	off_		(wxPoint(0, 0)),
+	scale_		(0.0f),
+	scalei_		(0.0f),
+	leftDown_	(false),
+	moved_		(false),
+	start_		(wxPoint(0, 0)),
+	border_		(border),
+	notify_		(notify),
+	eventId_	(eventId),
+	zoomable_	(zoomable)
 {
 	// create panel within a panel for a border round the image
 	panel_ = new wxPanel(this);
@@ -28,19 +36,7 @@ ImagePanel::ImagePanel(wxWindow* parent, const int border /*= 0*/) :
 	sizer->Add(panel_, 1, wxEXPAND | wxALL, border_);
 	SetSizer(sizer);
 
-	wxSize s1 = GetSize();
-	wxSize s2 = panel_->GetSize();
-
 	setBorderColour(Constants::white);
-
-	panel_->Bind(wxEVT_PAINT,	    &ImagePanel::onPaint,		 this, wxID_ANY);
-	panel_->Bind(wxEVT_MOTION,		&ImagePanel::mouseMoved,	 this, wxID_ANY);
-	panel_->Bind(wxEVT_LEFT_DOWN,	&ImagePanel::leftClickDown,	 this, wxID_ANY);
-	panel_->Bind(wxEVT_LEFT_UP,		&ImagePanel::leftClickUp,	 this, wxID_ANY);
-	panel_->Bind(wxEVT_RIGHT_DOWN,	&ImagePanel::rightClickDown, this, wxID_ANY);
-	panel_->Bind(wxEVT_RIGHT_UP,	&ImagePanel::rightClickUp,	 this, wxID_ANY);
-	panel_->Bind(wxEVT_SIZE,		&ImagePanel::onSize,		 this, wxID_ANY);
-	panel_->Bind(wxEVT_KEY_UP,		&ImagePanel::onKeyUp,		 this, wxID_ANY);
 }
 
 ImagePanel::~ImagePanel()
@@ -50,23 +46,46 @@ ImagePanel::~ImagePanel()
 void ImagePanel::setBorderColour(const wxColour &colour)
 {
 	SetBackgroundColour(colour);
-	panel_->SetBackgroundColour(colour);
 }
 
 void ImagePanel::setImage(const wxString file, const wxBitmapType format)
 {
-	// release the previous image 
-	memDc_.release();
+	panel_->Unbind(wxEVT_RIGHT_UP,		&ImagePanel::rightClickUp,	 this, wxID_ANY);
+	panel_->Unbind(wxEVT_LEFT_DOWN,		&ImagePanel::leftClickDown,  this, wxID_ANY);		
+	panel_->Unbind(wxEVT_PAINT,			&ImagePanel::onPaint,		 this, wxID_ANY);
+	panel_->Unbind(wxEVT_MOTION,		&ImagePanel::mouseMoved,	 this, wxID_ANY);
+	panel_->Unbind(wxEVT_LEFT_UP,		&ImagePanel::leftClickUp,	 this, wxID_ANY);
+	panel_->Unbind(wxEVT_RIGHT_DOWN,	&ImagePanel::rightClickDown, this, wxID_ANY);
+	panel_->Unbind(wxEVT_SIZE,			&ImagePanel::onSize,		 this, wxID_ANY);
+	panel_->Unbind(wxEVT_KEY_UP,		&ImagePanel::onKeyUp,		 this, wxID_ANY);
+
+	// clear the previous image 
+	memDc_ = nullptr;
+	image_ = nullptr;
 	wxClientDC dc(panel_);
 	dc.Clear();
 
 	// load the new image
 	if (file.size() > 0)
 	{
-		image_.LoadFile(file, format);
+		image_ = std::make_shared<wxBitmap>(file, format);
+		image_->LoadFile(file, format);
 
 		// render image
 		render(dc);
+
+		panel_->Bind(wxEVT_PAINT,     &ImagePanel::onPaint,       this, wxID_ANY);
+		panel_->Bind(wxEVT_LEFT_DOWN, &ImagePanel::leftClickDown, this, wxID_ANY);
+		panel_->Bind(wxEVT_RIGHT_UP,  &ImagePanel::rightClickUp,  this, wxID_ANY);
+
+		if (zoomable_)
+		{
+			panel_->Bind(wxEVT_MOTION,		&ImagePanel::mouseMoved,	 this, wxID_ANY);
+			panel_->Bind(wxEVT_LEFT_UP,		&ImagePanel::leftClickUp,	 this, wxID_ANY);
+			panel_->Bind(wxEVT_RIGHT_DOWN,	&ImagePanel::rightClickDown, this, wxID_ANY);
+			panel_->Bind(wxEVT_SIZE,		&ImagePanel::onSize,		 this, wxID_ANY);
+			panel_->Bind(wxEVT_KEY_UP,		&ImagePanel::onKeyUp,		 this, wxID_ANY);
+		}
 	}
 }
 
@@ -97,18 +116,23 @@ void ImagePanel::mouseMoved(wxMouseEvent &event)
 
 void ImagePanel::leftClickDown(wxMouseEvent &event)
 {
-	// user can drag image, starting point mouse down
-	// must be wthin the image
-
-	wxPoint spt = event.GetPosition();
-	wxPoint ipt = screenToImageCoords(spt);
-
-	if (imageCoordsValid(ipt))
+	if (zoomable_)
 	{
-		leftDown_ = true;
-		moved_ = false;
-		start_ = spt;
+		// user can drag image, starting point mouse down
+		// must be wthin the image
+
+		wxPoint spt = event.GetPosition();
+		wxPoint ipt = screenToImageCoords(spt);
+
+		if (imageCoordsValid(ipt))
+		{
+			leftDown_ = true;
+			moved_ = false;
+			start_ = spt;
+		}
 	}
+	else if (notify_ != nullptr)
+		notify_->selected(eventId_);
 }
 
 void ImagePanel::leftClickUp(wxMouseEvent &event) 
@@ -124,7 +148,10 @@ void ImagePanel::rightClickDown(wxMouseEvent &event)
 
 void ImagePanel::rightClickUp(wxMouseEvent &event)
 {
-	zoomImage(event.GetPosition(), 1.0f / 1.2f);
+	if (zoomable_)
+		zoomImage(event.GetPosition(), 1.0f / 1.2f);
+	else if (notify_ != nullptr)
+		notify_->contextMenu(eventId_);
 }
 
 void ImagePanel::mouseLeftWindow(wxMouseEvent &event) 
@@ -141,7 +168,7 @@ void ImagePanel::onPaint(wxPaintEvent &evt)
 
 void ImagePanel::onKeyUp(wxKeyEvent& event)
 {
-	int n = 0;
+	//int n = 0;
 }
 
 void ImagePanel::render(wxDC &dc)
@@ -152,28 +179,25 @@ void ImagePanel::render(wxDC &dc)
 	if (size.GetWidth() == 0) return;
 
 	// quit if no image set, nothing to render
-	if (image_.GetWidth() == 0) return;
-
-	int n1 = dc.GetSize().GetWidth();
-	int n2 = image_.GetWidth();
+	if (image_.get() == nullptr) return;
 
 	// on first render, scale image to fill panel
 	if (memDc_.get() == nullptr)
 	{
-		memDc_ = std::make_unique<wxMemoryDC>(image_);
+		memDc_ = std::make_shared<wxMemoryDC>(*image_.get());
 
-		float scalex = (float)(dc.GetSize().GetWidth())  / (float)(image_.GetWidth());
-		float scaley = (float)(dc.GetSize().GetHeight()) / (float)(image_.GetHeight());
+		float scalex = (float)(dc.GetSize().GetWidth())  / (float)(image_->GetWidth());
+		float scaley = (float)(dc.GetSize().GetHeight()) / (float)(image_->GetHeight());
 
 		if (scalex <= scaley)
 		{
 			scalei_ = scalex;
-			off_.y = (dc.GetSize().GetHeight() - (image_.GetHeight() * scalex)) / 2;
+			off_.y = (dc.GetSize().GetHeight() - (image_->GetHeight() * scalex)) / 2;
 		}
 		else
 		{
 			scalei_ = scaley;
-			off_.x = (dc.GetSize().GetWidth() - (image_.GetWidth() * scaley)) / 2;
+			off_.x = (dc.GetSize().GetWidth() - (image_->GetWidth() * scaley)) / 2;
 		}
 		scale_ = scalei_;
 	}
@@ -182,13 +206,13 @@ void ImagePanel::render(wxDC &dc)
 	dc.StretchBlit(
 		off_.x,
 		off_.y,
-		(int)((float) image_.GetWidth() * scale_),
-		(int)((float) image_.GetHeight() * scale_),
+		(int)((float) image_->GetWidth() * scale_),
+		(int)((float) image_->GetHeight() * scale_),
 		memDc_.get(), 
 		0, 
 		0, 
-		image_.GetWidth(),
-		image_.GetHeight());
+		image_->GetWidth(),
+		image_->GetHeight());
 }
 
 void ImagePanel::onSize(wxSizeEvent &event)
@@ -255,7 +279,7 @@ wxPoint ImagePanel::imageToScreenCoords(const wxPoint &ipt)
 
 bool ImagePanel::imageCoordsValid(const wxPoint &ipt)
 {
-	return ipt.x >= 0 && ipt.x <= image_.GetWidth() && ipt.y >= 0 && ipt.y <= image_.GetHeight();
+	return ipt.x >= 0 && ipt.x <= image_->GetWidth() && ipt.y >= 0 && ipt.y <= image_->GetHeight();
 }
 
 void ImagePanel::zoomImage(wxPoint pt, float scalex)

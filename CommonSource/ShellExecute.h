@@ -56,8 +56,8 @@ private:
 								// which is the command being run. 0 if exited
 	int 			exitCode_;	// exit code from command
 	bool 			success_;	// executed successfully
-	std::wstring 	stdout_;	// stdout capture
 	std::wstring 	stderr_;
+	std::wstring 	stdout_;	// stdout capture
 	bool 			timedOut_;	// true if command timedout
 
 	// async calls only

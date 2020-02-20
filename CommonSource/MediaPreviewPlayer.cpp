@@ -27,7 +27,9 @@
 constexpr int kNoOfClips = 10;
 constexpr int kTimer = 2000; // ms, time each clip is played for
 
-MediaPreviewPlayer::MediaPreviewPlayer(wxWindow *parent, wxWindowID id /*= wxID_ANY*/) : wxPanel(parent, id)
+MediaPreviewPlayer::MediaPreviewPlayer(wxWindow *parent, wxWindowID id /*= wxID_ANY*/) :
+	wxPanel(parent, id),
+	clipIx_(0)
 {
 	// add media control to this panel
 	player_ = new wxMediaCtrl();
@@ -109,7 +111,7 @@ void MediaPreviewPlayer::doTimer()
 {
 	player_->Seek(clips_[clipIx_] * 1000);
 	player_->Play();
-	clipIx_ = ++clipIx_ % kNoOfClips;
+	clipIx_ = (clipIx_ + 1) % kNoOfClips;
 
 	// on recycle calculate a new set of random clips
 	if (clipIx_ == 0) calculateClips();
@@ -141,6 +143,7 @@ int MediaPreviewPlayer::duration()
 	// get duration from ffmpeg output
 	std::wstring serr = res.getStderr();
 	size_t pos = serr.find(L"Duration:");
+	int d = 0;
 
 	if (pos != std::wstring::npos)
 	{
@@ -148,8 +151,9 @@ int MediaPreviewPlayer::duration()
 		int h = wcstol(serr.substr(pos + 10, 2).c_str(), nullptr, 10);
 		int m = wcstol(serr.substr(pos + 13, 2).c_str(), nullptr, 10);
 		int s = wcstol(serr.substr(pos + 16, 2).c_str(), nullptr, 10);
-		duration_ = 3600 * h + 60 * m + s;
+		d = 3600 * h + 60 * m + s;
 	}
+	return d;
 #endif
 }
 

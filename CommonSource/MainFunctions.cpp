@@ -40,6 +40,8 @@
 enum MenuIDsT
 {
 	ID_Dummy = 0,
+
+	// menus
 	ID_MenuFile,
 	ID_MenuFileDelete,
 	ID_MenuFileExit,
@@ -49,7 +51,11 @@ enum MenuIDsT
 	ID_MenuTools,
 	ID_MenuToolsTryout,
 	ID_MenuHelp,
-	ID_MenuHelpAbout
+	ID_MenuHelpAbout,
+
+	// other functions, accelerators
+	ID_PageUp,
+	ID_PageDown
 };
 
 void MyFrame::menuOpenDispatch(wxMenuEvent& event, int menuId)
@@ -62,14 +68,11 @@ void MyFrame::menuOpenDispatch(wxMenuEvent& event, int menuId)
 	case ID_MenuFile:
 		menus_[ID_MenuFileDelete]->Enable(isSelected);
 		break;
-
 	case ID_MenuView:
 		menus_[ID_MenuViewPlay]->Enable(isSelected);
 		break;
-
 	case ID_MenuTools:
 		break;
-
 	case ID_MenuHelp:
 		break;
 	}
@@ -77,8 +80,6 @@ void MyFrame::menuOpenDispatch(wxMenuEvent& event, int menuId)
 
 void MyFrame::menuSelectedDispatch(wxCommandEvent& event)
 {
-	int id = event.GetId();
-
 	FileSetT fs;
 	int row = getSelectedRow();
 	if (row != -1)
@@ -89,16 +90,19 @@ void MyFrame::menuSelectedDispatch(wxCommandEvent& event)
 	case ID_MenuFileDelete:
 		if (row != -1) deleteFile(event, row, *fs.get());
 		break;
-
 	case ID_MenuViewPlay:
 		if (row != -1) play(event, row, *fs.get());
 		break;
-
 	case ID_MenuToolsTryout:
 		tryout(event, row);
 		break;
-
 	case ID_MenuHelpAbout:
+		break;
+	case ID_PageUp:
+		images_->pageUp();
+		break;
+	case ID_PageDown:
+		images_->pageDown();
 		break;
 	}
 }
@@ -150,6 +154,25 @@ void MyFrame::setupMenus()
 
 	// bind the menu selected event to the dispatch function
 	Bind(wxEVT_MENU, &MyFrame::menuSelectedDispatch, this, wxID_ANY);
+
+	// accelerators
+	wxAcceleratorEntry entries[11];
+	entries[ 0].Set(wxACCEL_NORMAL, WXK_RETURN,			 ID_MenuViewPlay);
+	entries[ 1].Set(wxACCEL_NORMAL, WXK_NUMPAD_PAGEUP,	 ID_PageUp);
+	entries[ 2].Set(wxACCEL_NORMAL, (int)'Q',			 ID_PageUp);
+	entries[ 3].Set(wxACCEL_NORMAL, (int)'W',			 ID_PageUp);
+	entries[ 4].Set(wxACCEL_NORMAL, (int)'E',			 ID_PageUp);
+	entries[ 5].Set(wxACCEL_NORMAL, (int)'R',			 ID_PageUp);
+	entries[ 6].Set(wxACCEL_NORMAL, WXK_NUMPAD_PAGEDOWN, ID_PageDown);
+	entries[ 7].Set(wxACCEL_NORMAL, (int)'Z',			 ID_PageDown);
+	entries[ 8].Set(wxACCEL_NORMAL, (int)'X',			 ID_PageDown);
+	entries[ 9].Set(wxACCEL_NORMAL, (int)'C',			 ID_PageDown);
+	entries[10].Set(wxACCEL_NORMAL, (int)'V',			 ID_PageDown);
+
+	wxAcceleratorTable accel(11, entries);
+	SetAcceleratorTable(accel);
+
+	
 }
 
 wxMenu *MyFrame::getGridPopupMenu()
@@ -201,7 +224,7 @@ void MyFrame::tryout(wxCommandEvent& event, const int row)
 
 	return;
 
-	bool b;
+//	bool b;
 
 //
 //	std::wstring afn;
@@ -344,7 +367,7 @@ void MyFrame::tryout(wxCommandEvent& event, const int row)
 	//b = FU::fileExists(LR"(D:\emails)");
 	//b = FU::fileExists(LR"(D:\myimage.jpg)");
 	//b = FU::fileExists(LR"(D:\xyz)");
-	b = false;
+	//b = false;
 
 	// linux
 
