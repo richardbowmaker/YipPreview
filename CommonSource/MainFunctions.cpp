@@ -23,10 +23,11 @@
 #include <iterator>
 #include <wchar.h>
 #include <thread>
-
+#include <vector>
 
 #include "Constants.h"
 #include "FileSet.h"
+#include "GridEx.h"
 #include "GridTable.h"
 #include "GridTableTest.h"
 #include "Logger.h"
@@ -55,13 +56,15 @@ enum MenuIDsT
 
 	// other functions, accelerators
 	ID_PageUp,
-	ID_PageDown
+	ID_PageDown,
+	ID_CursorUp,
+	ID_CursorDown
 };
 
 void MyFrame::menuOpenDispatch(wxMenuEvent& event, int menuId)
 {
 	// is there a row selected
-	bool isSelected = (getSelectedRow() != -1);
+	bool isSelected = (grid_->getSelectedRow() != -1);
 	
 	switch (menuId)
 	{
@@ -81,7 +84,7 @@ void MyFrame::menuOpenDispatch(wxMenuEvent& event, int menuId)
 void MyFrame::menuSelectedDispatch(wxCommandEvent& event)
 {
 	FileSetT fs;
-	int row = getSelectedRow();
+	int row = grid_->getSelectedRow();
 	if (row != -1)
 		fs = FileSetManager::getFileSet(row);
 
@@ -99,10 +102,16 @@ void MyFrame::menuSelectedDispatch(wxCommandEvent& event)
 	case ID_MenuHelpAbout:
 		break;
 	case ID_PageUp:
-		images_->pageUp();
+		pageUp();
 		break;
 	case ID_PageDown:
-		images_->pageDown();
+		pageDown();
+		break;
+	case ID_CursorUp:
+		cursorUp();
+		break;
+	case ID_CursorDown:
+		cursorDown();
 		break;
 	}
 }
@@ -156,28 +165,28 @@ void MyFrame::setupMenus()
 	Bind(wxEVT_MENU, &MyFrame::menuSelectedDispatch, this, wxID_ANY);
 
 	// accelerators
-	wxAcceleratorEntry entries[11];
-	entries[ 0].Set(wxACCEL_NORMAL, WXK_RETURN,			 ID_MenuViewPlay);
-	entries[ 1].Set(wxACCEL_NORMAL, WXK_NUMPAD_PAGEUP,	 ID_PageUp);
-	entries[ 2].Set(wxACCEL_NORMAL, (int)'Q',			 ID_PageUp);
-	entries[ 3].Set(wxACCEL_NORMAL, (int)'W',			 ID_PageUp);
-	entries[ 4].Set(wxACCEL_NORMAL, (int)'E',			 ID_PageUp);
-	entries[ 5].Set(wxACCEL_NORMAL, (int)'R',			 ID_PageUp);
-	entries[ 6].Set(wxACCEL_NORMAL, WXK_NUMPAD_PAGEDOWN, ID_PageDown);
-	entries[ 7].Set(wxACCEL_NORMAL, (int)'Z',			 ID_PageDown);
-	entries[ 8].Set(wxACCEL_NORMAL, (int)'X',			 ID_PageDown);
-	entries[ 9].Set(wxACCEL_NORMAL, (int)'C',			 ID_PageDown);
-	entries[10].Set(wxACCEL_NORMAL, (int)'V',			 ID_PageDown);
+	std::vector<wxAcceleratorEntry> keys;
+	keys.emplace_back(wxACCEL_NORMAL, WXK_RETURN,		ID_MenuViewPlay);
+	keys.emplace_back(wxACCEL_NORMAL, WXK_PAGEUP,		ID_PageUp);
+	keys.emplace_back(wxACCEL_NORMAL, (int)'Q',			ID_PageUp);
+	keys.emplace_back(wxACCEL_NORMAL, (int)'W',			ID_PageUp);
+	keys.emplace_back(wxACCEL_NORMAL, (int)'E',			ID_PageUp);
+	keys.emplace_back(wxACCEL_NORMAL, (int)'R',			ID_PageUp);
+	keys.emplace_back(wxACCEL_NORMAL, WXK_PAGEDOWN,		ID_PageDown);
+	keys.emplace_back(wxACCEL_NORMAL, (int)'Z',			ID_PageDown);
+	keys.emplace_back(wxACCEL_NORMAL, (int)'X',			ID_PageDown);
+	keys.emplace_back(wxACCEL_NORMAL, (int)'C',			ID_PageDown);
+	keys.emplace_back(wxACCEL_NORMAL, (int)'V',			ID_PageDown);
+	keys.emplace_back(wxACCEL_NORMAL, WXK_UP,           ID_CursorUp);
+	keys.emplace_back(wxACCEL_NORMAL, WXK_DOWN,			ID_CursorDown);
 
-	wxAcceleratorTable accel(11, entries);
+	wxAcceleratorTable accel(keys.size(), &keys[0]);
 	SetAcceleratorTable(accel);
-
-	
 }
 
 wxMenu *MyFrame::getGridPopupMenu()
 {
-	bool isSelected = (getSelectedRow() != -1);
+	bool isSelected = (grid_->getSelectedRow() != -1);
 
 	wxMenu *menu = new wxMenu();
 	wxMenuItem *menuItem;
@@ -205,6 +214,59 @@ void MyFrame::play(wxCommandEvent& event, const int row, FileSet& fileset)
 	Logger::info(L"Play %ls, %d", fileset.getId().c_str(), row);
 }
 
+void MyFrame::pageUp()
+{
+	if (images_->hasFocus())
+		images_->pageUp();
+	else
+	{
+		grid_->MovePageUp();
+		int r = grid_->GetGridCursorRow();
+		grid_->SelectRow(r);
+		images_->setSelected(r);
+	}
+}
+
+void MyFrame::pageDown()
+{
+	if (images_->hasFocus())
+		images_->pageDown();
+	else
+	{
+		grid_->MovePageDown();
+		int r = grid_->GetGridCursorRow();
+		grid_->SelectRow(r);
+		images_->setSelected(r);
+	}
+}
+
+void MyFrame::cursorUp()
+{
+	if (images_->hasFocus())
+		images_->cursorUp();
+	else
+	{
+		grid_->MoveCursorUp(false);
+		int r = grid_->GetGridCursorRow();
+		grid_->SelectRow(r);
+		images_->setSelected(r);
+	}
+}
+
+void MyFrame::cursorDown()
+{
+	if (images_->hasFocus())
+		images_->cursorDown();
+	else
+	{
+		grid_->MoveCursorDown(false);
+		int r = grid_->GetGridCursorRow();
+		grid_->SelectRow(r);
+		images_->setSelected(r);
+	}
+}
+
+
 //--------------------------------------------------------------------------
 // trying out area 
 //--------------------------------------------------------------------------
@@ -221,7 +283,7 @@ void MyFrame::play(wxCommandEvent& event, const int row, FileSet& fileset)
 
 void MyFrame::tryout(wxCommandEvent& event, const int row)
 {
-
+	grid_->LineUp();
 	return;
 
 //	bool b;

@@ -16,7 +16,6 @@
 #endif
 
 #include <cstdlib>
-#include <wx/grid.h>
 #include <wx/splitter.h>
 #include <wx/sizer.h>
 #ifdef LINUX_BUILD
@@ -26,6 +25,7 @@
 #include "Constants.h"
 #include "FileSet.h"
 #include "FileSetManager.h"
+#include "GridEx.h"
 #include "GridTable.h"
 #include "GridTableTest.h"
 #include "ImagePanel.h"
@@ -148,7 +148,7 @@ MyFrame &MyFrame::getMainFrame()
 
 void MyFrame::initialiseGrid(wxPanel* panel)
 {
-	grid_ = new wxGrid(panel, wxID_ANY);
+	grid_ = new GridEx(panel, wxID_ANY);
 	table_ = new GridTable();
 	grid_->SetTable(table_);
 	grid_->SetSelectionMode(wxGrid::wxGridSelectRows);
@@ -156,6 +156,9 @@ void MyFrame::initialiseGrid(wxPanel* panel)
 
 	grid_->Bind(wxEVT_GRID_CELL_RIGHT_CLICK, &MyFrame::gridEventDispatch, this, wxID_ANY);
 	grid_->Bind(wxEVT_GRID_SELECT_CELL, &MyFrame::gridEventDispatch, this, wxID_ANY);
+	grid_->Bind(wxEVT_SET_FOCUS, &MyFrame::onFocus, this, wxID_ANY);
+
+	grid_->SetColLabelSize(grid_->GetDefaultRowSize());
 }
 
 void MyFrame::uninitialiseGrid()
@@ -171,54 +174,8 @@ void MyFrame::populateGrid()
 	grid_->SetSelectionMode(wxGrid::wxGridSelectRows);
 	grid_->HideRowLabels();
 	grid_->EnableEditing(false);
-}
 
-void MyFrame::refreshGridRowsAppended(const int noOfRows) const
-{
-	wxGridTableMessage push(table_,
-		wxGRIDTABLE_NOTIFY_ROWS_APPENDED,
-		noOfRows);
-	grid_->ProcessTableMessage(push);
-	grid_->ForceRefresh();
-}
-
-void MyFrame::refreshGridRowsDeleted(const int atRow, const int noOfRows) const
-{
-	wxGridTableMessage push(table_,
-		wxGRIDTABLE_NOTIFY_ROWS_DELETED,
-		atRow, noOfRows);
-	grid_->ProcessTableMessage(push);
-	grid_->ForceRefresh();
-}
-
-void MyFrame::refreshGridRowsInserted(const int atRow, const int noOfRows) const
-{
-	wxGridTableMessage push(table_,
-		wxGRIDTABLE_NOTIFY_ROWS_INSERTED,
-		atRow, noOfRows);
-	grid_->ProcessTableMessage(push);
-	grid_->ForceRefresh();
-}
-
-void MyFrame::refreshGrid() const
-{
-    grid_->ForceRefresh();
-}
-
-int MyFrame::getSelectedRow() const
-{
-	wxArrayInt rows = grid_->GetSelectedRows();
-	if (rows.GetCount() == 1)
-		return rows.Item(0);
-	else
-		return -1;
-}
-
-int MyFrame::getTopRow() const
-{
-	int x, y;
-	grid_->CalcUnscrolledPosition(0, 0, &x, &y);
-	return grid_->YToRow(y);
+	grid_->setScrollParams();
 }
 
 void MyFrame::gridEventDispatch(wxGridEvent &event)
@@ -228,7 +185,7 @@ void MyFrame::gridEventDispatch(wxGridEvent &event)
 	if (id == wxEVT_GRID_CELL_RIGHT_CLICK)
 	{
 		int row = grid_->YToRow(event.GetPosition().y - grid_->GetColLabelSize()) +
-				  getTopRow();
+			grid_->getTopRow();
 
 		if (row >= 0 && row < grid_->GetNumberRows())
 		{
@@ -238,7 +195,7 @@ void MyFrame::gridEventDispatch(wxGridEvent &event)
 	}
 	if (id == wxEVT_GRID_SELECT_CELL)
 	{
-		images_->setSelected(getSelectedRow());
+		images_->setSelected(grid_->getSelectedRow());
 	}
 }
 
@@ -263,7 +220,7 @@ int MyFrame::getNoOfImages()
 
 int MyFrame::getSelected()
 {
-	return getSelectedRow();
+	return grid_->getSelectedRow();
 }
 
 void MyFrame::setSelected(const int selected)
@@ -288,9 +245,15 @@ Logger *MyFrame::setupLogger(wxPanel *panel)
 	Logger::enableTime(true);
 	Logger::enableLineCount(true);
 	Logger::enableIdeOutput(true);
+	logger->Bind(wxEVT_SET_FOCUS, &MyFrame::onFocus, this, wxID_ANY);
 	return logger;
 }
 
+void MyFrame::onFocus(wxFocusEvent& event)
+{
+	Logger::info(L"Grid got focus");
+	images_->setFocus(false);
+}
 void MyFrame::OnClose(wxCloseEvent& event)
 {
 	FileSetManager::uninitialise();

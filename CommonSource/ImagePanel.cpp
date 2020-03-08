@@ -46,6 +46,7 @@ ImagePanel::~ImagePanel()
 void ImagePanel::setBorderColour(const wxColour &colour)
 {
 	SetBackgroundColour(colour);
+	Refresh();
 }
 
 void ImagePanel::setImage(const wxString file, const wxBitmapType format)
@@ -132,7 +133,9 @@ void ImagePanel::leftClickDown(wxMouseEvent &event)
 		}
 	}
 	else if (notify_ != nullptr)
+	{
 		notify_->selected(eventId_);
+	}
 }
 
 void ImagePanel::leftClickUp(wxMouseEvent &event) 

@@ -26,6 +26,7 @@ public:
     // colours
     static wxColour blue;
     static wxColour lightBlue;
+    static wxColour grey;
     static wxColour white;
     static wxColour systemBackground;
 

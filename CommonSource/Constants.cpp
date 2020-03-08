@@ -19,6 +19,7 @@ std::wstring Constants::title = std::wstring(L"YipPreview");
 
 wxColour Constants::white;
 wxColour Constants::blue;
+wxColour Constants::grey;
 wxColour Constants::lightBlue;
 wxColour Constants::systemBackground;
 
@@ -36,6 +37,7 @@ void Constants::initialise()
     wxColourDatabase colours;
     white = colours.Find(L"WHITE");
     blue = colours.Find(L"BLUE");
+    grey = colours.Find(L"GREY");
     lightBlue = colours.Find(L"LIGHT BLUE");
 
     systemBackground = wxSystemSettings::GetColour(wxSYS_COLOUR_GRAYTEXT);

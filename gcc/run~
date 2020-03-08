@@ -1,0 +1,10 @@
+#
+# !bin/sh
+#
+
+LD_LIBRARY_PATH=/usr/local/wxwidgets/debug/shared/lib
+PATH=$PATH:/usr/local/wxwidgets/debug/shared/bin
+./Release/YipPreview
+
+
+

@@ -33,6 +33,10 @@ public:
 	void setSelected(const int selected);
 	void pageUp();
 	void pageDown();
+	void cursorUp();
+	void cursorDown();
+	bool hasFocus();	
+	void setFocus(const bool focus);
 
 	// ImagePanelEvents
 	virtual void selected(const int eventId);
@@ -41,10 +45,10 @@ public:
 private:
 
 	void displayAt(const int top);
-	void onImageFocus(wxFocusEvent& event);
 
 	int top_;
 	ImagesBrowserData *idata_;
+	bool focus_;
 };
 
 #endif // COMMON_IMAGESBROWSER_H_

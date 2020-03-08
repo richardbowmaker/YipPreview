@@ -1,0 +1,67 @@
+#PiFan: PiFan.o CPiUtilities.o
+#       g++ -o PiFan PiFan.o CPiUtilities.o -I.
+
+CXX=g++
+CXXFLAGS=-Wall -I.
+CXXFLAGSD=-Wall -I. -DDEBUG -g
+
+DEPS= CPiUtilities.h
+
+SOURCES= \
+        CPiUtilities.cpp \
+        PiFan.cpp
+
+_OBJECTS=PiFan.o CPiUtilities.o
+
+# release
+BUILDDIR=./Release
+OBJECTS=$(patsubst %,$(BUILDDIR)/%,$(_OBJECTS))
+EXECUTABLE=$(BUILDDIR)/PiFan
+
+# debug
+BUILDDIRD=./Debug
+OBJECTSD=$(patsubst %,$(BUILDDIRD)/%,$(_OBJECTS))
+EXECUTABLED=$(BUILDDIRD)/PiFand
+
+# following link is useful
+# https://www3.ntu.edu.sg/home/ehchua/programming/cpp/gcc_make.html#zz-2.1
+
+# target : pre-requisites
+# <TAB>command
+#
+#
+
+# runing make with no argment generates the executeable target
+all: $(EXECUTABLE)
+debug: $(EXECUTABLED)
+
+# release build
+#--------------
+
+# object file is dependent on its c file and dependencies
+$(BUILDDIR)/%.o: %.cpp $(DEPS)
+	$(CXX) -c -o $@ $< $(CXXFLAGS)
+
+# $@ = EXECUTABLE, LHS :
+# $^ = OBJECTS, RHS :
+$(EXECUTABLE) : $(OBJECTS)
+	$(CXX) $^ -o $@
+
+# debug build
+#------------
+
+# object file is dependent on its c file and dependencies
+$(BUILDDIRD)/%.o: %.cpp $(DEPS)
+	$(CXX) -c -o $@ $< $(CXXFLAGSD)
+
+# $@ = EXECUTABLE, LHS :
+# $^ = OBJECTS, RHS :
+$(EXECUTABLED) : $(OBJECTSD)
+	$(CXX) $^ -o $@
+
+.PHONY: clean
+
+clean:
+	rm $(BUILDDIR)/*.o $(EXECUTABLE) $(BUILDDIRD)/*.o $(EXECUTABLED)
+
+

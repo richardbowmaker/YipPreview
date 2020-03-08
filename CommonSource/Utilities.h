@@ -22,6 +22,8 @@ public:
 	static long getThreadId();
 	static long getProcessId();
 	static long getMsCounter();
+	static int pageDown(const int total, const int top, const int visible);
+	static int pageUp(const int total, const int top, const int visible);
 
 private:
 

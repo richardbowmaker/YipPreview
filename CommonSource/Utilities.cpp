@@ -66,8 +66,32 @@ long Utilities::getMsCounter()
 		return 0;
 	return static_cast<long>(getpid());
 #endif
-
 }
+
+int Utilities::pageDown(const int total, const int top, const int visible)
+{
+	int t = 0;
+	if (top >= total - visible) t = 0;
+	else
+	{
+		t = top + visible;
+		if (t > total - visible) t = total - visible;
+	}
+	return t;
+}
+
+int Utilities::pageUp(const int total, const int top, const int visible)
+{
+	int t = 0;
+	if (top == 0) t = total - visible;
+	else
+	{
+		t = top - visible;
+		if (t < 0) t = 0;
+	}
+	return t;
+}
+
 
 std::wstring SU::strToWStr(const char* str, int len /*= 0*/)
 {

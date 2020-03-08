@@ -7,14 +7,18 @@
 
 #include "CThread.h"
 
+
+
+
 CThread::CThread(IThread* ithread) :
 	_ithread(ithread),
 	_run(false)
 {
+
 }
 
 CThread::~CThread()
-{
+{//https://www.youtube.com/watch?v=FRu8SRWuUko
 }
 
 bool CThread::Start()

@@ -159,6 +159,7 @@
     <ClInclude Include="..\..\..\CommonSource\CThread.h" />
     <ClInclude Include="..\..\..\CommonSource\FileSet.h" />
     <ClInclude Include="..\..\..\CommonSource\FileSetManager.h" />
+    <ClInclude Include="..\..\..\CommonSource\GridEx.h" />
     <ClInclude Include="..\..\..\CommonSource\GridTable.h" />
     <ClInclude Include="..\..\..\CommonSource\ImagePanel.h" />
     <ClInclude Include="..\..\..\CommonSource\ImagesBrowser.h" />
@@ -178,6 +179,7 @@
     <ClCompile Include="..\..\..\CommonSource\CThread.cpp" />
     <ClCompile Include="..\..\..\CommonSource\FileSet.cpp" />
     <ClCompile Include="..\..\..\CommonSource\FileSetManager.cpp" />
+    <ClCompile Include="..\..\..\CommonSource\GridEx.cpp" />
     <ClCompile Include="..\..\..\CommonSource\GridTable.cpp" />
     <ClCompile Include="..\..\..\CommonSource\ImagePanel.cpp" />
     <ClCompile Include="..\..\..\CommonSource\ImagesBrowser.cpp" />
