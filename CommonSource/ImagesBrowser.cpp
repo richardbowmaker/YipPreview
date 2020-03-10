@@ -133,33 +133,59 @@ void ImagesBrowser::pageDown()
 	);
 }
 
+void ImagesBrowser::cursorMove(const int step)
+{
+	int n = idata_->getNoOfImages();
+	// visible items
+	int v = idata_->getNoOfCols() * idata_->getNoOfRows();
+	int s = idata_->getSelected();
+
+	// sn = new selected item, tn = new top item
+	int sn = s + step;
+	int tn = top_;
+
+	// if current selected item is not visible then
+	// make the new selected the top item
+	if (s < top_ || s > top_ + v - 1)
+		tn = sn;
+	if (sn < 0)
+	{
+		sn += n;
+		tn = n - v;
+	}
+	else if (sn > n - 1)
+	{
+		sn -= n;
+		tn = 0;
+	}
+	else if (sn < tn)
+		tn = std::max(0, tn - std::abs(step));
+	else if (sn > tn + v - 1)
+		tn = std::min(n - v, tn + std::abs(step));
+
+	displayAt(tn);
+	setSelected(sn);
+	idata_->setSelected(sn);
+}
+
 void ImagesBrowser::cursorUp()
 {
-
+	cursorMove(-idata_->getNoOfCols());
 }
 
 void ImagesBrowser::cursorDown()
 {
-	int n = idata_->getNoOfCols() * idata_->getNoOfRows();
-	int s = idata_->getSelected();
+	cursorMove(idata_->getNoOfCols());
+}
 
-	// new selected item is one row down
-	int t = s + idata_->getNoOfCols();
-	idata_->setSelected(t);
+void ImagesBrowser::cursorLeft()
+{
+	ImagesBrowser::cursorMove(-1);
+}
 
-	if (t >= idata_->getNoOfImages())
-	{
-		setTop(0);
-	}
-	else if (t >= top_ + n)
-	{
-		// new selected item is off screen then scroll one row
-		setTop(top_ + idata_->getNoOfRows());
-	}
-	else
-	{
-		setSelected(t);
-	}
+void ImagesBrowser::cursorRight()
+{
+	ImagesBrowser::cursorMove(1);
 }
 
 //-------------------------------------------------------

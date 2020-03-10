@@ -11,6 +11,11 @@
 #include <string>
 #include <wx/wx.h>
 
+#ifdef WINDOWS_BUILD
+#elif LINUX_BUILD
+#endif
+
+
 class Constants
 {
 public:

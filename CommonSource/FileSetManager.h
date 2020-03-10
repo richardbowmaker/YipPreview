@@ -18,9 +18,6 @@ class FileSetManager
 {
 public:
 
-	using IdFileSetPairT = std::pair<std::wstring, FileSetT>;
-	using FileSetsT = std::vector<IdFileSetPairT>;
-
 	static void initialise();
 	static void uninitialise();
 
@@ -33,6 +30,9 @@ public:
 	static FileSetT getFileSet(const int n);
 
 private:
+
+	using IdFileSetPairT = std::pair<std::wstring, FileSetT>;
+	using FileSetsT = std::vector<IdFileSetPairT>;
 
 	FileSetManager();
 	FileSetManager(const FileSetManager&);

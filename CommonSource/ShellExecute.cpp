@@ -8,10 +8,6 @@
 #include "ShellExecute.h"
 
 #ifdef WINDOWS_BUILD
-#elif LINUX_BUILD
-#endif
-
-#ifdef WINDOWS_BUILD
 	#include <algorithm>
 	#include <cctype>
 	#include <cstdio>

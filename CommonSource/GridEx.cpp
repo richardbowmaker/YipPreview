@@ -81,19 +81,6 @@ int GridEx::getVisibleRows()
         return rb - rt;
 }
 
-void GridEx::setScrollParams()
-{
-	if (!HasScrollbar(wxVERTICAL)) return;
-	int r = GetNumberRows() + 1;
-//	SetScrollbar(wxVERTICAL, 0, getVisibleRows(), r, true);
-
-
-	wxSize s = GetClientSize();
-	int rh = GetDefaultRowSize();
-//	SetScrollbar(wxVERTICAL, 0,, r, true);
-}
-
-
 void GridEx::setTopRow(const int row)
 {
 	Logger::info(L"------------------------------");

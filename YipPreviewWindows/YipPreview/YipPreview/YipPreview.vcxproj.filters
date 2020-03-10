@@ -78,6 +78,9 @@
     <ClInclude Include="..\..\..\CommonSource\GridEx.h">
       <Filter>Common\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\CommonSource\VideoUpdaterDialog.h">
+      <Filter>Common\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\CommonSource\Logger.cpp">
@@ -123,6 +126,9 @@
       <Filter>Common\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\CommonSource\GridEx.cpp">
+      <Filter>Common\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\CommonSource\VideoUpdaterDialog.cpp">
       <Filter>Common\Source Files</Filter>
     </ClCompile>
   </ItemGroup>

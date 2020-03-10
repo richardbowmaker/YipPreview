@@ -27,16 +27,17 @@
 
 #include "Constants.h"
 #include "FileSet.h"
+#include "FileSetManager.h"
 #include "GridEx.h"
 #include "GridTable.h"
 #include "GridTableTest.h"
+#include "ImagePanel.h"
 #include "Logger.h"
+#include "MediaPreviewPlayer.h"
+#include "ShellExecute.h"
 #include "Tryout.h"
 #include "Utilities.h"
-#include "ShellExecute.h"
-#include "ImagePanel.h"
-#include "MediaPreviewPlayer.h"
-#include "FileSetManager.h"
+#include "VideoUpdaterDialog.h"
 
 enum MenuIDsT
 {
@@ -50,6 +51,7 @@ enum MenuIDsT
 	ID_MenuView,
 	ID_MenuViewPlay,
 	ID_MenuTools,
+	ID_MenuToolsVideoUpdater,
 	ID_MenuToolsTryout,
 	ID_MenuHelp,
 	ID_MenuHelpAbout,
@@ -58,13 +60,22 @@ enum MenuIDsT
 	ID_PageUp,
 	ID_PageDown,
 	ID_CursorUp,
-	ID_CursorDown
+	ID_CursorDown,
+	ID_CursorLeft,
+	ID_CursorRight
 };
 
 void MyFrame::menuOpenDispatch(wxMenuEvent& event, int menuId)
 {
 	// is there a row selected
-	bool isSelected = (grid_->getSelectedRow() != -1);
+	bool isSelected = false;
+	FileSetT fs;
+	int r = grid_->getSelectedRow();
+	if (r != -1)
+	{
+		isSelected = true;
+		fs = FileSetManager::getFileSet(r);
+	}
 	
 	switch (menuId)
 	{
@@ -75,6 +86,7 @@ void MyFrame::menuOpenDispatch(wxMenuEvent& event, int menuId)
 		menus_[ID_MenuViewPlay]->Enable(isSelected);
 		break;
 	case ID_MenuTools:
+		menus_[ID_MenuToolsVideoUpdater]->Enable(fs.get() != nullptr && fs->hasVideo());
 		break;
 	case ID_MenuHelp:
 		break;
@@ -91,10 +103,13 @@ void MyFrame::menuSelectedDispatch(wxCommandEvent& event)
 	switch (event.GetId())
 	{
 	case ID_MenuFileDelete:
-		if (row != -1) deleteFile(event, row, *fs.get());
+		deleteFile(event, row, *fs.get());
 		break;
 	case ID_MenuViewPlay:
-		if (row != -1) play(event, row, *fs.get());
+		play(event, row, *fs.get());
+		break;
+	case ID_MenuToolsVideoUpdater:
+		VideoUpdaterDialog::Run(this, fs);
 		break;
 	case ID_MenuToolsTryout:
 		tryout(event, row);
@@ -112,6 +127,12 @@ void MyFrame::menuSelectedDispatch(wxCommandEvent& event)
 		break;
 	case ID_CursorDown:
 		cursorDown();
+		break;
+	case ID_CursorLeft:
+		cursorLeft();
+		break;
+	case ID_CursorRight:
+		cursorRight();
 		break;
 	}
 }
@@ -143,9 +164,13 @@ void MyFrame::setupMenus()
 	wxMenu* menuTools = new wxMenu;
 	menuTools->Bind(wxEVT_MENU_OPEN, [this](wxMenuEvent& e) -> void { menuOpenDispatch(e, ID_MenuTools); }, wxID_ANY);
 
+	// tools video updater
+	menus_[ID_MenuToolsVideoUpdater] =
+		menuTools->Append(ID_MenuToolsVideoUpdater, "&Update video...\tCtrl-V", "Video update tools");
+
 	// tools tryout
 	menus_[ID_MenuToolsTryout] =
-		menuTools->Append(ID_MenuToolsTryout, "&TryOut...\tCtrl-T", "Hook for experimental code");
+		menuTools->Append(ID_MenuToolsTryout, "TryOut...\tCtrl-T", "Hook for experimental code");
 
 	// help menu
 	wxMenu* menuHelp = new wxMenu;
@@ -179,6 +204,8 @@ void MyFrame::setupMenus()
 	keys.emplace_back(wxACCEL_NORMAL, (int)'V',			ID_PageDown);
 	keys.emplace_back(wxACCEL_NORMAL, WXK_UP,           ID_CursorUp);
 	keys.emplace_back(wxACCEL_NORMAL, WXK_DOWN,			ID_CursorDown);
+	keys.emplace_back(wxACCEL_NORMAL, WXK_LEFT,			ID_CursorLeft);
+	keys.emplace_back(wxACCEL_NORMAL, WXK_RIGHT,		ID_CursorRight);
 
 	wxAcceleratorTable accel(keys.size(), &keys[0]);
 	SetAcceleratorTable(accel);
@@ -186,7 +213,14 @@ void MyFrame::setupMenus()
 
 wxMenu *MyFrame::getGridPopupMenu()
 {
-	bool isSelected = (grid_->getSelectedRow() != -1);
+	FileSetT fs;
+	int row = grid_->getSelectedRow();
+	bool isSelected = false;
+	if (row != -1)
+	{
+		fs = FileSetManager::getFileSet(row);
+		isSelected = true;
+	}
 
 	wxMenu *menu = new wxMenu();
 	wxMenuItem *menuItem;
@@ -195,6 +229,9 @@ wxMenu *MyFrame::getGridPopupMenu()
 
 	menuItem = menu->Append(ID_MenuViewPlay,   L"Play");
 	menuItem->Enable(isSelected);
+
+	menuItem = menu->Append(ID_MenuToolsVideoUpdater,   L"Update video ...");
+	menuItem->Enable(isSelected && fs.get() != nullptr && fs->hasVideo());
 
 	menu->Bind(wxEVT_MENU, &MyFrame::menuSelectedDispatch, this, wxID_ANY);
 	return menu;
@@ -266,6 +303,31 @@ void MyFrame::cursorDown()
 	}
 }
 
+void MyFrame::cursorLeft()
+{
+	if (images_->hasFocus())
+		images_->cursorLeft();
+	else
+	{
+		grid_->MoveCursorUp(false);
+		int r = grid_->GetGridCursorRow();
+		grid_->SelectRow(r);
+		images_->setSelected(r);
+	}
+}
+
+void MyFrame::cursorRight()
+{
+	if (images_->hasFocus())
+		images_->cursorRight();
+	else
+	{
+		grid_->MoveCursorDown(false);
+		int r = grid_->GetGridCursorRow();
+		grid_->SelectRow(r);
+		images_->setSelected(r);
+	}
+}
 
 //--------------------------------------------------------------------------
 // trying out area 
@@ -283,7 +345,6 @@ void MyFrame::cursorDown()
 
 void MyFrame::tryout(wxCommandEvent& event, const int row)
 {
-	grid_->LineUp();
 	return;
 
 //	bool b;

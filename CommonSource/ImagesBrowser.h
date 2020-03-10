@@ -35,6 +35,8 @@ public:
 	void pageDown();
 	void cursorUp();
 	void cursorDown();
+	void cursorLeft();
+	void cursorRight();
 	bool hasFocus();	
 	void setFocus(const bool focus);
 
@@ -45,6 +47,7 @@ public:
 private:
 
 	void displayAt(const int top);
+	void cursorMove(const int step);
 
 	int top_;
 	ImagesBrowserData *idata_;

@@ -84,6 +84,8 @@ private:
     void pageDown();
 	void cursorUp();
 	void cursorDown();
+	void cursorLeft();
+	void cursorRight();
 
     void OnClose(wxCloseEvent &event);
     void OnThread(wxCommandEvent &event);

@@ -169,6 +169,7 @@
     <ClInclude Include="..\..\..\CommonSource\ShellExecute.h" />
     <ClInclude Include="..\..\..\CommonSource\Tryout.h" />
     <ClInclude Include="..\..\..\CommonSource\Utilities.h" />
+    <ClInclude Include="..\..\..\CommonSource\VideoUpdaterDialog.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="targetver.h" />
@@ -190,6 +191,7 @@
     <ClCompile Include="..\..\..\CommonSource\ShellExecute.cpp" />
     <ClCompile Include="..\..\..\CommonSource\Tryout.cpp" />
     <ClCompile Include="..\..\..\CommonSource\Utilities.cpp" />
+    <ClCompile Include="..\..\..\CommonSource\VideoUpdaterDialog.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="YipPreview.rc" />

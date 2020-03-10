@@ -79,6 +79,11 @@ bool FileSet::setId(const std::wstring filename)
 	}
 }
 
+std::wstring FileSet::getFileStem() const
+{
+	return FU::getFileStem(id_);
+}
+
 std::wstring FileSet::getImage() const
 {
 	return image_;

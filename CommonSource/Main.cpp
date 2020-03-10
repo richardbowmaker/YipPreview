@@ -175,7 +175,6 @@ void MyFrame::populateGrid()
 	grid_->HideRowLabels();
 	grid_->EnableEditing(false);
 
-	grid_->setScrollParams();
 }
 
 void MyFrame::gridEventDispatch(wxGridEvent &event)

@@ -26,8 +26,6 @@ public:
     int  getTopRow() const;
     int  getVisibleRows();
     void setTopRow(const int row);
-	void setScrollParams();
-
 
 };
 

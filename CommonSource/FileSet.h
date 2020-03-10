@@ -28,6 +28,7 @@ public:
 	bool hasLink() const;
 	std::wstring typesToString() const;
 	std::wstring getShortName() const;
+	std::wstring getFileStem() const;
 
 	static bool isValidType(const std::wstring filename);
 	static std::wstring filenameToId(const std::wstring filename);
