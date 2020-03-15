@@ -157,6 +157,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\..\CommonSource\Constants.h" />
     <ClInclude Include="..\..\..\CommonSource\CThread.h" />
+    <ClInclude Include="..\..\..\CommonSource\DialogEx.h" />
     <ClInclude Include="..\..\..\CommonSource\FileSet.h" />
     <ClInclude Include="..\..\..\CommonSource\FileSetManager.h" />
     <ClInclude Include="..\..\..\CommonSource\GridEx.h" />
@@ -178,6 +179,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\CommonSource\Constants.cpp" />
     <ClCompile Include="..\..\..\CommonSource\CThread.cpp" />
+    <ClCompile Include="..\..\..\CommonSource\DialogEx.cpp" />
     <ClCompile Include="..\..\..\CommonSource\FileSet.cpp" />
     <ClCompile Include="..\..\..\CommonSource\FileSetManager.cpp" />
     <ClCompile Include="..\..\..\CommonSource\GridEx.cpp" />

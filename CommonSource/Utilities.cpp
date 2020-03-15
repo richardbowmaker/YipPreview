@@ -12,8 +12,10 @@
 	#include <iostream>
 	#include <regex>
 	#include <stdio.h>
+	#include <stdlib.h>
 	#include <string>
 	#include <string.h>
+	#include <time.h>
 	#include <utility>
 	#include <windows.h>
 #elif LINUX_BUILD
@@ -35,6 +37,9 @@
 #endif
 
 #include "Logger.h"
+#include "ShellExecute.h"
+
+bool Utilities::srand_{false};
 
 long Utilities::getThreadId()
 {
@@ -92,6 +97,16 @@ int Utilities::pageUp(const int total, const int top, const int visible)
 	return t;
 }
 
+
+int Utilities::getRand(const int min, const int max)
+{
+	if (!srand_)
+	{
+		srand((unsigned)time(NULL));
+		srand_ = true;
+	}
+	return min + (rand() % (max - min + 1));
+}
 
 std::wstring SU::strToWStr(const char* str, int len /*= 0*/)
 {

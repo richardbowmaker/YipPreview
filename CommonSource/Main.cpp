@@ -135,6 +135,7 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size) 
 
 	SetClientSize(wxSize(1000, 600));
 	Bind(wxEVT_SHELL_EXECUTE_RESULT, &MyFrame::OnShellExecute, this, wxID_ANY);
+
 }
 
 MyFrame &MyFrame::getMainFrame()
@@ -174,7 +175,6 @@ void MyFrame::populateGrid()
 	grid_->SetSelectionMode(wxGrid::wxGridSelectRows);
 	grid_->HideRowLabels();
 	grid_->EnableEditing(false);
-
 }
 
 void MyFrame::gridEventDispatch(wxGridEvent &event)
@@ -189,6 +189,7 @@ void MyFrame::gridEventDispatch(wxGridEvent &event)
 		if (row >= 0 && row < grid_->GetNumberRows())
 		{
 			grid_->SelectRow(row);
+			images_->setSelected(row);
 			grid_->PopupMenu(getGridPopupMenu());
 		}
 	}
@@ -230,6 +231,11 @@ void MyFrame::setSelected(const int selected)
 std::wstring MyFrame::getImage(const int n)
 {
 	return FileSetManager::getFileSet(n)->getImage();
+}
+
+std::wstring MyFrame::getVideo(const int n)
+{
+	return FileSetManager::getFileSet(n)->getVideo();
 }
 
 //--------------------------------------------------------------

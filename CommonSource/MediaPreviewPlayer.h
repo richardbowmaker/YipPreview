@@ -20,11 +20,17 @@
 class MediaPreviewPlayer : public wxPanel
 {
 public:
-	MediaPreviewPlayer(wxWindow *parent, wxWindowID id = wxID_ANY);
+
+	MediaPreviewPlayer(
+			wxWindow *parent,
+			wxWindowID id        = wxID_ANY,
+			const wxPoint &pos 	 = wxDefaultPosition,
+			const wxSize &size   = wxDefaultSize,
+			long  style 		 = wxTAB_TRAVERSAL,
+			const wxString &name = wxPanelNameStr);
 	virtual ~MediaPreviewPlayer();
 
 	MediaPreviewPlayer &setFile(const std::wstring &file);
-	void play();
 	void startPreview();
 	void stopPreview();
 

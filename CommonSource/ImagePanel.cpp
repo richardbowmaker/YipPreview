@@ -11,6 +11,8 @@
 
 #include "Constants.h"
 #include "Logger.h"
+#include "MediaPreviewPlayer.h"
+#include "Utilities.h"
 
 ImagePanel::ImagePanel(
 	wxWindow* parent,
@@ -28,13 +30,14 @@ ImagePanel::ImagePanel(
 	border_		(border),
 	notify_		(notify),
 	eventId_	(eventId),
+	preview_	(nullptr),
 	zoomable_	(zoomable)
 {
 	// create panel within a panel for a border round the image
 	panel_ = new wxPanel(this);
-	wxBoxSizer *sizer = new wxBoxSizer(wxVERTICAL);
-	sizer->Add(panel_, 1, wxEXPAND | wxALL, border_);
-	SetSizer(sizer);
+	sizer_ = new wxBoxSizer(wxVERTICAL);
+	sizer_->Add(panel_, 1, wxEXPAND | wxALL, border_);
+	SetSizer(sizer_);
 
 	setBorderColour(Constants::white);
 }
@@ -49,20 +52,13 @@ void ImagePanel::setBorderColour(const wxColour &colour)
 	Refresh();
 }
 
-void ImagePanel::setImage(const wxString file, const wxBitmapType format)
+void ImagePanel::setImage(const std::wstring file, const wxBitmapType format)
 {
-	panel_->Unbind(wxEVT_RIGHT_UP,		&ImagePanel::rightClickUp,	 this, wxID_ANY);
-	panel_->Unbind(wxEVT_LEFT_DOWN,		&ImagePanel::leftClickDown,  this, wxID_ANY);		
-	panel_->Unbind(wxEVT_PAINT,			&ImagePanel::onPaint,		 this, wxID_ANY);
-	panel_->Unbind(wxEVT_MOTION,		&ImagePanel::mouseMoved,	 this, wxID_ANY);
-	panel_->Unbind(wxEVT_LEFT_UP,		&ImagePanel::leftClickUp,	 this, wxID_ANY);
-	panel_->Unbind(wxEVT_RIGHT_DOWN,	&ImagePanel::rightClickDown, this, wxID_ANY);
-	panel_->Unbind(wxEVT_SIZE,			&ImagePanel::onSize,		 this, wxID_ANY);
-	panel_->Unbind(wxEVT_KEY_UP,		&ImagePanel::onKeyUp,		 this, wxID_ANY);
+	unbindEvents();
 
 	// clear the previous image 
-	memDc_ = nullptr;
-	image_ = nullptr;
+	memDc_.reset();
+	image_.reset();
 	wxClientDC dc(panel_);
 	dc.Clear();
 
@@ -74,20 +70,36 @@ void ImagePanel::setImage(const wxString file, const wxBitmapType format)
 
 		// render image
 		render(dc);
-
-		panel_->Bind(wxEVT_PAINT,     &ImagePanel::onPaint,       this, wxID_ANY);
-		panel_->Bind(wxEVT_LEFT_DOWN, &ImagePanel::leftClickDown, this, wxID_ANY);
-		panel_->Bind(wxEVT_RIGHT_UP,  &ImagePanel::rightClickUp,  this, wxID_ANY);
-
-		if (zoomable_)
-		{
-			panel_->Bind(wxEVT_MOTION,		&ImagePanel::mouseMoved,	 this, wxID_ANY);
-			panel_->Bind(wxEVT_LEFT_UP,		&ImagePanel::leftClickUp,	 this, wxID_ANY);
-			panel_->Bind(wxEVT_RIGHT_DOWN,	&ImagePanel::rightClickDown, this, wxID_ANY);
-			panel_->Bind(wxEVT_SIZE,		&ImagePanel::onSize,		 this, wxID_ANY);
-			panel_->Bind(wxEVT_KEY_UP,		&ImagePanel::onKeyUp,		 this, wxID_ANY);
-		}
+		bindEvents();
 	}
+}
+
+void ImagePanel::bindEvents()
+{
+	panel_->Bind(wxEVT_PAINT,     &ImagePanel::onPaint,       this, wxID_ANY);
+	panel_->Bind(wxEVT_LEFT_DOWN, &ImagePanel::leftClickDown, this, wxID_ANY);
+	panel_->Bind(wxEVT_RIGHT_UP,  &ImagePanel::rightClickUp,  this, wxID_ANY);
+
+	if (zoomable_)
+	{
+		panel_->Bind(wxEVT_MOTION,		&ImagePanel::mouseMoved,	 this, wxID_ANY);
+		panel_->Bind(wxEVT_LEFT_UP,		&ImagePanel::leftClickUp,	 this, wxID_ANY);
+		panel_->Bind(wxEVT_RIGHT_DOWN,	&ImagePanel::rightClickDown, this, wxID_ANY);
+		panel_->Bind(wxEVT_SIZE,		&ImagePanel::onSize,		 this, wxID_ANY);
+		panel_->Bind(wxEVT_KEY_UP,		&ImagePanel::onKeyUp,		 this, wxID_ANY);
+	}
+}
+
+void ImagePanel::unbindEvents()
+{
+	panel_->Unbind(wxEVT_RIGHT_UP,		&ImagePanel::rightClickUp,	 this, wxID_ANY);
+	panel_->Unbind(wxEVT_LEFT_DOWN,		&ImagePanel::leftClickDown,  this, wxID_ANY);
+	panel_->Unbind(wxEVT_PAINT,			&ImagePanel::onPaint,		 this, wxID_ANY);
+	panel_->Unbind(wxEVT_MOTION,		&ImagePanel::mouseMoved,	 this, wxID_ANY);
+	panel_->Unbind(wxEVT_LEFT_UP,		&ImagePanel::leftClickUp,	 this, wxID_ANY);
+	panel_->Unbind(wxEVT_RIGHT_DOWN,	&ImagePanel::rightClickDown, this, wxID_ANY);
+	panel_->Unbind(wxEVT_SIZE,			&ImagePanel::onSize,		 this, wxID_ANY);
+	panel_->Unbind(wxEVT_KEY_UP,		&ImagePanel::onKeyUp,		 this, wxID_ANY);
 }
 
 void ImagePanel::mouseMoved(wxMouseEvent &event) 
@@ -134,7 +146,7 @@ void ImagePanel::leftClickDown(wxMouseEvent &event)
 	}
 	else if (notify_ != nullptr)
 	{
-		notify_->selected(eventId_);
+		notify_->imageSelected(eventId_);
 	}
 }
 
@@ -154,7 +166,11 @@ void ImagePanel::rightClickUp(wxMouseEvent &event)
 	if (zoomable_)
 		zoomImage(event.GetPosition(), 1.0f / 1.2f);
 	else if (notify_ != nullptr)
-		notify_->contextMenu(eventId_);
+	{
+		notify_->imageSelected(eventId_);
+		wxMenu *pm = notify_->getPopupMenu(eventId_);
+		PopupMenu(pm);
+	}
 }
 
 void ImagePanel::mouseLeftWindow(wxMouseEvent &event) 
@@ -310,6 +326,47 @@ void ImagePanel::zoomImage(wxPoint pt, float scalex)
 	scale_ = scale;
 	wxClientDC dc(panel_);
 	render(dc);
+}
+
+void ImagePanel::startPreview(const std::wstring file)
+{
+	if (!FU::fileExists(file)) return;
+	if (preview_ != nullptr) return;
+
+	// remove the image
+	unbindEvents();
+	DestroyChildren();
+	panel_ = nullptr;
+	sizer_->Clear();
+
+	// replace with the preview player
+	preview_ = new 	MediaPreviewPlayer(this);
+	sizer_->Add(preview_, 1, wxEXPAND | wxALL, border_);
+	Layout();
+
+	preview_->setFile(file).startPreview();
+}
+
+void ImagePanel::stopPreview()
+{
+	if (preview_ == nullptr) return;
+
+	preview_->stopPreview();
+	DestroyChildren();
+	preview_ = nullptr;
+	sizer_->Clear();
+
+	// restore image
+	panel_ = new wxPanel(this);
+	sizer_->Add(panel_, 1, wxEXPAND | wxALL, border_);
+	Layout();
+
+	memDc_.reset();
+	wxClientDC dc(panel_);
+    render(dc);
+    Layout();
+
+	bindEvents();
 }
 
 

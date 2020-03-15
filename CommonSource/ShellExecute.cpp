@@ -64,7 +64,6 @@ bool ShellExecute::shell(const std::wstring &cmd)
 #ifdef WINDOWS_BUILD
 	return false;
 #elif LINUX_BUILD
-
 	ShellThreadData data;
 	data.result_.cmd_ = cmd;
 	if (shellStart(data))
@@ -83,6 +82,7 @@ bool ShellExecute::shellSync(
 		const std::wstring &cmd,
 		const int timeoutms /*= -1*/)
 {
+	Logger::info(L"ShellExecute::shellSync %ls, timeout = %d", cmd.c_str(), timeoutms);
 	ShellThreadData data;
 	data.result_.cmd_ = cmd;
 	data.timeoutms_ = timeoutms;
@@ -100,6 +100,7 @@ bool ShellExecute::shellSync(
 	ShellExecuteResult& result,
 	const int timeoutms /*= -1 */)
 {
+	Logger::info(L"ShellExecute::shellSync %ls, timeout = %d", cmd.c_str(), timeoutms);
 	ShellThreadData data;
 	data.result_.cmd_ = cmd;
 	data.timeoutms_ = timeoutms;
@@ -122,6 +123,7 @@ bool ShellExecute::shellAsync(
 	void* userData,
 	const int timeoutms)
 {
+	Logger::info(L"ShellExecute::shellAsync %ls, timeout = %d", cmd.c_str(), timeoutms);
 	ShellThreadData *data = new ShellThreadData;
 	data->result_.cmd_ = cmd;
 	data->result_.userId_ = userId;
@@ -163,6 +165,7 @@ bool ShellExecute::shellAsyncGui(
 	void* userData,
 	const int timeoutms)
 {
+	Logger::info(L"ShellExecute::shellAsyncGui %ls, timeout = %d", cmd.c_str(), timeoutms);
 	ShellThreadData* data = new ShellThreadData;
 	data->result_.cmd_ = cmd;
 	data->result_.userId_ = userId;
@@ -248,6 +251,8 @@ bool ShellExecute::shellWin_(ShellThreadData& data)
 		data.wxHandler_->AddPendingEvent(evt);
 	}
 
+	if (!data.result_.success_)
+		Logger::error(L"ShellExecute failed");
 	return data.result_.success_;
 }
 
@@ -607,6 +612,10 @@ bool ShellExecute::shellWait(ShellThreadData &data)
 	// setup return result
 	data.result_.exitCode_ 	= exit;
 	data.result_.success_ 	= exit == 0;
+
+	if (!data.result_.success_)
+		Logger::error(L"ShellExecute failed");
+
 	return data.result_.success_;
 }
 

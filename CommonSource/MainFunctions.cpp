@@ -35,6 +35,7 @@
 #include "Logger.h"
 #include "MediaPreviewPlayer.h"
 #include "ShellExecute.h"
+#include "TestDialog.h"
 #include "Tryout.h"
 #include "Utilities.h"
 #include "VideoUpdaterDialog.h"
@@ -52,6 +53,7 @@ enum MenuIDsT
 	ID_MenuViewPlay,
 	ID_MenuTools,
 	ID_MenuToolsVideoUpdater,
+	ID_MenuToolsTest,
 	ID_MenuToolsTryout,
 	ID_MenuHelp,
 	ID_MenuHelpAbout,
@@ -87,6 +89,7 @@ void MyFrame::menuOpenDispatch(wxMenuEvent& event, int menuId)
 		break;
 	case ID_MenuTools:
 		menus_[ID_MenuToolsVideoUpdater]->Enable(fs.get() != nullptr && fs->hasVideo());
+		menus_[ID_MenuToolsTest]->Enable(fs.get() != nullptr && fs->hasVideo());
 		break;
 	case ID_MenuHelp:
 		break;
@@ -110,6 +113,9 @@ void MyFrame::menuSelectedDispatch(wxCommandEvent& event)
 		break;
 	case ID_MenuToolsVideoUpdater:
 		VideoUpdaterDialog::Run(this, fs);
+		break;
+	case ID_MenuToolsTest:
+		TestDialog::Run(this, fs);
 		break;
 	case ID_MenuToolsTryout:
 		tryout(event, row);
@@ -168,6 +174,10 @@ void MyFrame::setupMenus()
 	menus_[ID_MenuToolsVideoUpdater] =
 		menuTools->Append(ID_MenuToolsVideoUpdater, "&Update video...\tCtrl-V", "Video update tools");
 
+	// tools test dialog
+	menus_[ID_MenuToolsTest] =
+		menuTools->Append(ID_MenuToolsTest, "Test...\tCtrl-V", "Test dialog");
+
 	// tools tryout
 	menus_[ID_MenuToolsTryout] =
 		menuTools->Append(ID_MenuToolsTryout, "TryOut...\tCtrl-T", "Hook for experimental code");
@@ -211,30 +221,32 @@ void MyFrame::setupMenus()
 	SetAcceleratorTable(accel);
 }
 
-wxMenu *MyFrame::getGridPopupMenu()
+wxMenu *MyFrame::getPopupMenu(const int item)
 {
 	FileSetT fs;
-	int row = grid_->getSelectedRow();
-	bool isSelected = false;
-	if (row != -1)
-	{
-		fs = FileSetManager::getFileSet(row);
-		isSelected = true;
-	}
+	if (item != -1) fs = FileSetManager::getFileSet(item);
 
 	wxMenu *menu = new wxMenu();
 	wxMenuItem *menuItem;
 	menuItem = menu->Append(ID_MenuFileDelete, L"Delete ...");
-	menuItem->Enable(isSelected);
+	menuItem->Enable(fs.get() != nullptr);
 
 	menuItem = menu->Append(ID_MenuViewPlay,   L"Play");
-	menuItem->Enable(isSelected);
+	menuItem->Enable(fs.get() != nullptr);
 
 	menuItem = menu->Append(ID_MenuToolsVideoUpdater,   L"Update video ...");
-	menuItem->Enable(isSelected && fs.get() != nullptr && fs->hasVideo());
+	menuItem->Enable(fs.get() != nullptr && fs->hasVideo());
+
+	menuItem = menu->Append(ID_MenuToolsTest,   L"Test dialog ...");
+	menuItem->Enable(fs.get() != nullptr && fs->hasVideo());
 
 	menu->Bind(wxEVT_MENU, &MyFrame::menuSelectedDispatch, this, wxID_ANY);
 	return menu;
+}
+
+wxMenu *MyFrame::getGridPopupMenu()
+{
+	return getPopupMenu(grid_->getSelectedRow());
 }
 
 //--------------------------------------------------------------------------

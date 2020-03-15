@@ -16,6 +16,7 @@
 #endif
 
 std::wstring Constants::title = std::wstring(L"YipPreview");
+std::wstring Constants::workingDir;
 
 wxColour Constants::white;
 wxColour Constants::blue;

@@ -155,7 +155,7 @@ private:
 //
 // add a handler either method as follows to the wxEvtHandler class, e.g. wxFrame
 //
-//		void MyFrame::OnShellExecute(wxShellExecuteEvent& event)
+//		void MyFrame::onShellExecute(wxShellExecuteEvent& event)
 //		{
 //			ShellExecuteResult result = event.getResult();
 //
@@ -165,27 +165,35 @@ private:
 //			event.Skip();
 //		}
 //
-// map the handler to the event either via a message map, lambda or functor
+// map the handler to the event either via a message map, directly, via lambda or functor
 //
 // message map :-
 //
 // 	wxBEGIN_EVENT_TABLE(MyFrame, wxFrame)
 //		...
-//		EVT_SHELL_EXECUTE_RESULT_COMMAND(wxID_ANY, MyFrame::OnShellExecute)
+//		EVT_SHELL_EXECUTE_RESULT_COMMAND(wxID_ANY, MyFrame::onShellExecute)
 //		...
 //	wxEND_EVENT_TABLE()
 //
-// bind to lambda :-
+// bind directly to handler:-
 //
-// 	Bind(wxEVT_SHELL_EXECUTE_RESULT, [this](wxShellExecuteEvent& e) -> void {OnShellExecute(e);}, wxID_ANY);
+// 	Bind(wxEVT_SHELL_EXECUTE_RESULT, &MyFrame::onShellExecute, this);
 //
-// bind to a functor; (#include <functional>)
+// bind via lambda :-
+//
+// 	Bind(wxEVT_SHELL_EXECUTE_RESULT, [this](wxShellExecuteEvent& e) -> void { onShellExecute(e); }, wxID_ANY);
+//
+// bind via functor; (#include <functional>)
 //
 //	std::function< void(wxShellExecuteEvent&) >
-//	shellHandler(std::bind(&MyFrame::OnShellExecute, this, std::placeholders::_1));
+//	shellHandler(std::bind(&MyFrame::onShellExecute, this, std::placeholders::_1));
 //	Bind(wxEVT_SHELL_EXECUTE_RESULT, shellHandler, wxID_ANY);
 //
-// To have more than one handler, the wxid must be set to something other than wxID_ANY
+// bind to lambda  :-
+//
+// 	Bind(wxEVT_SHELL_EXECUTE_RESULT, [this](wxShellExecuteEvent& e) -> void {-handling code-;}, wxID_ANY);
+//
+// To have more than one handler, the wxgrid must be set to something other than wxID_ANY
 // in the event table map and must be the the same as that set in the call to shellAsyncGui().
 //----------------------------------------------------------------------------
 

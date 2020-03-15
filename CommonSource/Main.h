@@ -55,6 +55,9 @@ public:
     virtual int getSelected();
     virtual void setSelected(const int selected);
     virtual std::wstring getImage(const int n);
+	virtual std::wstring getVideo(const int n);
+	virtual wxMenu *getPopupMenu(const int item);
+
 
 private:
 

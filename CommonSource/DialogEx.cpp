@@ -85,8 +85,8 @@ DialogEx::DialogEx(
 	// have just enough height
 	int h = ok_->GetSize().GetHeight();
 	panel_ = new wxPanel(this);
-	sizer->Add(panel_, size.GetHeight() - h);
-	sizer->Add(buttonSizer, h);
+	sizer->Add(panel_, size.GetHeight() - h, wxEXPAND);
+	sizer->Add(buttonSizer, h, wxTOP | wxBOTTOM, 5);
 }
 
 void DialogEx::setTitle(const std::wstring title)

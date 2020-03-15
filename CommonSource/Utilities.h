@@ -24,12 +24,15 @@ public:
 	static long getMsCounter();
 	static int pageDown(const int total, const int top, const int visible);
 	static int pageUp(const int total, const int top, const int visible);
+	static int getRand(const int min, const int max);
 
 private:
 
 	Utilities() = default;
 	Utilities(const Utilities&) = default;
 	Utilities(Utilities&&);
+
+	static bool srand_;
 };
 
 // String Utilities

@@ -19,6 +19,8 @@ public:
 	virtual int getSelected() = 0;
 	virtual void setSelected(const int selected) = 0;
 	virtual std::wstring getImage(const int n) = 0;
+	virtual std::wstring getVideo(const int n) = 0;
+	virtual wxMenu *getPopupMenu(const int item) = 0;
 };
 
 class ImagesBrowser : public wxPanel, ImagePanelEvents
@@ -41,8 +43,8 @@ public:
 	void setFocus(const bool focus);
 
 	// ImagePanelEvents
-	virtual void selected(const int eventId);
-	virtual void contextMenu(const int eventId);
+	virtual void imageSelected(const int eventId);
+	virtual wxMenu *getPopupMenu(const int eventId);
 
 private:
 

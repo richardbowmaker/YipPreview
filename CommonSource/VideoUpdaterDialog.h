@@ -16,7 +16,9 @@
 #include "DialogEx.h"
 #include "FileSet.h"
 
-class VideoUpdaterDialog: public DialogEx
+class wxShellExecuteEvent;
+
+class VideoUpdaterDialog : public DialogEx
 {
 public:
 
@@ -27,13 +29,18 @@ public:
 private:
 
 	virtual void onOk(wxCommandEvent &event);
+	void updateGui();
+	void setDuration();
+	void onShellExecute(wxShellExecuteEvent& event);
 
+	wxStaticText *txtDuration_;
 	wxCheckBox *chkAdjustVolume_;
 	wxCheckBox *chkRemoveAudio_;
 	wxCheckBox *chkCompress_;
 	wxCheckBox *chkNewImage_;
 
 	FileSetT fileset_;
+	int duration_;
 
 };
 

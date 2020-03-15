@@ -9,8 +9,11 @@
 #define COMMON_IMAGEPANEL_H_
 
 #include <memory>
+#include <string>
 #include <wx/wx.h>
 #include <wx/sizer.h>
+
+class MediaPreviewPlayer;
 
 class ImagePanelEvents
 {
@@ -18,8 +21,8 @@ public:
 	ImagePanelEvents() = default;
 	~ImagePanelEvents() = default;
 
-	virtual void selected(const int eventId) = 0;
-	virtual void contextMenu(const int eventId) = 0;
+	virtual void imageSelected(const int eventId) = 0;
+	virtual wxMenu *getPopupMenu(const int eventId) = 0;
 };
 
 class ImagePanel : public wxPanel
@@ -36,10 +39,14 @@ public:
 	virtual ~ImagePanel();
 
 	void setBorderColour(const wxColour &colour);
-	void setImage(const wxString file, const wxBitmapType format);
+	void setImage(const std::wstring file, const wxBitmapType format);
+	void startPreview(const std::wstring file);
+	void stopPreview();
 
 private:
 
+	void bindEvents();
+	void unbindEvents();
 	void onPaint(wxPaintEvent &evt);
 	void render(wxDC &dc);
 	void mouseMoved(wxMouseEvent &event);
@@ -75,12 +82,16 @@ private:
 	wxPoint start_;
 
 	// panel within the image panel to give a border
-	wxPanel* panel_;
+	wxBoxSizer *sizer_;
+	wxPanel *panel_;
 	int border_;
 
 	// notification
 	ImagePanelEvents *notify_;
 	int eventId_;
+
+	// preview player
+	MediaPreviewPlayer *preview_;
 
 	bool zoomable_;
 };

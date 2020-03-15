@@ -103,12 +103,19 @@ void ImagesBrowser::setSelected(const int selected)
 			ImagePanel *imgPnl = reinterpret_cast<ImagePanel *>(panels[i]);
 
 			if (top_ + i == selected)
+			{
 				if (focus_)
 					imgPnl->setBorderColour(Constants::blue);
 				else
 					imgPnl->setBorderColour(Constants::grey);
+
+				//imgPnl->startPreview(idata_->getVideo(top_ + i));
+			}
 			else
+			{
+				//imgPnl->stopPreview();
 				imgPnl->setBorderColour(Constants::white);
+			}
 		}
 	}
 }
@@ -192,16 +199,16 @@ void ImagesBrowser::cursorRight()
 // ImagesBrowser
 //-------------------------------------------------------
 
-void ImagesBrowser::selected(const int eventId)
+void ImagesBrowser::imageSelected(const int eventId)
 {
-	idata_->setSelected(top_ + eventId);
-	setSelected(top_ + eventId);
 	setFocus(true);
+	setSelected(top_ + eventId);
+	idata_->setSelected(top_ + eventId);
 }
 
-void ImagesBrowser::contextMenu(const int eventId)
+wxMenu *ImagesBrowser::getPopupMenu(const int eventId)
 {
-	setFocus(true);
+	return idata_->getPopupMenu(eventId + top_);
 }
 
 bool ImagesBrowser::hasFocus()

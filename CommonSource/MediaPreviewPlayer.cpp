@@ -27,8 +27,17 @@
 constexpr int kNoOfClips = 10;
 constexpr int kTimer = 2000; // ms, time each clip is played for
 
-MediaPreviewPlayer::MediaPreviewPlayer(wxWindow *parent, wxWindowID id /*= wxID_ANY*/) :
-	wxPanel(parent, id),
+MediaPreviewPlayer::MediaPreviewPlayer(
+		wxWindow *parent,
+		wxWindowID id        /*= wxID_ANY*/,
+		const wxPoint &pos 	 /*= wxDefaultPosition*/,
+		const wxSize &size   /*= wxDefaultSize*/,
+		long  style 		 /*= wxTAB_TRAVERSAL*/,
+		const wxString &name /*= wxPanelNameStr*/) :
+	wxPanel(parent, id, pos, size, style, name),
+	duration_(0),
+	player_(nullptr),
+	timer_(nullptr),
 	clipIx_(0)
 {
 	// add media control to this panel
@@ -74,16 +83,6 @@ void MediaPreviewPlayer::onMediaPlay(wxMediaEvent& event)
 	calculateClips();
 	doTimer();
 	timer_->Start(kTimer);
-}
-
-void MediaPreviewPlayer::play()
-{
-	if (file_.length() > 0)
-	{
-		player_->Load(file_.c_str());
-	}
-	else
-		Logger::error(L"MediaPreviewPlayer play file before file has been set");
 }
 
 void MediaPreviewPlayer::startPreview()
