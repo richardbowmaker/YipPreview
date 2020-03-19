@@ -17,9 +17,9 @@
 ImagePanel::ImagePanel(
 	wxWindow* parent,
 	ImagePanelEvents *notify /*= nullptr*/,
-	const int eventId /*= 0*/,
-	const int border /*= 0*/,
-	const bool zoomable /*= false*/) : 
+	const int eventId 		 /*= 0*/,
+	const int border 		 /*= 0*/,
+	const bool zoomable 	 /*= false*/) :
 	wxPanel		(parent),
 	off_		(wxPoint(0, 0)),
 	scale_		(0.0f),
@@ -33,6 +33,9 @@ ImagePanel::ImagePanel(
 	preview_	(nullptr),
 	zoomable_	(zoomable)
 {
+	memDc_.reset();
+	image_.reset();
+
 	// create panel within a panel for a border round the image
 	panel_ = new wxPanel(this);
 	sizer_ = new wxBoxSizer(wxVERTICAL);
@@ -44,6 +47,17 @@ ImagePanel::ImagePanel(
 
 ImagePanel::~ImagePanel()
 {
+}
+
+void ImagePanel::uninitilaise()
+{
+	if (inPreview()) stopPreview();
+
+	unbindEvents();
+	wxClientDC dc(this);
+	dc.Clear();
+	memDc_.reset();
+	image_.reset();
 }
 
 void ImagePanel::setBorderColour(const wxColour &colour)
@@ -125,8 +139,6 @@ void ImagePanel::mouseMoved(wxMouseEvent &event)
 	}
 }
 
-// void ImagePanel::mouseWheelMoved(wxMouseEvent& event) {}
-
 void ImagePanel::leftClickDown(wxMouseEvent &event)
 {
 	if (zoomable_)
@@ -201,8 +213,8 @@ void ImagePanel::render(wxDC &dc)
 	if (image_.get() == nullptr) return;
 
 	// on first render, scale image to fill panel
-	if (memDc_.get() == nullptr)
-	{
+//	if (memDc_.get() == nullptr)
+//	{
 		memDc_ = std::make_shared<wxMemoryDC>(*image_.get());
 
 		float scalex = (float)(dc.GetSize().GetWidth())  / (float)(image_->GetWidth());
@@ -219,7 +231,7 @@ void ImagePanel::render(wxDC &dc)
 			off_.x = (dc.GetSize().GetWidth() - (image_->GetWidth() * scaley)) / 2;
 		}
 		scale_ = scalei_;
-	}
+//	}
 
 	dc.Clear();
 	dc.StretchBlit(
@@ -341,10 +353,11 @@ void ImagePanel::startPreview(const std::wstring file)
 
 	// replace with the preview player
 	preview_ = new 	MediaPreviewPlayer(this);
-	sizer_->Add(preview_, 1, wxEXPAND | wxALL, border_);
+	sizer_->Add(preview_, 1, wxSHAPED | wxALL, border_);
 	Layout();
-
+	Update();
 	preview_->setFile(file).startPreview();
+//	SetFocus();
 }
 
 void ImagePanel::stopPreview()
@@ -359,14 +372,18 @@ void ImagePanel::stopPreview()
 	// restore image
 	panel_ = new wxPanel(this);
 	sizer_->Add(panel_, 1, wxEXPAND | wxALL, border_);
+
+//	memDc_.reset();
+
 	Layout();
-
-	memDc_.reset();
-	wxClientDC dc(panel_);
-    render(dc);
-    Layout();
-
+	Update();
 	bindEvents();
+//	SetFocus();
+}
+
+bool ImagePanel::inPreview() const
+{
+	return preview_ != nullptr;
 }
 
 

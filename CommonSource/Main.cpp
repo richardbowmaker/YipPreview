@@ -261,6 +261,7 @@ void MyFrame::onFocus(wxFocusEvent& event)
 }
 void MyFrame::OnClose(wxCloseEvent& event)
 {
+	images_->uninitialise();
 	FileSetManager::uninitialise();
 	uninitialiseGrid();
 

@@ -38,6 +38,19 @@ void ImagesBrowser::initialise()
 	displayAt(0);
 }
 
+void ImagesBrowser::uninitialise()
+{
+	stopPreview();
+	int n = idata_->getNoOfRows() * idata_->getNoOfCols();
+
+	wxWindowList panels = GetChildren();
+	for (int i = 0; i < n; ++i)
+	{
+		ImagePanel *imgPnl = reinterpret_cast<ImagePanel *>(panels[i]);
+		imgPnl->uninitilaise();
+	}
+}
+
 void ImagesBrowser::setTop(const int top)
 {
 	displayAt(top);
@@ -49,10 +62,11 @@ void ImagesBrowser::displayAt(int top)
 
 	// total images
 	int n = idata_->getNoOfRows() * idata_->getNoOfCols();
+	stopPreview();
 
 	// cannot scroll beyond end of data
 	if (top + n > idata_->getNoOfImages())
-		top = idata_->getNoOfImages() - n - 1;
+		top = idata_->getNoOfImages() - n;
 
 	if (top < 0) top = 0;
 
@@ -70,15 +84,21 @@ void ImagesBrowser::displayAt(int top)
 		if (si != -1)
 		{
 			if (top + i == idata_->getSelected())
+			{
 				if (focus_)
 					imgPnl->setBorderColour(Constants::blue);
 				else
 					imgPnl->setBorderColour(Constants::grey);
+
+				// start preview
+				imgPnl->startPreview(idata_->getVideo(top + i));
+			}
 			else
 				imgPnl->setBorderColour(Constants::white);
 		}
 	}
 	top_ = top;
+	Refresh();
 }
 
 void ImagesBrowser::setSelected(const int selected)
@@ -86,6 +106,7 @@ void ImagesBrowser::setSelected(const int selected)
 	if (selected == -1) return;
 
 	int n = idata_->getNoOfRows() * idata_->getNoOfCols();
+	stopPreview();
 
 	// if the newly selected item is not currently displayed
 	// then display it
@@ -109,14 +130,24 @@ void ImagesBrowser::setSelected(const int selected)
 				else
 					imgPnl->setBorderColour(Constants::grey);
 
-				//imgPnl->startPreview(idata_->getVideo(top_ + i));
+				imgPnl->startPreview(idata_->getVideo(top_ + i));
 			}
 			else
-			{
-				//imgPnl->stopPreview();
 				imgPnl->setBorderColour(Constants::white);
-			}
 		}
+	}
+}
+
+void ImagesBrowser::stopPreview()
+{
+	wxWindowList panels = GetChildren();
+	int n = idata_->getNoOfRows() * idata_->getNoOfCols();
+	for (int i = 0; i < n; ++i)
+	{
+		ImagePanel *imgPnl = reinterpret_cast<ImagePanel *>(panels[i]);
+
+		if (imgPnl->inPreview())
+			imgPnl->stopPreview();
 	}
 }
 

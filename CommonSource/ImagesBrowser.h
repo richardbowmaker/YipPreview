@@ -31,6 +31,7 @@ public:
 	virtual ~ImagesBrowser();
 
 	void initialise();
+	void uninitialise();
 	void setTop(int top);
 	void setSelected(const int selected);
 	void pageUp();
@@ -41,6 +42,7 @@ public:
 	void cursorRight();
 	bool hasFocus();	
 	void setFocus(const bool focus);
+	void stopPreview();
 
 	// ImagePanelEvents
 	virtual void imageSelected(const int eventId);
