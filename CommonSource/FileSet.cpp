@@ -148,6 +148,17 @@ std::wstring FileSet::toString() const
 	return std::wstring(L"ID = ") + id_ + std::wstring(L", ") + typesToString();
 }
 
+//-------------------------------------------------------
+// properties
+//-------------------------------------------------------
+FileProperties& FileSet::properties()
+{
+	return properties_;
+}
+
+
+
+
 
 
 

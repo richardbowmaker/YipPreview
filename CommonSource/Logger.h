@@ -46,6 +46,8 @@ public:
 	static void warning(const StringsT &strings, const wchar_t* format, ...);
 	static void info(const StringsT &strings, const wchar_t* format, ...);
 
+	static bool test(const bool result, const wchar_t* format, ...);
+
 	//static void logSourceSystemError(const char* file, const int line, const int err, const char* format, ...); // err = errno
 	//static void logSourceError(const char* file, const int line, const char* format, ...);
 	//static void logSourceWarning(const char* file, const int line, const char* format, ...);

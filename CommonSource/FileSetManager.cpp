@@ -7,6 +7,7 @@
 
 #include "FileSetManager.h"
 
+#include <fstream>
 
 #include "FileSet.h"
 #include "Logger.h"
@@ -36,9 +37,9 @@ FileSetManager& FileSetManager::get()
 	return instance;
 }
 
-bool FileSetManager::addFiles(const std::wstring directory)
+bool FileSetManager::addFiles(const VolumeT volume)
 {
-	return get().addFilesImpl(directory);
+	return get().addFilesImpl(volume);
 }
 
 int FileSetManager::getNoOfFileSets()
@@ -65,10 +66,10 @@ void FileSetManager::uninitialiseImpl()
 	fileSets_.clear();
 }
 
-bool FileSetManager::addFilesImpl(const std::wstring directory)
+bool FileSetManager::addFilesImpl(const VolumeT volume)
 {
 	StringsT files;
-	if (FU::findMatchingFiles(directory, files, L"*"))
+	if (FU::findMatchingFiles(volume->getFilesDirectory(), files, L"*"))
 	{
 		for (auto f : files)
 		{
@@ -92,9 +93,30 @@ bool FileSetManager::addFilesImpl(const std::wstring directory)
 				}
 			}
 		}
+
+		// read the properties cache
+		std::string pf = SU::wStrToStr(volume->getPropertiesFile());
+		std::ifstream infile(pf);
+		std::string sl;
+		while (std::getline(infile, sl))
+		{
+			std::wstring wl = SU::strToWStr(sl);
+			int n = wl.find(L";");
+
+			if (n != std::wstring::npos)
+			{
+				std::wstring fn = wl.substr(0, n);
+				std::wstring ps = wl.substr(n + 1);
+				int nn = 0;
+			}
+		}
+		infile.close();
 	}
 	else
-		Logger::warning(L"FileSetManager::addFilesImpl empty directory %ls", directory.c_str());
+		Logger::warning(
+				L"FileSetManager::addFilesImpl empty directory %ls",
+				volume->getFilesDirectory().c_str());
+
 	return true;
 }
 

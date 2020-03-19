@@ -84,8 +84,9 @@ private:
 	wxPoint start_;
 
 	// panel within the image panel to give a border
-	wxBoxSizer *sizer_;
-	wxPanel *panel_;
+	wxBoxSizer *sizero_; // sizer for ImagePanel
+	wxBoxSizer *sizeri_; // sizer for panel_, only used for media preview player
+	wxPanel *paneli_;
 	int border_;
 
 	// notification

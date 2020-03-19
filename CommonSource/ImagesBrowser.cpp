@@ -30,7 +30,7 @@ void ImagesBrowser::initialise()
 
 	for (int i = 0; i < rows * cols; ++i)
 	{
-		ImagePanel* pnlImg = new ImagePanel(this, this, i, 5);
+		ImagePanel* pnlImg = new ImagePanel(this, this, i, 5, true);
 		sizer->Add(pnlImg, 1, wxEXPAND, 0);
 	}
 

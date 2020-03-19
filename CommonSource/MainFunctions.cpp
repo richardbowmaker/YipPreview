@@ -28,6 +28,7 @@
 #include "Constants.h"
 #include "FileSet.h"
 #include "FileSetManager.h"
+#include "FileProperties.h"
 #include "GridEx.h"
 #include "GridTable.h"
 #include "GridTableTest.h"
@@ -357,7 +358,49 @@ void MyFrame::cursorRight()
 
 void MyFrame::tryout(wxCommandEvent& event, const int row)
 {
+	bool b = FileProperties::test();
+
+	if (!b) Logger::error(L"property test failed");
+
 	return;
+
+//	FileProperties fp;
+//	std::wstring s;
+//	fp.setString(L"p1", L"v1");
+//	fp.setInt(L"p2", 2);
+//	fp.incCount(L"p3");
+//	fp.incCount(L"p3");
+//	fp.incCount(L"p3");
+//	fp.setDateTimeNow(L"p4");
+//	s = fp.toString();
+//
+//	fp.clear();
+//	s = fp.toString();
+//	fp.fromString(L"p1;v1;p2;2");
+//	s = fp.toString();
+//	int c = fp.getSize();
+//	s = fp.getString(L"p1");
+//	c = fp.getInt(L"p2");
+//	s = fp.getCount(L"p2");
+//	fp.remove(L"p1");
+//	s = fp.toString();
+//	fp.setString(L"p2", L"");
+//	s = fp.toString();
+//	fp.fromString(L"");
+//	s = fp.toString();
+//	fp.fromString(L"p1;v1;p2");
+//	s = fp.toString();
+//	fp.fromString(L"p1;v1;p2;2;");
+//	s = fp.toString();
+//	fp.fromString(L"p1;v1;p2;;");
+//	s = fp.toString();
+//	fp.fromString(L"p1;v1;p2;");
+//	s = fp.toString();
+
+
+
+
+	int n = 0;
 
 //	bool b;
 

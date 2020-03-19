@@ -270,6 +270,18 @@ void Logger::info(const StringsT &strings, const wchar_t* format, ...)
 		for (auto s : strings) append(Info, s.c_str());
 	}
 }
+
+bool Logger::test(const bool result, const wchar_t* format, ...)
+{
+	if (!result)
+	{
+		va_list vl;
+		va_start(vl, format);
+		log(Error, format, vl);
+	}
+	return result;
+}
+
 /*
 void CLogger::LogSourceSystemError(const char* file, const int line, const int err, const char* format, ...)
 {

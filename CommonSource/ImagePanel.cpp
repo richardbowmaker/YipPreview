@@ -27,6 +27,9 @@ ImagePanel::ImagePanel(
 	leftDown_	(false),
 	moved_		(false),
 	start_		(wxPoint(0, 0)),
+	sizero_		(nullptr),
+	sizeri_		(nullptr),
+	paneli_	    (nullptr),
 	border_		(border),
 	notify_		(notify),
 	eventId_	(eventId),
@@ -37,10 +40,13 @@ ImagePanel::ImagePanel(
 	image_.reset();
 
 	// create panel within a panel for a border round the image
-	panel_ = new wxPanel(this);
-	sizer_ = new wxBoxSizer(wxVERTICAL);
-	sizer_->Add(panel_, 1, wxEXPAND | wxALL, border_);
-	SetSizer(sizer_);
+	paneli_ = new wxPanel(this);
+	sizero_ = new wxBoxSizer(wxVERTICAL);
+	sizero_->Add(paneli_, 1, wxEXPAND | wxALL, border_);
+	SetSizer(sizero_);
+
+	sizeri_ = new wxBoxSizer(wxVERTICAL);
+	paneli_->SetSizer(sizeri_);
 
 	setBorderColour(Constants::white);
 }
@@ -63,6 +69,7 @@ void ImagePanel::uninitilaise()
 void ImagePanel::setBorderColour(const wxColour &colour)
 {
 	SetBackgroundColour(colour);
+	paneli_->SetBackgroundColour(Constants::white);
 	Refresh();
 }
 
@@ -73,7 +80,7 @@ void ImagePanel::setImage(const std::wstring file, const wxBitmapType format)
 	// clear the previous image 
 	memDc_.reset();
 	image_.reset();
-	wxClientDC dc(panel_);
+	wxClientDC dc(paneli_);
 	dc.Clear();
 
 	// load the new image
@@ -90,30 +97,30 @@ void ImagePanel::setImage(const std::wstring file, const wxBitmapType format)
 
 void ImagePanel::bindEvents()
 {
-	panel_->Bind(wxEVT_PAINT,     &ImagePanel::onPaint,       this, wxID_ANY);
-	panel_->Bind(wxEVT_LEFT_DOWN, &ImagePanel::leftClickDown, this, wxID_ANY);
-	panel_->Bind(wxEVT_RIGHT_UP,  &ImagePanel::rightClickUp,  this, wxID_ANY);
+	paneli_->Bind(wxEVT_PAINT,     &ImagePanel::onPaint,       this, wxID_ANY);
+	paneli_->Bind(wxEVT_LEFT_DOWN, &ImagePanel::leftClickDown, this, wxID_ANY);
+	paneli_->Bind(wxEVT_RIGHT_UP,  &ImagePanel::rightClickUp,  this, wxID_ANY);
 
 	if (zoomable_)
 	{
-		panel_->Bind(wxEVT_MOTION,		&ImagePanel::mouseMoved,	 this, wxID_ANY);
-		panel_->Bind(wxEVT_LEFT_UP,		&ImagePanel::leftClickUp,	 this, wxID_ANY);
-		panel_->Bind(wxEVT_RIGHT_DOWN,	&ImagePanel::rightClickDown, this, wxID_ANY);
-		panel_->Bind(wxEVT_SIZE,		&ImagePanel::onSize,		 this, wxID_ANY);
-		panel_->Bind(wxEVT_KEY_UP,		&ImagePanel::onKeyUp,		 this, wxID_ANY);
+		paneli_->Bind(wxEVT_MOTION,		&ImagePanel::mouseMoved,	 this, wxID_ANY);
+		paneli_->Bind(wxEVT_LEFT_UP,	&ImagePanel::leftClickUp,	 this, wxID_ANY);
+		paneli_->Bind(wxEVT_RIGHT_DOWN,	&ImagePanel::rightClickDown, this, wxID_ANY);
+		paneli_->Bind(wxEVT_SIZE,		&ImagePanel::onSize,		 this, wxID_ANY);
+		paneli_->Bind(wxEVT_KEY_UP,		&ImagePanel::onKeyUp,		 this, wxID_ANY);
 	}
 }
 
 void ImagePanel::unbindEvents()
 {
-	panel_->Unbind(wxEVT_RIGHT_UP,		&ImagePanel::rightClickUp,	 this, wxID_ANY);
-	panel_->Unbind(wxEVT_LEFT_DOWN,		&ImagePanel::leftClickDown,  this, wxID_ANY);
-	panel_->Unbind(wxEVT_PAINT,			&ImagePanel::onPaint,		 this, wxID_ANY);
-	panel_->Unbind(wxEVT_MOTION,		&ImagePanel::mouseMoved,	 this, wxID_ANY);
-	panel_->Unbind(wxEVT_LEFT_UP,		&ImagePanel::leftClickUp,	 this, wxID_ANY);
-	panel_->Unbind(wxEVT_RIGHT_DOWN,	&ImagePanel::rightClickDown, this, wxID_ANY);
-	panel_->Unbind(wxEVT_SIZE,			&ImagePanel::onSize,		 this, wxID_ANY);
-	panel_->Unbind(wxEVT_KEY_UP,		&ImagePanel::onKeyUp,		 this, wxID_ANY);
+	paneli_->Unbind(wxEVT_RIGHT_UP,		&ImagePanel::rightClickUp,	 this, wxID_ANY);
+	paneli_->Unbind(wxEVT_LEFT_DOWN,	&ImagePanel::leftClickDown,  this, wxID_ANY);
+	paneli_->Unbind(wxEVT_PAINT,		&ImagePanel::onPaint,		 this, wxID_ANY);
+	paneli_->Unbind(wxEVT_MOTION,		&ImagePanel::mouseMoved,	 this, wxID_ANY);
+	paneli_->Unbind(wxEVT_LEFT_UP,		&ImagePanel::leftClickUp,	 this, wxID_ANY);
+	paneli_->Unbind(wxEVT_RIGHT_DOWN,	&ImagePanel::rightClickDown, this, wxID_ANY);
+	paneli_->Unbind(wxEVT_SIZE,			&ImagePanel::onSize,		 this, wxID_ANY);
+	paneli_->Unbind(wxEVT_KEY_UP,		&ImagePanel::onKeyUp,		 this, wxID_ANY);
 }
 
 void ImagePanel::mouseMoved(wxMouseEvent &event) 
@@ -132,7 +139,7 @@ void ImagePanel::mouseMoved(wxMouseEvent &event)
 			moved_ = true;
 			off_.x += xd;
 			off_.y += yd;
-			wxClientDC dc(panel_);
+			wxClientDC dc(paneli_);
 			render(dc);
 			start_ = pt;
 		}
@@ -141,19 +148,22 @@ void ImagePanel::mouseMoved(wxMouseEvent &event)
 
 void ImagePanel::leftClickDown(wxMouseEvent &event)
 {
-	if (zoomable_)
+	if ((event.GetModifiers() & wxMOD_SHIFT) > 0)
 	{
-		// user can drag image, starting point mouse down
-		// must be wthin the image
-
-		wxPoint spt = event.GetPosition();
-		wxPoint ipt = screenToImageCoords(spt);
-
-		if (imageCoordsValid(ipt))
+		if (zoomable_)
 		{
-			leftDown_ = true;
-			moved_ = false;
-			start_ = spt;
+			// user can drag image, starting point mouse down
+			// must be within the image
+
+			wxPoint spt = event.GetPosition();
+			wxPoint ipt = screenToImageCoords(spt);
+
+			if (imageCoordsValid(ipt))
+			{
+				leftDown_ = true;
+				moved_ = false;
+				start_ = spt;
+			}
 		}
 	}
 	else if (notify_ != nullptr)
@@ -164,6 +174,7 @@ void ImagePanel::leftClickDown(wxMouseEvent &event)
 
 void ImagePanel::leftClickUp(wxMouseEvent &event) 
 {
+	if (!leftDown_) return;
 	if (!moved_) zoomImage(event.GetPosition(), 1.2f);
 	leftDown_ = false;
 	moved_ = false;
@@ -175,8 +186,11 @@ void ImagePanel::rightClickDown(wxMouseEvent &event)
 
 void ImagePanel::rightClickUp(wxMouseEvent &event)
 {
-	if (zoomable_)
-		zoomImage(event.GetPosition(), 1.0f / 1.2f);
+	if ((event.GetModifiers() & wxMOD_SHIFT) > 0)
+	{
+		if (zoomable_)
+			zoomImage(event.GetPosition(), 1.0f / 1.2f);
+	}
 	else if (notify_ != nullptr)
 	{
 		notify_->imageSelected(eventId_);
@@ -193,7 +207,7 @@ void ImagePanel::mouseLeftWindow(wxMouseEvent &event)
 
 void ImagePanel::onPaint(wxPaintEvent &evt)
 {
-	wxPaintDC dc(panel_);
+	wxPaintDC dc(paneli_);
     render(dc);
 }
 
@@ -204,6 +218,9 @@ void ImagePanel::onKeyUp(wxKeyEvent& event)
 
 void ImagePanel::render(wxDC &dc)
 {
+	// don't display image in preview mode
+	if (preview_ != nullptr) return;
+
 	// the first calls to render occur before the client area
 	// size is set, so ignore these
 	wxSize size = dc.GetSize();
@@ -213,8 +230,8 @@ void ImagePanel::render(wxDC &dc)
 	if (image_.get() == nullptr) return;
 
 	// on first render, scale image to fill panel
-//	if (memDc_.get() == nullptr)
-//	{
+	if (memDc_.get() == nullptr)
+	{
 		memDc_ = std::make_shared<wxMemoryDC>(*image_.get());
 
 		float scalex = (float)(dc.GetSize().GetWidth())  / (float)(image_->GetWidth());
@@ -231,7 +248,7 @@ void ImagePanel::render(wxDC &dc)
 			off_.x = (dc.GetSize().GetWidth() - (image_->GetWidth() * scaley)) / 2;
 		}
 		scale_ = scalei_;
-//	}
+	}
 
 	dc.Clear();
 	dc.StretchBlit(
@@ -289,7 +306,7 @@ void ImagePanel::onSize(wxSizeEvent &event)
 //	//	xs, ys
 //	//	);
 
-	wxClientDC dc(panel_);
+	wxClientDC dc(paneli_);
 	render(dc);
 }
 
@@ -336,49 +353,42 @@ void ImagePanel::zoomImage(wxPoint pt, float scalex)
 	off_.y += (int)((float)ipt.y * (scale_ - scale));
 
 	scale_ = scale;
-	wxClientDC dc(panel_);
+	wxClientDC dc(paneli_);
 	render(dc);
 }
 
 void ImagePanel::startPreview(const std::wstring file)
 {
-	if (!FU::fileExists(file)) return;
 	if (preview_ != nullptr) return;
+	if (!FU::fileExists(file)) return;
 
-	// remove the image
-	unbindEvents();
-	DestroyChildren();
-	panel_ = nullptr;
-	sizer_->Clear();
+	// clear the image
+	wxClientDC dc(paneli_);
+	dc.Clear();
 
-	// replace with the preview player
-	preview_ = new 	MediaPreviewPlayer(this);
-	sizer_->Add(preview_, 1, wxSHAPED | wxALL, border_);
-	Layout();
-	Update();
+	// add preview player to inner panel
+	preview_ = new 	MediaPreviewPlayer(paneli_);
+	sizeri_->Add(preview_, 1, wxSHAPED | wxALIGN_CENTER, 0);
+
 	preview_->setFile(file).startPreview();
-//	SetFocus();
+
+	Layout();
+	Refresh();
 }
 
 void ImagePanel::stopPreview()
 {
+	// stop preview, remove and destroy media player
+
 	if (preview_ == nullptr) return;
 
 	preview_->stopPreview();
-	DestroyChildren();
+	paneli_->RemoveChild(preview_);
+	preview_->Destroy();
 	preview_ = nullptr;
-	sizer_->Clear();
-
-	// restore image
-	panel_ = new wxPanel(this);
-	sizer_->Add(panel_, 1, wxEXPAND | wxALL, border_);
-
-//	memDc_.reset();
 
 	Layout();
-	Update();
-	bindEvents();
-//	SetFocus();
+	Refresh();
 }
 
 bool ImagePanel::inPreview() const

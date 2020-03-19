@@ -18,6 +18,7 @@
 #include <map>
 
 #include "ImagesBrowser.h"
+#include "Volume.h"
 
 class FileSet;
 class GridEx;
@@ -106,6 +107,9 @@ private:
 
     std::map<int, wxMenuItem*> menus_;
     static MyFrame* this_;
+
+    // temporarily here
+    VolumeT volume_;
 };
 
 #endif /* COMMON_MAIN_H_ */

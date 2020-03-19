@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "FileSet.h"
+#include "Volume.h"
 
 class FileSetManager
 {
@@ -24,7 +25,7 @@ public:
 	static FileSetManager& get();
 	virtual ~FileSetManager();
 
-	static bool addFiles(const std::wstring directory);
+	static bool addFiles(const VolumeT volume);
 	static std::wstring toString();
 	static int getNoOfFileSets();
 	static FileSetT getFileSet(const int n);
@@ -40,7 +41,7 @@ private:
 	void initialiseImpl();
 	void uninitialiseImpl();
 	std::wstring toStringImpl();
-	bool addFilesImpl(const std::wstring directory);
+	bool addFilesImpl(const VolumeT volume);
 	int getNoOfFileSetsImpl() const;
 	FileSetT getFileSetImpl(const int n) const;
 

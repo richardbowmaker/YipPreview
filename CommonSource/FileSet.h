@@ -1,8 +1,12 @@
 #ifndef FILESET_H
 #define FILESET_H
 
+#include <map>
 #include <memory>
 #include <string>
+#include <time.h>
+
+#include "FileProperties.h"
 
 class FileSet;
 using FileSetT = std::shared_ptr<FileSet>;
@@ -30,6 +34,9 @@ public:
 	std::wstring getShortName() const;
 	std::wstring getFileStem() const;
 
+	// properties
+	FileProperties& properties();
+
 	static bool isValidType(const std::wstring filename);
 	static std::wstring filenameToId(const std::wstring filename);
 
@@ -45,6 +52,8 @@ private:
 	std::wstring image_;
 	std::wstring video_;
 	std::wstring link_;
+
+	FileProperties properties_;
 };
 
 

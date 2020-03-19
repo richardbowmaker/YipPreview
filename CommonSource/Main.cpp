@@ -170,7 +170,8 @@ void MyFrame::uninitialiseGrid()
 
 void MyFrame::populateGrid()
 {
-	FileSetManager::addFiles(FU::pathToLocal(LR"(\YipPreview\Tryout)").c_str());
+	volume_ = std::make_shared<Volume>(L"");
+	FileSetManager::addFiles(volume_);
 	grid_->SetTable(table_);
 	grid_->SetSelectionMode(wxGrid::wxGridSelectRows);
 	grid_->HideRowLabels();
