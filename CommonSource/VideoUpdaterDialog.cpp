@@ -47,7 +47,15 @@ VideoUpdaterDialog::VideoUpdaterDialog(wxWindow *parent, FileSetT &fileset) :
 
 	Bind(wxEVT_CHECKBOX, [this](wxCommandEvent &) { updateGui(); });
 	updateGui();
-	setDuration();
+
+	// get duration from file set, if it does not have one
+	// then calculate it
+	std::wstring d = fileset_->getDurationStr();
+	if (d.size() > 0)
+		txtDuration_->SetLabelText(
+				std::wstring(txtDuration_->GetLabelText().wc_str()) + d);
+	else
+		setDuration();
 }
 
 void VideoUpdaterDialog::setDuration()
@@ -76,18 +84,12 @@ void VideoUpdaterDialog::onShellExecute(wxShellExecuteEvent& event)
 
 	if (p != std::wstring::npos)
 	{
-		// display duration on gui
-		std::wstring t = std::wstring(txtDuration_->GetLabelText().wc_str()) +
-				str.substr(p + 10, 11);
-		txtDuration_->SetLabelText(t.c_str());
+		fileset_->setDurationStr(str.substr(p + 10, 12));
+		duration_ = fileset_->getDurationMs() / 1000;
+		txtDuration_->SetLabelText(
+				std::wstring(txtDuration_->GetLabelText().wc_str()) +
+				fileset_->getDurationStr());
 		Layout();
-
-		// parse and save duration in seconds
-		wchar_t* q;
-		long h = wcstol((str.substr(p + 10, 2)).c_str(), &q, 10);
-		long m = wcstol((str.substr(p + 13, 2)).c_str(), &q, 10);
-		long s = wcstol((str.substr(p + 16, 2)).c_str(), &q, 10);
-		duration_ = static_cast<int>(h * 60 * 60 + m * 60 + s);
 		updateGui();
 	}
 }

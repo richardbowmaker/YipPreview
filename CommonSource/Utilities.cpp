@@ -569,6 +569,167 @@ std::wstring FU::abbreviateFilename(const std::wstring &file, const int max)
 	return file.substr(0, (n/2) + (n%2)) + std::wstring(L"...") + file.substr(m - (n/2));
 }
 
+//---------------------------------------------
+// Duration
+//---------------------------------------------
+
+Duration::Duration() :
+		hh_(0),
+		mm_(0),
+		ss_(0),
+		ms_(0)
+{
+}
+
+void Duration::setMs(const long ms)
+{
+	long d = ms;
+	ms_ = d % 1000; d /= 1000;
+	ss_ = d % 60;   d /= 60;
+	mm_ = d % 60;   d /= 60;
+	hh_ = d % 60;   d /= 60;
+}
+
+long Duration::getMs() const
+{
+	return ((((hh_ * 60) + mm_) * 60) + ss_) * 1000 + ms_;
+}
+
+bool Duration::parse(const std::wstring &str)
+{
+	return parse(SU::wStrToStr(str));
+}
+
+bool Duration::parse(const std::string &str)
+{
+    setMs(0);
+    if (str.size() == 0) return true;
+    const std::regex rex(R"(((\d{1,2}):)?(\d{1,2}):(\d{1,2})(\.(\d{1,3}(\s)?))?)");
+    std::smatch m;
+    if (std::regex_search(str, m, rex))
+    {
+    	hh_ = atoi(m[1].str().c_str());
+    	mm_ = atoi(m[3].str().c_str());
+    	ss_ = atoi(m[4].str().c_str());
+    	ms_ = atoi(m[6].str().c_str());
+    	return true;
+    }
+    else
+    {
+    	Logger::error(L"Duration::parse() invalid duration string: %ls", str.c_str());
+    	return false;
+    }
+}
+
+std::wstring Duration::toString() const
+{
+	wchar_t buf[100];
+	swprintf(buf, sizeof(buf) / sizeof(wchar_t),
+			L"%02d:%02d:%02d.%03d", hh_, mm_, ss_, ms_);
+	return std::wstring(buf);
+}
+
+bool Duration::test()
+{
+	Duration d;
+	std::wstring s;
+	bool b;
+	bool result = true;
+
+	s = d.toString();
+	result &= Logger::test(s.compare(L"00:00:00.000") == 0, L"Duration::test() t1 failed");
+
+	d.setMs( ((((12 * 60) + 34) * 60) + 56) * 1000 + 789 );
+	s = d.toString();
+	result &= Logger::test(s.compare(L"12:34:56.789") == 0, L"Duration::test() t2 failed");
+
+	b = d.parse(L"12:34");
+	result &= Logger::test(b, L"Duration::test() t3 failed");
+	result &= Logger::test((d.hh_ == 0 ), L"Duration::test() t4 failed");
+	result &= Logger::test((d.mm_ == 12), L"Duration::test() t5 failed");
+	result &= Logger::test((d.ss_ == 34), L"Duration::test() t6 failed");
+	result &= Logger::test((d.ms_ == 0 ), L"Duration::test() t7 failed");
+
+	b = d.parse(L"12:34:56");
+	result &= Logger::test(b, L"Duration::test() t8 failed");
+	result &= Logger::test((d.hh_ == 12), L"Duration::test() t9 failed");
+	result &= Logger::test((d.mm_ == 34), L"Duration::test() t10 failed");
+	result &= Logger::test((d.ss_ == 56), L"Duration::test() t11 failed");
+	result &= Logger::test((d.ms_ == 0 ), L"Duration::test() t12 failed");
+
+	b = d.parse(L"12:34:56.789");
+	result &= Logger::test(b, L"Duration::test() t13 failed");
+	result &= Logger::test((d.hh_ == 12 ), L"Duration::test() t14 failed");
+	result &= Logger::test((d.mm_ == 34 ), L"Duration::test() t15 failed");
+	result &= Logger::test((d.ss_ == 56 ), L"Duration::test() t16 failed");
+	result &= Logger::test((d.ms_ == 789), L"Duration::test() t17 failed");
+
+	b = d.parse(L"1:2:3.4");
+	result &= Logger::test(b, L"Duration::test() t18 failed");
+	result &= Logger::test((d.hh_ == 1), L"Duration::test() t19 failed");
+	result &= Logger::test((d.mm_ == 2), L"Duration::test() t20 failed");
+	result &= Logger::test((d.ss_ == 3), L"Duration::test() t21 failed");
+	result &= Logger::test((d.ms_ == 4), L"Duration::test() t22 failed");
+
+	b = d.parse(L"12:34:56.78 ");
+	result &= Logger::test(b, L"Duration::test() t23 failed");
+	result &= Logger::test((d.hh_ == 12), L"Duration::test() t24 failed");
+	result &= Logger::test((d.mm_ == 34), L"Duration::test() t25 failed");
+	result &= Logger::test((d.ss_ == 56), L"Duration::test() t26 failed");
+	result &= Logger::test((d.ms_ == 78), L"Duration::test() t27 failed");
+
+	b = d.parse(L"x:y:z");
+	result &= Logger::test(!b, L"Duration::test() t28 failed");
+
+	if (result) Logger::info(L"Duration::test() all tests passed");
+}
+
+
+//bool SU::parseDuration(const std::wstring &str, DurationT &duration)
+//{
+//	return parseDuration(SU::wStrToStr(str), duration);
+//}
+//
+//bool SU::parseDuration(const std::string &str, DurationT &duration)
+//{
+//    memset(reinterpret_cast<void *>(&duration), 0, sizeof(duration));
+//    const std::regex rex(R"(((\d{1,2}):)?(\d{1,2}):(\d{1,2})(\.(\d{1,3}))?)");
+//    std::smatch m;
+//    if (std::regex_search(str, m, rex))
+//    {
+//    	duration.hh = atoi(m[1].str().c_str());
+//    	duration.mm = atoi(m[3].str().c_str());
+//    	duration.ss = atoi(m[4].str().c_str());
+//    	duration.ms = atoi(m[6].str().c_str());
+//    	return true;
+//    }
+//    else
+//    	return false;
+//}
+//
+//std::wstring SU::durationToString(const DurationT &duration)
+//{
+//	wchar_t buf[100];
+//	swprintf(buf, sizeof(buf) / sizeof(wchar_t),
+//			L"%02d:%02d:%02d.%03d",
+//			duration.hh,
+//			duration.mm,
+//			duration.ss,
+//			duration.ms);
+//	return std::wstring(buf);
+//}
+//
+//std::wstring SU::durationToString(const long &durationMs)
+//{
+//	DurationT d;
+//	long ld = durationMs;
+//	d.ms = ld % 1000; ld /= 1000;
+//	d.ss = ld % 60; ld /= 60;
+//	d.mm = ld % 60; ld /= 60;
+//	d.hh = ld % 60; ld /= 60;
+//	return durationToString(d);
+//}
+//
 
 
 

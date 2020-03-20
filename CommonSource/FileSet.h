@@ -33,6 +33,10 @@ public:
 	std::wstring typesToString() const;
 	std::wstring getShortName() const;
 	std::wstring getFileStem() const;
+	void setDurationMs(const long ms);
+	long getDurationMs() const;
+	void setDurationStr(const std::wstring duration);
+	std::wstring getDurationStr() const;
 
 	// properties
 	FileProperties& properties();

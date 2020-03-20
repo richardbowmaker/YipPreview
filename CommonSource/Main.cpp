@@ -176,6 +176,8 @@ void MyFrame::populateGrid()
 	grid_->SetSelectionMode(wxGrid::wxGridSelectRows);
 	grid_->HideRowLabels();
 	grid_->EnableEditing(false);
+	grid_->SetColSize(0, 220);
+	grid_->SetColSize(1, 50);
 }
 
 void MyFrame::gridEventDispatch(wxGridEvent &event)

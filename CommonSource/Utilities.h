@@ -54,7 +54,6 @@ private:
 	SU() = default;
 	SU(const SU&) = default;
 	SU(SU&&);
-
 };
 
 class FU
@@ -119,5 +118,27 @@ private:
 			StringsT *dirs,
 			const bool sort);
 };
+
+class Duration
+{
+public:
+
+	Duration();
+
+	static bool test();
+
+	void setMs(const long ms);
+	long getMs() const;
+	bool parse(const std::wstring &str);
+	bool parse(const std::string &str);
+	std::wstring toString() const;
+
+	int hh_;
+	int mm_;
+	int ss_;
+	int ms_;
+};
+
+
 
 #endif /* COMMON_UTILITIES_H_ */

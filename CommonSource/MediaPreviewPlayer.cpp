@@ -76,7 +76,7 @@ void MediaPreviewPlayer::onMediaPlay(wxMediaEvent& event)
 	player_->SetVolume(0);
 
 	// set the duration
-	int d = duration();
+	int d = duration() / 1000;
 	if (d != -1)
 		duration_ = d;
 
@@ -129,10 +129,10 @@ void MediaPreviewPlayer::calculateClips()
 
 // for the linux version we have to use ffmpeg to get the duration
 // as the media control does not provide it
-int MediaPreviewPlayer::duration()
+long MediaPreviewPlayer::duration()
 {
 #ifdef WINDOWS_BUILD
-	return static_cast<int>(player_->Length() / 1000);
+	return static_cast<int>(player_->Length());
 #elif LINUX_BUILD
 	// get duration
 	ShellExecuteResult res;
@@ -142,17 +142,12 @@ int MediaPreviewPlayer::duration()
 	// get duration from ffmpeg output
 	std::wstring serr = res.getStderr();
 	size_t pos = serr.find(L"Duration:");
-	int d = 0;
+	Duration d;
 
 	if (pos != std::wstring::npos)
-	{
-		// Duration: 00:02:46.49
-		int h = wcstol(serr.substr(pos + 10, 2).c_str(), nullptr, 10);
-		int m = wcstol(serr.substr(pos + 13, 2).c_str(), nullptr, 10);
-		int s = wcstol(serr.substr(pos + 16, 2).c_str(), nullptr, 10);
-		d = 3600 * h + 60 * m + s;
-	}
-	return d;
+		d.parse(serr.substr(pos + 10, 12));
+
+	return d.getMs();
 #endif
 }
 

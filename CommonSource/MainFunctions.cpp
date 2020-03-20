@@ -15,6 +15,7 @@
 #endif
 #include <cstdlib>
 #include <iostream>
+#include <regex>
 #include <stdarg.h>
 #include <stdio.h>
 #include <wx/splitter.h>
@@ -358,13 +359,45 @@ void MyFrame::cursorRight()
 
 void MyFrame::tryout(wxCommandEvent& event, const int row)
 {
-	bool b = FileProperties::test();
+//	std::wstring s(L"12:34:56");
+//
+//    const std::regex rex(R"(((\d{1,2}):)?(\d{1,2}):(\d{1,2}))");
+//
+//    std::smatch m;
+//    std::string s1 = SU::wStrToStr(s);
+//    int hh = 0, mm = 0, ss = 0;
+//
+//    if (std::regex_search(s1, m, rex))
+//    {
+//    	hh = atoi(m[1].str().c_str());
+//    	mm = atoi(m[3].str().c_str());
+//        ss = atoi(m[4].str().c_str());
+//    }
+//
+//
+//    s1 = "4:56";
+//    if (std::regex_search(s1, m, rex))
+//    {
+//    	hh = atoi(m[1].str().c_str());
+//    	mm = atoi(m[3].str().c_str());
+//        ss = atoi(m[4].str().c_str());
+//    }
+//
 
-	if (!b) Logger::error(L"property test failed");
 
-	return;
+	Duration::test();
+    return;
 
-//	FileProperties fp;
+
+
+
+//	bool b = FileProperties::test();
+//
+//	if (!b) Logger::error(L"property test failed");
+//
+//	return;
+//
+////	FileProperties fp;
 //	std::wstring s;
 //	fp.setString(L"p1", L"v1");
 //	fp.setInt(L"p2", 2);

@@ -39,12 +39,12 @@ int GridTable::GetNumberRows()
 
 int GridTable::GetNumberCols()
 {
-	return 2;
+	return 5;
 }
 
 wxString GridTable::GetValue(int row, int col)
 {
-	if (row >= FileSetManager::getNoOfFileSets() || row < 0 || col < 0 || col > 2)
+	if (row >= FileSetManager::getNoOfFileSets() || row < 0 || col < 0 || col > 5)
 	{
 		Logger::error(L"GridTable::GetValue invalid row %d, col %d", row, col);
 		return L"";
@@ -56,6 +56,9 @@ wxString GridTable::GetValue(int row, int col)
 	{
 	case 0: return fs->getShortName();
 	case 1: return fs->typesToString();
+	case 2: return fs->getDurationStr();
+	case 3: return L"";
+	case 4: return L"";
 	}
 	return L"";
 }
@@ -70,6 +73,9 @@ wxString GridTable::GetColLabelValue(int col)
 	{
 	case 0: return L"File";
 	case 1: return L"Type";
+	case 2: return L"Duration";
+	case 3: return L"Last";
+	case 4: return L"Times";
 	default: return L"";
 	}
 }

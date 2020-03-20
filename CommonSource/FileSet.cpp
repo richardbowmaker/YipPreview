@@ -2,6 +2,9 @@
 #include "FileSet.h"
 
 #include <filesystem>
+#include <regex>
+#include <stdlib.h>
+#include <stdio.h>
 #include <string>
 
 #include "Logger.h"
@@ -151,10 +154,52 @@ std::wstring FileSet::toString() const
 //-------------------------------------------------------
 // properties
 //-------------------------------------------------------
+// \Files\All\file20191106221222;times;11;lasttime;08/01/2020;volume;-8.3  -40.7;duration;5:27
+
+
+
 FileProperties& FileSet::properties()
 {
 	return properties_;
 }
+
+void FileSet::setDurationMs(const long ms)
+{
+	Duration d;
+	d.setMs(ms);
+	properties_.setString(L"duration", d.toString());
+}
+
+long FileSet::getDurationMs() const
+{
+	Duration d;
+	d.parse(properties_.getString(L"duration"));
+	return d.getMs();
+}
+
+// (hh:)mm:ss(.nnn)
+void FileSet::setDurationStr(const std::wstring duration)
+{
+	std::wstring s;
+	if (duration.size() > 0)
+	{
+		Duration d;
+		if (d.parse(duration)) s = d.toString();
+	}
+	properties_.setString(L"duration", s);
+}
+
+std::wstring FileSet::getDurationStr() const
+{
+	std::wstring p = properties_.getString(L"duration");
+	if (p.size() > 0)
+	{
+		Duration d;
+		if (d.parse(p)) p = d.toString();
+	}
+	return p;
+}
+
 
 
 
