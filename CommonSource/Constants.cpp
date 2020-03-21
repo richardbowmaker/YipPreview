@@ -10,9 +10,13 @@
 #ifdef WINDOWS_BUILD
     std::wstring Constants::ffmpeg = std::wstring(LR"(D:\Projects\WxWidgets\YipPreview\ffmpeg.exe)");
     std::wstring Constants::ffmpegEnd = std::wstring(L" 2>&1");
+    std::wstring Constants::filesDir = std::wstring(LR"(\Files\All)");
+    std::wstring Constants::propertiesCache = std::wstring(LR"(\PropertyCache.txt)");
 #elif LINUX_BUILD
 	std::wstring Constants::ffmpeg = std::wstring(LR"(/usr/bin/ffmpeg)");
     std::wstring Constants::ffmpegEnd = std::wstring(L" &2>1");
+    std::wstring Constants::filesDir = std::wstring(LR"(/Files/All)");
+    std::wstring Constants::propertiesCache = std::wstring(LR"(/PropertyCache.txt)");
 #endif
 
 std::wstring Constants::title = std::wstring(L"YipPreview");
@@ -23,7 +27,6 @@ wxColour Constants::blue;
 wxColour Constants::grey;
 wxColour Constants::lightBlue;
 wxColour Constants::systemBackground;
-
 
 Constants::Constants()
 {

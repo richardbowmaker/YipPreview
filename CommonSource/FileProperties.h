@@ -13,8 +13,7 @@
 #include <string>
 #include <time.h>
 
-class FileProperties;
-using FilePropertiesT = std::shared_ptr<FileProperties>;
+#include "_Types.h"
 
 class FileProperties
 {
@@ -37,11 +36,10 @@ public:
 	void clear();
 	int getSize() const;
 	void remove(const std::wstring property);
+	void toLogger() const;
 
 private:
 
-	using PropertyT = std::pair<std::wstring, std::wstring>;
-	using PropertiesT = std::map<std::wstring, std::wstring>;
 	PropertiesT properties_;
 };
 

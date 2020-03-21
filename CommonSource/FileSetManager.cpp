@@ -7,11 +7,12 @@
 
 #include "FileSetManager.h"
 
-#include <fstream>
+#include <map>
 
 #include "FileSet.h"
 #include "Logger.h"
 #include "Utilities.h"
+#include "VolumeManager.h"
 
 FileSetManager::FileSetManager()
 {
@@ -37,7 +38,7 @@ FileSetManager& FileSetManager::get()
 	return instance;
 }
 
-bool FileSetManager::addFiles(const VolumeT volume)
+bool FileSetManager::addFiles(VolumeT volume)
 {
 	return get().addFilesImpl(volume);
 }
@@ -57,6 +58,15 @@ std::wstring FileSetManager::toString()
 	return get().toStringImpl();
 }
 
+void FileSetManager::toLogger()
+{
+	get().toLoggerImpl();
+}
+
+//----------------------------------------------
+// implementation
+//----------------------------------------------
+
 void FileSetManager::initialiseImpl()
 {
 }
@@ -66,8 +76,10 @@ void FileSetManager::uninitialiseImpl()
 	fileSets_.clear();
 }
 
-bool FileSetManager::addFilesImpl(const VolumeT volume)
+bool FileSetManager::addFilesImpl(VolumeT volume)
 {
+	// scan the volume's directory for files and add
+	// them to the filesets_ collection
 	StringsT files;
 	if (FU::findMatchingFiles(volume->getFilesDirectory(), files, L"*"))
 	{
@@ -75,11 +87,12 @@ bool FileSetManager::addFilesImpl(const VolumeT volume)
 		{
 			if (FileSet::isValidType(f))
 			{
-				// search for existing fileset entry
+				// search for existing file set entry
 				std::wstring id = FileSet::filenameToId(f);
 
-				FileSetsT::const_iterator it = std::find_if(fileSets_.begin(), fileSets_.end(),
-					[id](IdFileSetPairT& fs) { return fs.first.compare(id) == 0; });
+				IdFileSetPairCollT::const_iterator it =
+					std::find_if(fileSets_.begin(), fileSets_.end(),
+							[id](const IdFileSetPairT &fs) { return fs.first.compare(id) == 0; });
 
 				if (it != fileSets_.end())
 				{
@@ -87,30 +100,17 @@ bool FileSetManager::addFilesImpl(const VolumeT volume)
 				}
 				else
 				{
-					FileSetT fs = std::make_shared<FileSet>();
-					fs->set(f);
+					// create file set object and add to collection
+					VolumeWRefT vref(volume);
+					FileSetT fs = std::make_shared<FileSet>(vref, f);
 					fileSets_.push_back(IdFileSetPairT(id, fs));
+
+					// add file set to volume
+					volume->addFileSet(fs);
 				}
 			}
 		}
-
-		// read the properties cache
-		std::string pf = SU::wStrToStr(volume->getPropertiesFile());
-		std::ifstream infile(pf);
-		std::string sl;
-		while (std::getline(infile, sl))
-		{
-			std::wstring wl = SU::strToWStr(sl);
-			int n = wl.find(L";");
-
-			if (n != std::wstring::npos)
-			{
-				std::wstring fn = wl.substr(0, n);
-				std::wstring ps = wl.substr(n + 1);
-				int nn = 0;
-			}
-		}
-		infile.close();
+		volume->readProperties();
 	}
 	else
 		Logger::warning(
@@ -137,5 +137,19 @@ FileSetT FileSetManager::getFileSetImpl(const int n) const
 {
 	return fileSets_[n].second;
 }
+
+void FileSetManager::toLoggerImpl() const
+{
+	Logger::info(L"File Set Manager, %d", fileSets_.size());
+
+	for (auto fs : fileSets_)
+	{
+		Logger::info(L"\tkey %ls", fs.first.c_str());
+		fs.second->toLogger();
+	}
+}
+
+
+
 
 

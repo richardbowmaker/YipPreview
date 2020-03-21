@@ -41,6 +41,7 @@
 #include "Tryout.h"
 #include "Utilities.h"
 #include "VideoUpdaterDialog.h"
+#include "VolumeManager.h"
 
 enum MenuIDsT
 {
@@ -55,8 +56,10 @@ enum MenuIDsT
 	ID_MenuViewPlay,
 	ID_MenuTools,
 	ID_MenuToolsVideoUpdater,
-	ID_MenuToolsTest,
-	ID_MenuToolsTryout,
+	ID_MenuTest,
+	ID_MenuTestTest,
+	ID_MenuTestTryout,
+	ID_MenuTestToLogger,
 	ID_MenuHelp,
 	ID_MenuHelpAbout,
 
@@ -91,7 +94,9 @@ void MyFrame::menuOpenDispatch(wxMenuEvent& event, int menuId)
 		break;
 	case ID_MenuTools:
 		menus_[ID_MenuToolsVideoUpdater]->Enable(fs.get() != nullptr && fs->hasVideo());
-		menus_[ID_MenuToolsTest]->Enable(fs.get() != nullptr && fs->hasVideo());
+		break;
+	case ID_MenuTest:
+		menus_[ID_MenuTestTest]->Enable(fs.get() != nullptr && fs->hasVideo());
 		break;
 	case ID_MenuHelp:
 		break;
@@ -116,11 +121,14 @@ void MyFrame::menuSelectedDispatch(wxCommandEvent& event)
 	case ID_MenuToolsVideoUpdater:
 		VideoUpdaterDialog::Run(this, fs);
 		break;
-	case ID_MenuToolsTest:
+	case ID_MenuTestTest:
 		TestDialog::Run(this, fs);
 		break;
-	case ID_MenuToolsTryout:
+	case ID_MenuTestTryout:
 		tryout(event, row);
+		break;
+	case ID_MenuTestToLogger:
+		toLogger();
 		break;
 	case ID_MenuHelpAbout:
 		break;
@@ -151,20 +159,20 @@ void MyFrame::setupMenus()
 	wxMenu* menuFile = new wxMenu;
 	menuFile->Bind(wxEVT_MENU_OPEN, [this](wxMenuEvent& e) -> void { menuOpenDispatch(e, ID_MenuFile); }, wxID_ANY);
 	
-	// file delete
+	// file, delete
 	menus_[ID_MenuFileDelete] = 
 		menuFile->Append(ID_MenuFileDelete, "Delete...\tCtrl-D", "Delete file");
 
 	menuFile->AppendSeparator();
 
-	// file exit
+	// file, exit
 	menus_[ID_MenuFileExit] = menuFile->Append(wxID_EXIT);
 
-	// view menu
+	// view, menu
 	wxMenu* menuView = new wxMenu;
 	menuView->Bind(wxEVT_MENU_OPEN, [this](wxMenuEvent& e) -> void { menuOpenDispatch(e, ID_MenuView); }, wxID_ANY);
 
-	// view play
+	// view, play
 	menus_[ID_MenuViewPlay] =
 		menuView->Append(ID_MenuViewPlay, "Play\tF1", "Play file");
 
@@ -172,17 +180,25 @@ void MyFrame::setupMenus()
 	wxMenu* menuTools = new wxMenu;
 	menuTools->Bind(wxEVT_MENU_OPEN, [this](wxMenuEvent& e) -> void { menuOpenDispatch(e, ID_MenuTools); }, wxID_ANY);
 
-	// tools video updater
+	// tools, video updater
 	menus_[ID_MenuToolsVideoUpdater] =
 		menuTools->Append(ID_MenuToolsVideoUpdater, "&Update video...\tCtrl-V", "Video update tools");
 
-	// tools test dialog
-	menus_[ID_MenuToolsTest] =
-		menuTools->Append(ID_MenuToolsTest, "Test...\tCtrl-V", "Test dialog");
+	// tools menu
+	wxMenu* menuTest = new wxMenu;
+	menuTools->Bind(wxEVT_MENU_OPEN, [this](wxMenuEvent& e) -> void { menuOpenDispatch(e, ID_MenuTest); }, wxID_ANY);
 
-	// tools tryout
-	menus_[ID_MenuToolsTryout] =
-		menuTools->Append(ID_MenuToolsTryout, "TryOut...\tCtrl-T", "Hook for experimental code");
+	// test, test dialog
+	menus_[ID_MenuTestTest] =
+		menuTest->Append(ID_MenuTestTest, "Test\tCtrl-V", "Test dialog");
+
+	// test, tryout
+	menus_[ID_MenuTestTryout] =
+		menuTest->Append(ID_MenuTestTryout, "TryOut...\tCtrl-T", "Hook for experimental code");
+
+	// test, to logger
+	menus_[ID_MenuTestToLogger] =
+		menuTest->Append(ID_MenuTestToLogger, "To Logger\tCtrl-L", "Hook for experimental code");
 
 	// help menu
 	wxMenu* menuHelp = new wxMenu;
@@ -195,6 +211,7 @@ void MyFrame::setupMenus()
 	menuBar->Append(menuFile,  "File");
 	menuBar->Append(menuView,  "View");
 	menuBar->Append(menuTools, "Tools");
+	menuBar->Append(menuTest,  "Test");
 	menuBar->Append(menuHelp,  "Help");
 	SetMenuBar(menuBar);
 
@@ -239,9 +256,6 @@ wxMenu *MyFrame::getPopupMenu(const int item)
 	menuItem = menu->Append(ID_MenuToolsVideoUpdater,   L"Update video ...");
 	menuItem->Enable(fs.get() != nullptr && fs->hasVideo());
 
-	menuItem = menu->Append(ID_MenuToolsTest,   L"Test dialog ...");
-	menuItem->Enable(fs.get() != nullptr && fs->hasVideo());
-
 	menu->Bind(wxEVT_MENU, &MyFrame::menuSelectedDispatch, this, wxID_ANY);
 	return menu;
 }
@@ -263,6 +277,9 @@ void MyFrame::deleteFile(wxCommandEvent& event, const int row, FileSet& fileset)
 void MyFrame::play(wxCommandEvent& event, const int row, FileSet& fileset)
 {
 	Logger::info(L"Play %ls, %d", fileset.getId().c_str(), row);
+
+	fileset.properties().setDateTimeNow(L"lasttime");
+	fileset.properties().incCount(L"times");
 }
 
 void MyFrame::pageUp()
@@ -341,6 +358,12 @@ void MyFrame::cursorRight()
 		grid_->SelectRow(r);
 		images_->setSelected(r);
 	}
+}
+
+void MyFrame::toLogger()
+{
+	VolumeManager::toLogger();
+	FileSetManager::toLogger();
 }
 
 //--------------------------------------------------------------------------

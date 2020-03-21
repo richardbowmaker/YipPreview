@@ -5,20 +5,21 @@
 #include <memory>
 #include <string>
 #include <time.h>
+#include <vector>
 
+#include "_Types.h"
 #include "FileProperties.h"
-
-class FileSet;
-using FileSetT = std::shared_ptr<FileSet>;
+#include "Volume.h"
 
 class FileSet
 {
 public:
 
 	FileSet();
+	FileSet(const VolumeWRefT &volume, const std::wstring file);
 	virtual ~FileSet();
 
-	void set(const std::wstring filename);
+	void set(const std::wstring file);
 	std::wstring getId() const;
 	std::wstring getImage() const;
 	void setImage(const std::wstring filename);
@@ -37,6 +38,9 @@ public:
 	long getDurationMs() const;
 	void setDurationStr(const std::wstring duration);
 	std::wstring getDurationStr() const;
+	std::wstring getLastTime() const;
+	std::wstring getTimes() const;
+	void toLogger();
 
 	// properties
 	FileProperties& properties();
@@ -58,6 +62,7 @@ private:
 	std::wstring link_;
 
 	FileProperties properties_;
+	VolumeWRefT volume_;
 };
 
 

@@ -18,81 +18,6 @@
 
 #include "Logger.h"
 
-bool FileProperties::test()
-{
-	FileProperties fp;
-	std::wstring s;
-	bool result = true;
-
-	fp.setString(L"p1", L"v1");
-	fp.setInt(L"p2", 2);
-	fp.incCount(L"p3");
-	fp.incCount(L"p3");
-	fp.incCount(L"p3");
-//	fp.setDateTimeNow(L"p4");
-	s = fp.toString();
-	result &= Logger::test(s.compare(L"p1;v1;p2;2;p3;3") == 0, L"FileProperties::test() t1 failed");
-
-	fp.clear();
-	s = fp.toString();
-	result &= Logger::test(s.compare(L"") == 0, L"FileProperties::test() t2 failed");
-
-	fp.fromString(L"p1;v1;p2;10");
-	s = fp.toString();
-	result &= Logger::test(s.compare(L"p1;v1;p2;10") == 0, L"FileProperties::test() t3 failed");
-
-	int c = fp.getSize();
-	result &= Logger::test(c == 2, L"FileProperties::test() t4 failed");
-
-	s = fp.getString(L"p1");
-	result &= Logger::test(s.compare(L"v1") == 0, L"FileProperties::test() t5 failed");
-
-	c = fp.getInt(L"p2");
-	result &= Logger::test(c == 10, L"FileProperties::test() t6 failed");
-
-	c = fp.getCount(L"p2");
-	result &= Logger::test(c == 10, L"FileProperties::test() t7 failed");
-
-	fp.remove(L"p1");
-	c = fp.getSize();
-	result &= Logger::test(c == 1, L"FileProperties::test() t8 failed");
-
-	s = fp.toString();
-	result &= Logger::test(s.compare(L"p2;10") == 0, L"FileProperties::test() t9 failed");
-
-	fp.setString(L"p2", L"");
-	c = fp.getSize();
-	result &= Logger::test(c == 0, L"FileProperties::test() t10 failed");
-
-	s = fp.toString();
-	result &= Logger::test(s.compare(L"") == 0, L"FileProperties::test() t11 failed");
-
-	fp.fromString(L"");
-	s = fp.toString();
-	result &= Logger::test(s.compare(L"") == 0, L"FileProperties::test() t12 failed");
-
-	fp.fromString(L"p1;v1;p2");
-	s = fp.toString();
-	result &= Logger::test(s.compare(L"p1;v1") == 0, L"FileProperties::test() t13 failed");
-
-	fp.fromString(L"p1;v1;p2;2;");
-	s = fp.toString();
-	Logger::test(s.compare(L"p1;v1;p2;2") == 0, L"FileProperties::test() t14 failed");
-
-	fp.fromString(L"p1;v1;p2;;");
-	s = fp.toString();
-	result &= Logger::test(s.compare(L"p1;v1") == 0, L"FileProperties::test() t15 failed");
-
-	fp.fromString(L"p1;v1;p2;");
-	s = fp.toString();
-	result &= Logger::test(s.compare(L"p1;v1") == 0, L"FileProperties::test() t16 failed");
-
-	if (result)
-		Logger::info(L"FileProperties::test() passed");
-
-	return result;
-}
-
 void FileProperties::setString(const std::wstring& property,
 		const std::wstring& value)
 {
@@ -223,6 +148,89 @@ void FileProperties::remove(const std::wstring property)
 	auto n = properties_.find(property);
 	if (n != properties_.end()) properties_.erase(n);
 }
+
+void FileProperties::toLogger() const
+{
+	Logger::info(L"File Properties");
+	for (auto p : properties_)
+		Logger::info(L"\t%ls %ls", p.first.c_str(), p.second.c_str());
+}
+
+bool FileProperties::test()
+{
+	FileProperties fp;
+	std::wstring s;
+	bool result = true;
+
+	fp.setString(L"p1", L"v1");
+	fp.setInt(L"p2", 2);
+	fp.incCount(L"p3");
+	fp.incCount(L"p3");
+	fp.incCount(L"p3");
+//	fp.setDateTimeNow(L"p4");
+	s = fp.toString();
+	result &= Logger::test(s.compare(L"p1;v1;p2;2;p3;3") == 0, L"FileProperties::test() t1 failed");
+
+	fp.clear();
+	s = fp.toString();
+	result &= Logger::test(s.compare(L"") == 0, L"FileProperties::test() t2 failed");
+
+	fp.fromString(L"p1;v1;p2;10");
+	s = fp.toString();
+	result &= Logger::test(s.compare(L"p1;v1;p2;10") == 0, L"FileProperties::test() t3 failed");
+
+	int c = fp.getSize();
+	result &= Logger::test(c == 2, L"FileProperties::test() t4 failed");
+
+	s = fp.getString(L"p1");
+	result &= Logger::test(s.compare(L"v1") == 0, L"FileProperties::test() t5 failed");
+
+	c = fp.getInt(L"p2");
+	result &= Logger::test(c == 10, L"FileProperties::test() t6 failed");
+
+	c = fp.getCount(L"p2");
+	result &= Logger::test(c == 10, L"FileProperties::test() t7 failed");
+
+	fp.remove(L"p1");
+	c = fp.getSize();
+	result &= Logger::test(c == 1, L"FileProperties::test() t8 failed");
+
+	s = fp.toString();
+	result &= Logger::test(s.compare(L"p2;10") == 0, L"FileProperties::test() t9 failed");
+
+	fp.setString(L"p2", L"");
+	c = fp.getSize();
+	result &= Logger::test(c == 0, L"FileProperties::test() t10 failed");
+
+	s = fp.toString();
+	result &= Logger::test(s.compare(L"") == 0, L"FileProperties::test() t11 failed");
+
+	fp.fromString(L"");
+	s = fp.toString();
+	result &= Logger::test(s.compare(L"") == 0, L"FileProperties::test() t12 failed");
+
+	fp.fromString(L"p1;v1;p2");
+	s = fp.toString();
+	result &= Logger::test(s.compare(L"p1;v1") == 0, L"FileProperties::test() t13 failed");
+
+	fp.fromString(L"p1;v1;p2;2;");
+	s = fp.toString();
+	Logger::test(s.compare(L"p1;v1;p2;2") == 0, L"FileProperties::test() t14 failed");
+
+	fp.fromString(L"p1;v1;p2;;");
+	s = fp.toString();
+	result &= Logger::test(s.compare(L"p1;v1") == 0, L"FileProperties::test() t15 failed");
+
+	fp.fromString(L"p1;v1;p2;");
+	s = fp.toString();
+	result &= Logger::test(s.compare(L"p1;v1") == 0, L"FileProperties::test() t16 failed");
+
+	if (result)
+		Logger::info(L"FileProperties::test() passed");
+
+	return result;
+}
+
 
 
 

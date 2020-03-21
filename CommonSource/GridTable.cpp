@@ -57,8 +57,8 @@ wxString GridTable::GetValue(int row, int col)
 	case 0: return fs->getShortName();
 	case 1: return fs->typesToString();
 	case 2: return fs->getDurationStr();
-	case 3: return L"";
-	case 4: return L"";
+	case 3: return fs->getLastTime();
+	case 4: return fs->getTimes();
 	}
 	return L"";
 }

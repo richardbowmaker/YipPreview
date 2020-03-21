@@ -28,6 +28,8 @@ public:
     static std::wstring ffmpegEnd;
     static std::wstring title;
     static std::wstring workingDir;
+    static std::wstring filesDir;
+    static std::wstring propertiesCache;
 
     // colours
     static wxColour blue;

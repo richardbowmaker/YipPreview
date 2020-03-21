@@ -15,10 +15,10 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
-class Volume;
-
-using VolumeT = std::shared_ptr<Volume>;
+#include "_Types.h"
+#include "FileSet.h"
 
 class Volume
 {
@@ -31,12 +31,16 @@ public:
 	bool getIsMounted() const;
 	std::wstring getPropertiesFile() const;
 	std::wstring getFilesDirectory() const;
+	void addFileSet(FileSetT &fileset);
+	void readProperties();
+	void writeProperties();
+	void toLogger() const;
 
 private:
 
 	std::wstring root_;
 	bool isMounted_;
-
+	FileSetCollT filesets_;
 };
 
 #endif /* COMMON_VOLUME_H_ */

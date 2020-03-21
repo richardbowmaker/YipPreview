@@ -35,6 +35,7 @@
 #include "ShellExecute.h"
 #include "Tryout.h"
 #include "Utilities.h"
+#include "VolumeManager.h"
 
 wxIMPLEMENT_APP(MyApp);
 
@@ -170,7 +171,8 @@ void MyFrame::uninitialiseGrid()
 
 void MyFrame::populateGrid()
 {
-	volume_ = std::make_shared<Volume>(L"");
+	volume_ = std::make_shared<Volume>(FU::pathToLocal(LR"(/YipPreview/Tryout)"));
+	VolumeManager::add(volume_);
 	FileSetManager::addFiles(volume_);
 	grid_->SetTable(table_);
 	grid_->SetSelectionMode(wxGrid::wxGridSelectRows);
@@ -178,6 +180,9 @@ void MyFrame::populateGrid()
 	grid_->EnableEditing(false);
 	grid_->SetColSize(0, 220);
 	grid_->SetColSize(1, 50);
+	grid_->SetColSize(2, 100);
+	grid_->SetColSize(3, 150);
+	grid_->SetColSize(4, 50);
 }
 
 void MyFrame::gridEventDispatch(wxGridEvent &event)
@@ -265,6 +270,8 @@ void MyFrame::onFocus(wxFocusEvent& event)
 void MyFrame::OnClose(wxCloseEvent& event)
 {
 	images_->uninitialise();
+	VolumeManager::writeProperties();
+	VolumeManager::uninitialise();
 	FileSetManager::uninitialise();
 	uninitialiseGrid();
 

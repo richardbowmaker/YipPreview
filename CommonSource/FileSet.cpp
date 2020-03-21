@@ -15,13 +15,19 @@ FileSet::FileSet()
 {
 }
 
+FileSet::FileSet(const VolumeWRefT &volume, const std::wstring file)
+{
+	volume_ = volume;
+	set(file);
+}
+
 FileSet::~FileSet()
 {
 }
 
 std::wstring FileSet::filenameToId(const std::wstring filename)
 {
-	return FU::getPathNoExt(filename);
+	return FU::getFileStem(filename);
 }
 
 FileSet::TypeT FileSet::filenameToType(const std::wstring filename)
@@ -62,12 +68,13 @@ std::wstring FileSet::getId() const
 
 bool FileSet::setId(const std::wstring filename)
 {
-	std::wstring s = FU::getPathNoExt(filename);
+	std::wstring s = filenameToId(filename);
 	if (id_.size() == 0)
 	{
 		// first time a file is set, capture the id and short name
 		id_ = s;
-		short_ = FU::abbreviateFilename(id_, 30);
+		s = FU::getPathNoExt(filename);
+		short_ = FU::abbreviateFilename(s, 30);
 		return true;
 	}
 	if (s.compare(id_) == 0)
@@ -151,12 +158,22 @@ std::wstring FileSet::toString() const
 	return std::wstring(L"ID = ") + id_ + std::wstring(L", ") + typesToString();
 }
 
+void FileSet::toLogger()
+{
+	Logger::info(L"File Set");
+
+	Logger::info(L"\tID %ls",         id_.c_str());
+	Logger::info(L"\tShortname %ls",  short_.c_str());
+	Logger::info(L"\tImage file %ls", image_.c_str());
+	Logger::info(L"\tVideo file %ls",  video_.c_str());
+	Logger::info(L"\tLink file %ls",  link_.c_str());
+	properties_.toLogger();
+}
+
 //-------------------------------------------------------
 // properties
 //-------------------------------------------------------
 // \Files\All\file20191106221222;times;11;lasttime;08/01/2020;volume;-8.3  -40.7;duration;5:27
-
-
 
 FileProperties& FileSet::properties()
 {
@@ -199,6 +216,17 @@ std::wstring FileSet::getDurationStr() const
 	}
 	return p;
 }
+
+std::wstring FileSet::getLastTime() const
+{
+	return properties_.getString(L"lasttime");
+}
+
+std::wstring FileSet::getTimes() const
+{
+	return properties_.getString(L"times");
+}
+
 
 
 

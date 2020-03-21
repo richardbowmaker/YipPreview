@@ -12,6 +12,7 @@
 #include <utility>
 #include <vector>
 
+#include "_Types.h"
 #include "FileSet.h"
 #include "Volume.h"
 
@@ -25,15 +26,16 @@ public:
 	static FileSetManager& get();
 	virtual ~FileSetManager();
 
-	static bool addFiles(const VolumeT volume);
+	static bool addFiles(VolumeT volume);
 	static std::wstring toString();
 	static int getNoOfFileSets();
 	static FileSetT getFileSet(const int n);
+	static void toLogger();
 
 private:
 
 	using IdFileSetPairT = std::pair<std::wstring, FileSetT>;
-	using FileSetsT = std::vector<IdFileSetPairT>;
+	using IdFileSetPairCollT = std::vector<IdFileSetPairT>;
 
 	FileSetManager();
 	FileSetManager(const FileSetManager&);
@@ -41,11 +43,12 @@ private:
 	void initialiseImpl();
 	void uninitialiseImpl();
 	std::wstring toStringImpl();
-	bool addFilesImpl(const VolumeT volume);
+	bool addFilesImpl(VolumeT volume);
 	int getNoOfFileSetsImpl() const;
 	FileSetT getFileSetImpl(const int n) const;
+	void toLoggerImpl() const;
 
-	FileSetsT fileSets_;
+	IdFileSetPairCollT fileSets_;
 };
 
 #endif /* COMMON_FILESETMANAGER_H_ */

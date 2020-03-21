@@ -71,6 +71,7 @@ private:
     void onFocus(wxFocusEvent& event);
 
     Logger *setupLogger(wxPanel *panel);
+    void toLogger();
 
     // menus
     void setupMenus();
