@@ -17,12 +17,19 @@
 
 #include "Constants.h"
 #include "Logger.h"
+#include "Main.h"
 #include "ShellExecute.h"
 
 int VideoUpdaterDialog::Run(wxWindow *parent, FileSetT &fileset)
 {
-	VideoUpdaterDialog dlg(parent, fileset);
-	return dlg.ShowModal();
+	//VideoUpdaterDialog dlg(parent, fileset);
+	//return dlg.ShowModal();
+
+	VideoUpdaterDialog *dlg = new VideoUpdaterDialog(parent, fileset);
+	int n = dlg->ShowModal();
+	dlg->Destroy();
+	delete dlg;
+	return n;
 }
 
 VideoUpdaterDialog::VideoUpdaterDialog(wxWindow *parent, FileSetT &fileset) :
@@ -91,6 +98,7 @@ void VideoUpdaterDialog::onShellExecute(wxShellExecuteEvent& event)
 				fileset_->getDurationStr());
 		Layout();
 		updateGui();
+		MyFrame::get().refresh(*fileset_);
 	}
 }
 

@@ -17,20 +17,20 @@
 
 #include <map>
 
+#include "_Types.h"
 #include "ImagesBrowser.h"
+#include "ImagesGrid.h"
 #include "Volume.h"
 
 class FileSet;
-class GridEx;
 class GridTable;
-class GridTableTest;
+class ImagesGrid;
 class Logger;
 class MediaPreviewPlayer;
 class wxGridEvent;
 class wxMenuItem;
 class wxMenu;
 class wxShellExecuteEvent;
-
 
 class MyApp: public wxApp
 {
@@ -40,33 +40,35 @@ public:
     virtual bool OnInit();
 };
 
-class MyFrame: public wxFrame, ImagesBrowserData
+class MyFrame: public wxFrame, ImagesBrowserServer, ImagesGridServer
 {
 public:
 
     MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size);
     ~MyFrame() = default;
 
-    static MyFrame& getMainFrame();
+    static MyFrame& get();
 
-    // ImagesBrowserData interface
-    virtual int getNoOfRows();
-    virtual int getNoOfCols();
-    virtual int getNoOfImages();
-    virtual int getSelected();
-    virtual void setSelected(const int selected);
-    virtual std::wstring getImage(const int n);
-	virtual std::wstring getVideo(const int n);
-	virtual wxMenu *getPopupMenu(const int item);
-
+    void refresh(const FileSet &fileset);
 
 private:
 
-    // grid functions
-    void initialiseGrid(wxPanel* panel);
-    void uninitialiseGrid();
-    void populateGrid();
-    void gridEventDispatch(wxGridEvent &event);
+    // ImagesBrowserData interface
+	virtual int browserGetNoOfRows();
+	virtual int browserGetNoOfCols();
+	virtual int browserGetNoOfImages();
+	virtual int browserGetSelected();
+	virtual void browserSetSelected(const int selected);
+	virtual std::wstring browserGetImage(const int n);
+	virtual std::wstring browserGetVideo(const int n);
+	virtual wxMenu *browserGetPopupMenu(const int item);
+
+	// ImagesGridServer interface
+	virtual wxMenu *gridGetPopupMenu(const int item);
+	virtual wxGridTableBase *gridGetTable();
+	virtual void gridSetSelected(const int selected);
+	virtual void gridGotFocus();
+
 
     void onFocus(wxFocusEvent& event);
 
@@ -76,12 +78,15 @@ private:
     // menus
     void setupMenus();
     void menuSelectedDispatch(wxCommandEvent &event);
-    void menuOpenDispatch(wxMenuEvent &event, int menuId);
-    wxMenu *getGridPopupMenu();
+    void menuConfigure(wxMenuEvent &event, int menuId);
+    wxMenu *getPopupMenu(const int item);
 
-    void deleteFile(wxCommandEvent& event, const int row, FileSet& fileset);
-    void play(wxCommandEvent& event, const int row, FileSet& fileset);
-    void tryout(wxCommandEvent& event, const int row);
+
+    void deleteFile(wxCommandEvent& event, const int row, FileSet &fileset);
+    void play(wxCommandEvent &event, const int row, FileSet &fileset);
+    void tryout(wxCommandEvent &event, const int row);
+    void togglePreviewMode();
+    void unitTests();
 
     FileSet& getSelectedFileSet() const;
 
@@ -97,8 +102,7 @@ private:
 	void OnProcessCustom(wxCommandEvent &event);
 	void OnShellExecute(wxShellExecuteEvent &event);
 
-	MediaPreviewPlayer *player_;
-	GridEx *grid_;
+	ImagesGrid *grid_;
     GridTable *table_;
 
     // images browser

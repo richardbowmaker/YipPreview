@@ -8,9 +8,10 @@
 #ifndef COMMON_TYPES_H_
 #define COMMON_TYPES_H_
 
-#include <memory>
-#include <vector>
 #include <map>
+#include <memory>
+#include <string>
+#include <vector>
 
 class FileSet;
 using FileSetT = std::shared_ptr<FileSet>;

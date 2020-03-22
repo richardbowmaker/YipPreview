@@ -55,7 +55,7 @@ ImagePanel::~ImagePanel()
 {
 }
 
-void ImagePanel::uninitilaise()
+void ImagePanel::uninitialise()
 {
 	if (inPreview()) stopPreview();
 

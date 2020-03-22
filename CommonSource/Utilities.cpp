@@ -616,7 +616,8 @@ bool Duration::parse(const std::string &str)
     }
     else
     {
-    	Logger::error(L"Duration::parse() invalid duration string: %ls", str.c_str());
+    	Logger::error(L"Duration::parse() invalid duration string: %ls",
+    			SU::strToWStr(str).c_str());
     	return false;
     }
 }
@@ -682,6 +683,8 @@ bool Duration::test()
 	result &= Logger::test(!b, L"Duration::test() t28 failed");
 
 	if (result) Logger::info(L"Duration::test() all tests passed");
+
+	return result;
 }
 
 

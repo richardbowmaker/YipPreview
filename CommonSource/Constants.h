@@ -30,6 +30,7 @@ public:
     static std::wstring workingDir;
     static std::wstring filesDir;
     static std::wstring propertiesCache;
+    static bool previewMode;	// image browser preview mode on
 
     // colours
     static wxColour blue;

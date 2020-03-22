@@ -8,10 +8,10 @@
 #include "ImagePanel.h"
 #include "Logger.h"
 
-ImagesBrowser::ImagesBrowser(wxWindow *parent, ImagesBrowserData *idata) :
+ImagesBrowser::ImagesBrowser(wxWindow *parent, ImagesBrowserServer *iServer) :
 	wxPanel(parent),
 	top_(0),
-	idata_(idata),
+	iServer_(iServer),
 	focus_(false)
 {
 }
@@ -22,8 +22,8 @@ ImagesBrowser::~ImagesBrowser()
 
 void ImagesBrowser::initialise()
 {
-	int rows = idata_->getNoOfRows();
-	int cols = idata_->getNoOfCols();
+	int rows = iServer_->browserGetNoOfRows();
+	int cols = iServer_->browserGetNoOfCols();
 
 	wxGridSizer* sizer = new wxGridSizer(rows, cols, 0, 0);
 	SetSizer(sizer);
@@ -41,13 +41,14 @@ void ImagesBrowser::initialise()
 void ImagesBrowser::uninitialise()
 {
 	stopPreview();
-	int n = idata_->getNoOfRows() * idata_->getNoOfCols();
+
+	int n = iServer_->browserGetNoOfRows() * iServer_->browserGetNoOfCols();
 
 	wxWindowList panels = GetChildren();
 	for (int i = 0; i < n; ++i)
 	{
 		ImagePanel *imgPnl = reinterpret_cast<ImagePanel *>(panels[i]);
-		imgPnl->uninitilaise();
+		imgPnl->uninitialise();
 	}
 }
 
@@ -61,29 +62,29 @@ void ImagesBrowser::displayAt(int top)
 	if (top == top_) return;
 
 	// total images
-	int n = idata_->getNoOfRows() * idata_->getNoOfCols();
+	int n = iServer_->browserGetNoOfRows() * iServer_->browserGetNoOfCols();
 	stopPreview();
 
 	// cannot scroll beyond end of data
-	if (top + n > idata_->getNoOfImages())
-		top = idata_->getNoOfImages() - n;
+	if (top + n > iServer_->browserGetNoOfImages())
+		top = iServer_->browserGetNoOfImages() - n;
 
 	if (top < 0) top = 0;
 
 	// set the images in each image panel
 	wxSizer* sizer = GetSizer();
 	sizer->Layout();
-	int si = idata_->getSelected();
+	int si = iServer_->browserGetSelected();
 	wxWindowList panels = GetChildren();
 
 	for (int i = 0; i < n; ++i)
 	{
 		ImagePanel *imgPnl = reinterpret_cast<ImagePanel *>(panels[i]);
-		imgPnl->setImage(idata_->getImage(top + i), wxBITMAP_TYPE_JPEG);
+		imgPnl->setImage(iServer_->browserGetImage(top + i), wxBITMAP_TYPE_JPEG);
 
 		if (si != -1)
 		{
-			if (top + i == idata_->getSelected())
+			if (top + i == iServer_->browserGetSelected())
 			{
 				if (focus_)
 					imgPnl->setBorderColour(Constants::blue);
@@ -91,7 +92,8 @@ void ImagesBrowser::displayAt(int top)
 					imgPnl->setBorderColour(Constants::grey);
 
 				// start preview
-				imgPnl->startPreview(idata_->getVideo(top + i));
+				if (Constants::previewMode)
+					imgPnl->startPreview(iServer_->browserGetVideo(top + i));
 			}
 			else
 				imgPnl->setBorderColour(Constants::white);
@@ -105,7 +107,8 @@ void ImagesBrowser::setSelected(const int selected)
 {
 	if (selected == -1) return;
 
-	int n = idata_->getNoOfRows() * idata_->getNoOfCols();
+	int n = iServer_->browserGetNoOfRows() * iServer_->browserGetNoOfCols();
+
 	stopPreview();
 
 	// if the newly selected item is not currently displayed
@@ -130,7 +133,8 @@ void ImagesBrowser::setSelected(const int selected)
 				else
 					imgPnl->setBorderColour(Constants::grey);
 
-				imgPnl->startPreview(idata_->getVideo(top_ + i));
+				if (Constants::previewMode)
+					imgPnl->startPreview(iServer_->browserGetVideo(top_ + i));
 			}
 			else
 				imgPnl->setBorderColour(Constants::white);
@@ -141,7 +145,7 @@ void ImagesBrowser::setSelected(const int selected)
 void ImagesBrowser::stopPreview()
 {
 	wxWindowList panels = GetChildren();
-	int n = idata_->getNoOfRows() * idata_->getNoOfCols();
+	int n = iServer_->browserGetNoOfRows() * iServer_->browserGetNoOfCols();
 	for (int i = 0; i < n; ++i)
 	{
 		ImagePanel *imgPnl = reinterpret_cast<ImagePanel *>(panels[i]);
@@ -155,9 +159,9 @@ void ImagesBrowser::pageUp()
 {
 	displayAt(
 		Utilities::pageUp(
-			idata_->getNoOfImages(),
+			iServer_->browserGetNoOfImages(),
 			top_,
-			idata_->getNoOfRows() * idata_->getNoOfCols())
+			iServer_->browserGetNoOfRows() * iServer_->browserGetNoOfCols())
 	);
 }
 
@@ -165,18 +169,18 @@ void ImagesBrowser::pageDown()
 {
 	displayAt(
 		Utilities::pageDown(
-			idata_->getNoOfImages(),
+			iServer_->browserGetNoOfImages(),
 			top_,
-			idata_->getNoOfRows() * idata_->getNoOfCols())
+			iServer_->browserGetNoOfRows() * iServer_->browserGetNoOfCols())
 	);
 }
 
 void ImagesBrowser::cursorMove(const int step)
 {
-	int n = idata_->getNoOfImages();
+	int n = iServer_->browserGetNoOfImages();
 	// visible items
-	int v = idata_->getNoOfCols() * idata_->getNoOfRows();
-	int s = idata_->getSelected();
+	int v = iServer_->browserGetNoOfCols() * iServer_->browserGetNoOfRows();
+	int s = iServer_->browserGetSelected();
 
 	// sn = new selected item, tn = new top item
 	int sn = s + step;
@@ -203,17 +207,17 @@ void ImagesBrowser::cursorMove(const int step)
 
 	displayAt(tn);
 	setSelected(sn);
-	idata_->setSelected(sn);
+	iServer_->browserSetSelected(sn);
 }
 
 void ImagesBrowser::cursorUp()
 {
-	cursorMove(-idata_->getNoOfCols());
+	cursorMove(-iServer_->browserGetNoOfCols());
 }
 
 void ImagesBrowser::cursorDown()
 {
-	cursorMove(idata_->getNoOfCols());
+	cursorMove(iServer_->browserGetNoOfCols());
 }
 
 void ImagesBrowser::cursorLeft()
@@ -234,12 +238,12 @@ void ImagesBrowser::imageSelected(const int eventId)
 {
 	setFocus(true);
 	setSelected(top_ + eventId);
-	idata_->setSelected(top_ + eventId);
+	iServer_->browserSetSelected(top_ + eventId);
 }
 
 wxMenu *ImagesBrowser::getPopupMenu(const int eventId)
 {
-	return idata_->getPopupMenu(eventId + top_);
+	return iServer_->browserGetPopupMenu(eventId + top_);
 }
 
 bool ImagesBrowser::hasFocus()
@@ -256,7 +260,7 @@ void ImagesBrowser::setFocus(const bool focus)
 	{
 		// the selected colour has to change
 		focus_ = focus;
-		setSelected(idata_->getSelected());
+		setSelected(iServer_->browserGetSelected());
 	}
 	else
 		focus_ = focus;

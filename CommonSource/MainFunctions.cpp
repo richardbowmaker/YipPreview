@@ -30,10 +30,10 @@
 #include "FileSet.h"
 #include "FileSetManager.h"
 #include "FileProperties.h"
-#include "GridEx.h"
 #include "GridTable.h"
 #include "GridTableTest.h"
 #include "ImagePanel.h"
+#include "ImagesGrid.h"
 #include "Logger.h"
 #include "MediaPreviewPlayer.h"
 #include "ShellExecute.h"
@@ -54,6 +54,7 @@ enum MenuIDsT
 	ID_MenuFileImport,
 	ID_MenuView,
 	ID_MenuViewPlay,
+	ID_MenuViewTogglePreview,
 	ID_MenuTools,
 	ID_MenuToolsVideoUpdater,
 	ID_MenuTest,
@@ -72,7 +73,7 @@ enum MenuIDsT
 	ID_CursorRight
 };
 
-void MyFrame::menuOpenDispatch(wxMenuEvent& event, int menuId)
+void MyFrame::menuConfigure(wxMenuEvent& event, int menuId)
 {
 	// is there a row selected
 	bool isSelected = false;
@@ -91,12 +92,16 @@ void MyFrame::menuOpenDispatch(wxMenuEvent& event, int menuId)
 		break;
 	case ID_MenuView:
 		menus_[ID_MenuViewPlay]->Enable(isSelected);
+		menus_[ID_MenuViewTogglePreview]->Check(Constants::previewMode);
+		if (Constants::previewMode)
+			menus_[ID_MenuViewTogglePreview]->SetItemLabel(L"Preview mode off");
+		else
+			menus_[ID_MenuViewTogglePreview]->SetItemLabel(L"Preview mode on");
 		break;
 	case ID_MenuTools:
 		menus_[ID_MenuToolsVideoUpdater]->Enable(fs.get() != nullptr && fs->hasVideo());
 		break;
 	case ID_MenuTest:
-		menus_[ID_MenuTestTest]->Enable(fs.get() != nullptr && fs->hasVideo());
 		break;
 	case ID_MenuHelp:
 		break;
@@ -118,11 +123,15 @@ void MyFrame::menuSelectedDispatch(wxCommandEvent& event)
 	case ID_MenuViewPlay:
 		play(event, row, *fs.get());
 		break;
+	case ID_MenuViewTogglePreview:
+		togglePreviewMode();
+		break;
 	case ID_MenuToolsVideoUpdater:
-		VideoUpdaterDialog::Run(this, fs);
+		//VideoUpdaterDialog::Run(this, fs);
+		TestDialog::Run(this, fs);
 		break;
 	case ID_MenuTestTest:
-		TestDialog::Run(this, fs);
+		unitTests();
 		break;
 	case ID_MenuTestTryout:
 		tryout(event, row);
@@ -157,11 +166,11 @@ void MyFrame::setupMenus()
 {
 	// file menu
 	wxMenu* menuFile = new wxMenu;
-	menuFile->Bind(wxEVT_MENU_OPEN, [this](wxMenuEvent& e) -> void { menuOpenDispatch(e, ID_MenuFile); }, wxID_ANY);
+	menuFile->Bind(wxEVT_MENU_OPEN, [this](wxMenuEvent& e) -> void { menuConfigure(e, ID_MenuFile); }, wxID_ANY);
 	
 	// file, delete
 	menus_[ID_MenuFileDelete] = 
-		menuFile->Append(ID_MenuFileDelete, "Delete...\tCtrl-D", "Delete file");
+		menuFile->Append(ID_MenuFileDelete, L"Delete...\tCtrl-D", L"Delete file");
 
 	menuFile->AppendSeparator();
 
@@ -170,49 +179,53 @@ void MyFrame::setupMenus()
 
 	// view, menu
 	wxMenu* menuView = new wxMenu;
-	menuView->Bind(wxEVT_MENU_OPEN, [this](wxMenuEvent& e) -> void { menuOpenDispatch(e, ID_MenuView); }, wxID_ANY);
+	menuView->Bind(wxEVT_MENU_OPEN, [this](wxMenuEvent& e) -> void { menuConfigure(e, ID_MenuView); }, wxID_ANY);
 
 	// view, play
 	menus_[ID_MenuViewPlay] =
-		menuView->Append(ID_MenuViewPlay, "Play\tF1", "Play file");
+		menuView->Append(ID_MenuViewPlay, L"Play\tF1", L"Play file");
+
+	// view, toggle preview
+	menus_[ID_MenuViewTogglePreview] =
+		menuView->Append(ID_MenuViewTogglePreview, L"Preview mode on/off", L"Toggles preview mode", wxITEM_CHECK);
 
 	// tools menu
 	wxMenu* menuTools = new wxMenu;
-	menuTools->Bind(wxEVT_MENU_OPEN, [this](wxMenuEvent& e) -> void { menuOpenDispatch(e, ID_MenuTools); }, wxID_ANY);
+	menuTools->Bind(wxEVT_MENU_OPEN, [this](wxMenuEvent& e) -> void { menuConfigure(e, ID_MenuTools); }, wxID_ANY);
 
 	// tools, video updater
 	menus_[ID_MenuToolsVideoUpdater] =
-		menuTools->Append(ID_MenuToolsVideoUpdater, "&Update video...\tCtrl-V", "Video update tools");
+		menuTools->Append(ID_MenuToolsVideoUpdater, L"&Update video...\tCtrl-V", L"Video update tools");
 
 	// tools menu
 	wxMenu* menuTest = new wxMenu;
-	menuTools->Bind(wxEVT_MENU_OPEN, [this](wxMenuEvent& e) -> void { menuOpenDispatch(e, ID_MenuTest); }, wxID_ANY);
+	menuTools->Bind(wxEVT_MENU_OPEN, [this](wxMenuEvent& e) -> void { menuConfigure(e, ID_MenuTest); }, wxID_ANY);
 
 	// test, test dialog
 	menus_[ID_MenuTestTest] =
-		menuTest->Append(ID_MenuTestTest, "Test\tCtrl-V", "Test dialog");
+		menuTest->Append(ID_MenuTestTest, L"Test\tCtrl-V", L"Runs unit tests");
 
 	// test, tryout
 	menus_[ID_MenuTestTryout] =
-		menuTest->Append(ID_MenuTestTryout, "TryOut...\tCtrl-T", "Hook for experimental code");
+		menuTest->Append(ID_MenuTestTryout, L"TryOut...\tCtrl-T", L"Hook for experimental code");
 
 	// test, to logger
 	menus_[ID_MenuTestToLogger] =
-		menuTest->Append(ID_MenuTestToLogger, "To Logger\tCtrl-L", "Hook for experimental code");
+		menuTest->Append(ID_MenuTestToLogger, L"To Logger\tCtrl-L", L"Hook for experimental code");
 
 	// help menu
 	wxMenu* menuHelp = new wxMenu;
-	menuHelp->Bind(wxEVT_MENU_OPEN, [this](wxMenuEvent& e) -> void { menuOpenDispatch(e, ID_MenuHelp); }, wxID_ANY);
+	menuHelp->Bind(wxEVT_MENU_OPEN, [this](wxMenuEvent& e) -> void { menuConfigure(e, ID_MenuHelp); }, wxID_ANY);
 	
 	menus_[ID_MenuHelpAbout] = menuHelp->Append(wxID_ABOUT);
 
 	// setup menu bar
 	wxMenuBar* menuBar = new wxMenuBar;
-	menuBar->Append(menuFile,  "File");
-	menuBar->Append(menuView,  "View");
-	menuBar->Append(menuTools, "Tools");
-	menuBar->Append(menuTest,  "Test");
-	menuBar->Append(menuHelp,  "Help");
+	menuBar->Append(menuFile,  L"File");
+	menuBar->Append(menuView,  L"View");
+	menuBar->Append(menuTools, L"Tools");
+	menuBar->Append(menuTest,  L"Test");
+	menuBar->Append(menuHelp,  L"Help");
 	SetMenuBar(menuBar);
 
 	// bind the menu selected event to the dispatch function
@@ -250,20 +263,25 @@ wxMenu *MyFrame::getPopupMenu(const int item)
 	menuItem = menu->Append(ID_MenuFileDelete, L"Delete ...");
 	menuItem->Enable(fs.get() != nullptr);
 
-	menuItem = menu->Append(ID_MenuViewPlay,   L"Play");
+	menuItem = menu->Append(ID_MenuViewPlay, L"Play");
 	menuItem->Enable(fs.get() != nullptr);
 
-	menuItem = menu->Append(ID_MenuToolsVideoUpdater,   L"Update video ...");
+	menuItem = menu->Append(ID_MenuToolsVideoUpdater, L"Update video ...");
 	menuItem->Enable(fs.get() != nullptr && fs->hasVideo());
+
+	menuItem = menu->Append(ID_MenuViewTogglePreview, L"Preview mode", wxEmptyString, wxITEM_CHECK);
+	menuItem->Check(Constants::previewMode);
+	if (Constants::previewMode)
+		menuItem->SetItemLabel(L"Preview mode off");
+	else
+		menuItem->SetItemLabel(L"Preview mode on");
+
+//	menuItem->Enable(fs.get() != nullptr && fs->hasVideo());
 
 	menu->Bind(wxEVT_MENU, &MyFrame::menuSelectedDispatch, this, wxID_ANY);
 	return menu;
 }
 
-wxMenu *MyFrame::getGridPopupMenu()
-{
-	return getPopupMenu(grid_->getSelectedRow());
-}
 
 //--------------------------------------------------------------------------
 // functions 
@@ -274,12 +292,13 @@ void MyFrame::deleteFile(wxCommandEvent& event, const int row, FileSet& fileset)
 	Logger::info(L"Delete file %ls, %d", fileset.getId().c_str(), row);
 }
 
-void MyFrame::play(wxCommandEvent& event, const int row, FileSet& fileset)
+void MyFrame::play(wxCommandEvent& event, const int row, FileSet &fileset)
 {
 	Logger::info(L"Play %ls, %d", fileset.getId().c_str(), row);
 
 	fileset.properties().setDateTimeNow(L"lasttime");
 	fileset.properties().incCount(L"times");
+	refresh(fileset);
 }
 
 void MyFrame::pageUp()
@@ -366,6 +385,23 @@ void MyFrame::toLogger()
 	FileSetManager::toLogger();
 }
 
+void MyFrame::togglePreviewMode()
+{
+	if (Constants::previewMode) images_->stopPreview();
+	Constants::previewMode = !Constants::previewMode;
+}
+
+void MyFrame::unitTests()
+{
+	bool result = true;
+
+	result &= Duration::test();
+	result &= FileProperties::test();
+
+	if (result) Logger::info(L"All unit tests passed");
+}
+
+
 //--------------------------------------------------------------------------
 // trying out area 
 //--------------------------------------------------------------------------
@@ -408,7 +444,7 @@ void MyFrame::tryout(wxCommandEvent& event, const int row)
 //
 
 
-	Duration::test();
+
     return;
 
 

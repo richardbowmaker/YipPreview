@@ -7,27 +7,27 @@
 
 #include "ImagePanel.h"
 
-class ImagesBrowserData
+class ImagesBrowserServer
 {
 public:
 
-	virtual ~ImagesBrowserData() = default;
+	virtual ~ImagesBrowserServer() = default;
 
-	virtual int getNoOfRows() = 0;
-	virtual int getNoOfCols() = 0;
-	virtual int getNoOfImages() = 0;
-	virtual int getSelected() = 0;
-	virtual void setSelected(const int selected) = 0;
-	virtual std::wstring getImage(const int n) = 0;
-	virtual std::wstring getVideo(const int n) = 0;
-	virtual wxMenu *getPopupMenu(const int item) = 0;
+	virtual int browserGetNoOfRows() = 0;
+	virtual int browserGetNoOfCols() = 0;
+	virtual int browserGetNoOfImages() = 0;
+	virtual int browserGetSelected() = 0;
+	virtual void browserSetSelected(const int selected) = 0;
+	virtual std::wstring browserGetImage(const int n) = 0;
+	virtual std::wstring browserGetVideo(const int n) = 0;
+	virtual wxMenu *browserGetPopupMenu(const int item) = 0;
 };
 
 class ImagesBrowser : public wxPanel, ImagePanelEvents
 {
 public:
 
-	ImagesBrowser(wxWindow *parent, ImagesBrowserData *idata);
+	ImagesBrowser(wxWindow *parent, ImagesBrowserServer *iServer);
 	virtual ~ImagesBrowser();
 
 	void initialise();
@@ -54,7 +54,7 @@ private:
 	void cursorMove(const int step);
 
 	int top_;
-	ImagesBrowserData *idata_;
+	ImagesBrowserServer *iServer_;
 	bool focus_;
 };
 

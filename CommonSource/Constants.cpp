@@ -21,6 +21,7 @@
 
 std::wstring Constants::title = std::wstring(L"YipPreview");
 std::wstring Constants::workingDir;
+bool Constants::previewMode = false;
 
 wxColour Constants::white;
 wxColour Constants::blue;

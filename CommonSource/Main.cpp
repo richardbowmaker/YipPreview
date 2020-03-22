@@ -25,11 +25,11 @@
 #include "Constants.h"
 #include "FileSet.h"
 #include "FileSetManager.h"
-#include "GridEx.h"
 #include "GridTable.h"
 #include "GridTableTest.h"
 #include "ImagePanel.h"
 #include "ImagesBrowser.h"
+#include "ImagesGrid.h"
 #include "Logger.h"
 #include "MediaPreviewPlayer.h"
 #include "ShellExecute.h"
@@ -60,7 +60,6 @@ MyFrame *MyFrame::this_;
 
 MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size) :
 	wxFrame(NULL, wxID_ANY, title, pos, size),
-	player_(nullptr),
 	grid_(nullptr),
 	table_(nullptr),
 	images_(nullptr),
@@ -72,6 +71,10 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size) 
 
 	Constants::initialise();
 	FileSetManager::initialise();
+
+	volume_ = std::make_shared<Volume>(FU::pathToLocal(LR"(/YipPreview/Tryout)"));
+	VolumeManager::add(volume_);
+	FileSetManager::addFiles(volume_);
 
 	setupMenus();
 	CreateStatusBar();
@@ -109,9 +112,14 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size) 
 	wxBoxSizer* sizerTop = new wxBoxSizer(wxVERTICAL);
 	pnlTop->SetSizer(sizerTop);
 
-	// create grid and add it to top panel
-	initialiseGrid(pnlTop);
-	populateGrid();
+// create grid and add it to top panel
+//	initialiseGrid(pnlTop);
+//	populateGrid();
+	grid_ = new ImagesGrid(pnlTop, wxID_ANY);
+	table_ = new GridTable();
+	grid_->initialise(this);
+	grid_->populate();
+
 	sizerTop->Add(grid_, 1, wxEXPAND, 0);
 
 	// create a bottom panel 
@@ -139,112 +147,88 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size) 
 
 }
 
-MyFrame &MyFrame::getMainFrame()
+//--------------------------------------------------------------
+// public methods
+//--------------------------------------------------------------
+
+MyFrame &MyFrame::get()
 {
 	return *this_;
 }
 
+void MyFrame::refresh(const FileSet &fileset)
+{
+	grid_->refresh();
+}
+
 //--------------------------------------------------------------
-// grid functions
+// ImagesGridServer interface
 //--------------------------------------------------------------
 
-void MyFrame::initialiseGrid(wxPanel* panel)
+wxMenu *MyFrame::gridGetPopupMenu(const int item)
 {
-	grid_ = new GridEx(panel, wxID_ANY);
-	table_ = new GridTable();
-	grid_->SetTable(table_);
-	grid_->SetSelectionMode(wxGrid::wxGridSelectRows);
-	grid_->HideRowLabels();
-
-	grid_->Bind(wxEVT_GRID_CELL_RIGHT_CLICK, &MyFrame::gridEventDispatch, this, wxID_ANY);
-	grid_->Bind(wxEVT_GRID_SELECT_CELL, &MyFrame::gridEventDispatch, this, wxID_ANY);
-	grid_->Bind(wxEVT_SET_FOCUS, &MyFrame::onFocus, this, wxID_ANY);
-
-	grid_->SetColLabelSize(grid_->GetDefaultRowSize());
+	return getPopupMenu(item);
 }
 
-void MyFrame::uninitialiseGrid()
+wxGridTableBase *MyFrame::gridGetTable()
 {
-	grid_->SetTable(nullptr);
-	delete table_;
+	return table_;
 }
 
-void MyFrame::populateGrid()
+void MyFrame::gridSetSelected(const int selected)
 {
-	volume_ = std::make_shared<Volume>(FU::pathToLocal(LR"(/YipPreview/Tryout)"));
-	VolumeManager::add(volume_);
-	FileSetManager::addFiles(volume_);
-	grid_->SetTable(table_);
-	grid_->SetSelectionMode(wxGrid::wxGridSelectRows);
-	grid_->HideRowLabels();
-	grid_->EnableEditing(false);
-	grid_->SetColSize(0, 220);
-	grid_->SetColSize(1, 50);
-	grid_->SetColSize(2, 100);
-	grid_->SetColSize(3, 150);
-	grid_->SetColSize(4, 50);
+	images_->setSelected(selected);
 }
 
-void MyFrame::gridEventDispatch(wxGridEvent &event)
+void MyFrame::gridGotFocus()
 {
-	int id = event.GetEventType();
-
-	if (id == wxEVT_GRID_CELL_RIGHT_CLICK)
-	{
-		int row = grid_->YToRow(event.GetPosition().y - grid_->GetColLabelSize()) +
-			grid_->getTopRow();
-
-		if (row >= 0 && row < grid_->GetNumberRows())
-		{
-			grid_->SelectRow(row);
-			images_->setSelected(row);
-			grid_->PopupMenu(getGridPopupMenu());
-		}
-	}
-	if (id == wxEVT_GRID_SELECT_CELL)
-	{
-		images_->setSelected(grid_->getSelectedRow());
-	}
+	images_->setFocus(false);
 }
 
 //--------------------------------------------------------------
 // ImagesBrowserData interface
 //--------------------------------------------------------------
 
-int MyFrame::getNoOfRows()
+int MyFrame::browserGetNoOfRows()
 {
 	return browserRows_;
 }
 
-int MyFrame::getNoOfCols()
+int MyFrame::browserGetNoOfCols()
 {
 	return browserCols_;
 }
 
-int MyFrame::getNoOfImages()
+int MyFrame::browserGetNoOfImages()
 {
 	return FileSetManager::getNoOfFileSets();
 }
 
-int MyFrame::getSelected()
+int MyFrame::browserGetSelected()
 {
 	return grid_->getSelectedRow();
 }
 
-void MyFrame::setSelected(const int selected)
+void MyFrame::browserSetSelected(const int selected)
 {
 	grid_->SelectRow(selected);
 }
 
-std::wstring MyFrame::getImage(const int n)
+std::wstring MyFrame::browserGetImage(const int n)
 {
 	return FileSetManager::getFileSet(n)->getImage();
 }
 
-std::wstring MyFrame::getVideo(const int n)
+std::wstring MyFrame::browserGetVideo(const int n)
 {
 	return FileSetManager::getFileSet(n)->getVideo();
 }
+
+wxMenu *MyFrame::browserGetPopupMenu(const int item)
+{
+	return getPopupMenu(item);
+}
+
 
 //--------------------------------------------------------------
 //
@@ -269,11 +253,18 @@ void MyFrame::onFocus(wxFocusEvent& event)
 }
 void MyFrame::OnClose(wxCloseEvent& event)
 {
+	Logger::info(L"images_->uninitialise()");
 	images_->uninitialise();
+	Logger::info(L"grid_->uninitialise()");
+	grid_->uninitialise();
+	Logger::info(L"VolumeManager::writeProperties()");
 	VolumeManager::writeProperties();
+	Logger::info(L"VolumeManager::uninitialise()");
 	VolumeManager::uninitialise();
+	Logger::info(L"FileSetManager::uninitialise()");
 	FileSetManager::uninitialise();
-	uninitialiseGrid();
+	if (table_ != nullptr)
+		delete table_;
 
 	Destroy();  // you may also do:  event.Skip();
 				// since the default event handler does call Destroy(), too
