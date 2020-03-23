@@ -32,7 +32,9 @@ public:
 
 	void initialise();
 	void uninitialise();
-	void setTop(int top);
+	void setTop(const int top);
+	int getTop();
+	void displayAt(const int top);
 	void setSelected(const int selected);
 	void pageUp();
 	void pageDown();
@@ -50,7 +52,6 @@ public:
 
 private:
 
-	void displayAt(const int top);
 	void cursorMove(const int step);
 
 	int top_;

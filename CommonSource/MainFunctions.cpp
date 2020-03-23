@@ -42,19 +42,24 @@
 #include "Utilities.h"
 #include "VideoUpdaterDialog.h"
 #include "VolumeManager.h"
+#include "VolumeSelectDialog.h"
 
+// the menu resource IDs
 enum MenuIDsT
 {
 	ID_Dummy = 0,
 
 	// menus
 	ID_MenuFile,
+	ID_MenuFileSelect,
 	ID_MenuFileDelete,
 	ID_MenuFileExit,
 	ID_MenuFileImport,
 	ID_MenuView,
 	ID_MenuViewPlay,
 	ID_MenuViewTogglePreview,
+	ID_MenuViewMoreImages,
+	ID_MenuViewLessImages,
 	ID_MenuTools,
 	ID_MenuToolsVideoUpdater,
 	ID_MenuTest,
@@ -73,103 +78,19 @@ enum MenuIDsT
 	ID_CursorRight
 };
 
-void MyFrame::menuConfigure(wxMenuEvent& event, int menuId)
-{
-	// is there a row selected
-	bool isSelected = false;
-	FileSetT fs;
-	int r = grid_->getSelectedRow();
-	if (r != -1)
-	{
-		isSelected = true;
-		fs = FileSetManager::getFileSet(r);
-	}
-	
-	switch (menuId)
-	{
-	case ID_MenuFile:
-		menus_[ID_MenuFileDelete]->Enable(isSelected);
-		break;
-	case ID_MenuView:
-		menus_[ID_MenuViewPlay]->Enable(isSelected);
-		menus_[ID_MenuViewTogglePreview]->Check(Constants::previewMode);
-		if (Constants::previewMode)
-			menus_[ID_MenuViewTogglePreview]->SetItemLabel(L"Preview mode off");
-		else
-			menus_[ID_MenuViewTogglePreview]->SetItemLabel(L"Preview mode on");
-		break;
-	case ID_MenuTools:
-		menus_[ID_MenuToolsVideoUpdater]->Enable(fs.get() != nullptr && fs->hasVideo());
-		break;
-	case ID_MenuTest:
-		break;
-	case ID_MenuHelp:
-		break;
-	}
-}
-
-void MyFrame::menuSelectedDispatch(wxCommandEvent& event)
-{
-	FileSetT fs;
-	int row = grid_->getSelectedRow();
-	if (row != -1)
-		fs = FileSetManager::getFileSet(row);
-
-	switch (event.GetId())
-	{
-	case ID_MenuFileDelete:
-		deleteFile(event, row, *fs.get());
-		break;
-	case ID_MenuViewPlay:
-		play(event, row, *fs.get());
-		break;
-	case ID_MenuViewTogglePreview:
-		togglePreviewMode();
-		break;
-	case ID_MenuToolsVideoUpdater:
-		//VideoUpdaterDialog::Run(this, fs);
-		TestDialog::Run(this, fs);
-		break;
-	case ID_MenuTestTest:
-		unitTests();
-		break;
-	case ID_MenuTestTryout:
-		tryout(event, row);
-		break;
-	case ID_MenuTestToLogger:
-		toLogger();
-		break;
-	case ID_MenuHelpAbout:
-		break;
-	case ID_PageUp:
-		pageUp();
-		break;
-	case ID_PageDown:
-		pageDown();
-		break;
-	case ID_CursorUp:
-		cursorUp();
-		break;
-	case ID_CursorDown:
-		cursorDown();
-		break;
-	case ID_CursorLeft:
-		cursorLeft();
-		break;
-	case ID_CursorRight:
-		cursorRight();
-		break;
-	}
-}
-
+// sets up the menu bar and menus
 void MyFrame::setupMenus()
 {
 	// file menu
 	wxMenu* menuFile = new wxMenu;
 	menuFile->Bind(wxEVT_MENU_OPEN, [this](wxMenuEvent& e) -> void { menuConfigure(e, ID_MenuFile); }, wxID_ANY);
+
+	// file, delete
+	menus_[ID_MenuFileSelect] =
+		menuFile->Append(ID_MenuFileSelect, L"Select...\tCtrl-S", L"Select volumes");
 	
 	// file, delete
-	menus_[ID_MenuFileDelete] = 
+	menus_[ID_MenuFileDelete] =
 		menuFile->Append(ID_MenuFileDelete, L"Delete...\tCtrl-D", L"Delete file");
 
 	menuFile->AppendSeparator();
@@ -188,6 +109,12 @@ void MyFrame::setupMenus()
 	// view, toggle preview
 	menus_[ID_MenuViewTogglePreview] =
 		menuView->Append(ID_MenuViewTogglePreview, L"Preview mode on/off", L"Toggles preview mode", wxITEM_CHECK);
+
+	// view, more/less images
+	menus_[ID_MenuViewMoreImages] =
+		menuView->Append(ID_MenuViewMoreImages, L"Show more images", L"Shows more images in the image browser");
+	menus_[ID_MenuViewLessImages] =
+		menuView->Append(ID_MenuViewLessImages, L"Show less images", L"Shows less images in the image browser");
 
 	// tools menu
 	wxMenu* menuTools = new wxMenu;
@@ -216,16 +143,16 @@ void MyFrame::setupMenus()
 	// help menu
 	wxMenu* menuHelp = new wxMenu;
 	menuHelp->Bind(wxEVT_MENU_OPEN, [this](wxMenuEvent& e) -> void { menuConfigure(e, ID_MenuHelp); }, wxID_ANY);
-	
+
 	menus_[ID_MenuHelpAbout] = menuHelp->Append(wxID_ABOUT);
 
 	// setup menu bar
 	wxMenuBar* menuBar = new wxMenuBar;
-	menuBar->Append(menuFile,  L"File");
-	menuBar->Append(menuView,  L"View");
+	menuBar->Append(menuFile, L"File");
+	menuBar->Append(menuView, L"View");
 	menuBar->Append(menuTools, L"Tools");
-	menuBar->Append(menuTest,  L"Test");
-	menuBar->Append(menuHelp,  L"Help");
+	menuBar->Append(menuTest, L"Test");
+	menuBar->Append(menuHelp, L"Help");
 	SetMenuBar(menuBar);
 
 	// bind the menu selected event to the dispatch function
@@ -233,26 +160,129 @@ void MyFrame::setupMenus()
 
 	// accelerators
 	std::vector<wxAcceleratorEntry> keys;
-	keys.emplace_back(wxACCEL_NORMAL, WXK_RETURN,		ID_MenuViewPlay);
-	keys.emplace_back(wxACCEL_NORMAL, WXK_PAGEUP,		ID_PageUp);
-	keys.emplace_back(wxACCEL_NORMAL, (int)'Q',			ID_PageUp);
-	keys.emplace_back(wxACCEL_NORMAL, (int)'W',			ID_PageUp);
-	keys.emplace_back(wxACCEL_NORMAL, (int)'E',			ID_PageUp);
-	keys.emplace_back(wxACCEL_NORMAL, (int)'R',			ID_PageUp);
-	keys.emplace_back(wxACCEL_NORMAL, WXK_PAGEDOWN,		ID_PageDown);
-	keys.emplace_back(wxACCEL_NORMAL, (int)'Z',			ID_PageDown);
-	keys.emplace_back(wxACCEL_NORMAL, (int)'X',			ID_PageDown);
-	keys.emplace_back(wxACCEL_NORMAL, (int)'C',			ID_PageDown);
-	keys.emplace_back(wxACCEL_NORMAL, (int)'V',			ID_PageDown);
-	keys.emplace_back(wxACCEL_NORMAL, WXK_UP,           ID_CursorUp);
-	keys.emplace_back(wxACCEL_NORMAL, WXK_DOWN,			ID_CursorDown);
-	keys.emplace_back(wxACCEL_NORMAL, WXK_LEFT,			ID_CursorLeft);
-	keys.emplace_back(wxACCEL_NORMAL, WXK_RIGHT,		ID_CursorRight);
+	keys.emplace_back(wxACCEL_NORMAL, WXK_RETURN, ID_MenuViewPlay);
+	keys.emplace_back(wxACCEL_NORMAL, WXK_PAGEUP, ID_PageUp);
+	keys.emplace_back(wxACCEL_NORMAL, (int)'Q', ID_PageUp);
+	keys.emplace_back(wxACCEL_NORMAL, (int)'W', ID_PageUp);
+	keys.emplace_back(wxACCEL_NORMAL, (int)'E', ID_PageUp);
+	keys.emplace_back(wxACCEL_NORMAL, (int)'R', ID_PageUp);
+	keys.emplace_back(wxACCEL_NORMAL, WXK_PAGEDOWN, ID_PageDown);
+	keys.emplace_back(wxACCEL_NORMAL, (int)'Z', ID_PageDown);
+	keys.emplace_back(wxACCEL_NORMAL, (int)'X', ID_PageDown);
+	keys.emplace_back(wxACCEL_NORMAL, (int)'C', ID_PageDown);
+	keys.emplace_back(wxACCEL_NORMAL, (int)'V', ID_PageDown);
+	keys.emplace_back(wxACCEL_NORMAL, WXK_UP, ID_CursorUp);
+	keys.emplace_back(wxACCEL_NORMAL, WXK_DOWN, ID_CursorDown);
+	keys.emplace_back(wxACCEL_NORMAL, WXK_LEFT, ID_CursorLeft);
+	keys.emplace_back(wxACCEL_NORMAL, WXK_RIGHT, ID_CursorRight);
 
 	wxAcceleratorTable accel(keys.size(), &keys[0]);
 	SetAcceleratorTable(accel);
 }
 
+// called as the menu is about to be  displayed, enable and check status etc. can be updated here
+void MyFrame::menuConfigure(wxMenuEvent& event, int menuId)
+{
+	// is there a row selected
+	bool isSelected = false;
+	FileSetT fs;
+	int r = grid_->getSelectedRow();
+	if (r != -1)
+	{
+		isSelected = true;
+		fs = FileSetManager::getFileSet(r);
+	}
+	
+	switch (menuId)
+	{
+	case ID_MenuFile:
+		menus_[ID_MenuFileDelete]->Enable(isSelected);
+		break;
+	case ID_MenuView:
+		menus_[ID_MenuViewPlay]->Enable(isSelected);
+		menus_[ID_MenuViewTogglePreview]->Check(Constants::previewMode);
+		if (Constants::previewMode)
+			menus_[ID_MenuViewTogglePreview]->SetItemLabel(L"Preview mode off");
+		else
+			menus_[ID_MenuViewTogglePreview]->SetItemLabel(L"Preview mode on");
+		menus_[ID_MenuViewMoreImages]->Enable(Constants::imageBrowserSize < Constants::imageBrowserSizeMax);
+		menus_[ID_MenuViewLessImages]->Enable(Constants::imageBrowserSize > Constants::imageBrowserSizeMin);
+		break;
+	case ID_MenuTools:
+		menus_[ID_MenuToolsVideoUpdater]->Enable(fs.get() != nullptr && fs->hasVideo());
+		break;
+	case ID_MenuTest:
+		break;
+	case ID_MenuHelp:
+		break;
+	}
+}
+
+// called when a menu option has been selected
+void MyFrame::menuSelectedDispatch(wxCommandEvent& event)
+{
+	FileSetT fs;
+	int row = grid_->getSelectedRow();
+	if (row != -1)
+		fs = FileSetManager::getFileSet(row);
+
+	switch (event.GetId())
+	{
+	case ID_MenuFileSelect:
+		VolumeSelectDialog::Run(this);
+		break;
+	case ID_MenuFileDelete:
+		deleteFile(event, row, *fs.get());
+		break;
+	case ID_MenuViewPlay:
+		play(event, row, *fs.get());
+		break;
+	case ID_MenuViewTogglePreview:
+		togglePreviewMode();
+		break;
+	case ID_MenuViewMoreImages:
+		updateNoOfImages(+1);
+		break;
+	case ID_MenuViewLessImages:
+		updateNoOfImages(-1);
+		break;
+	case ID_MenuToolsVideoUpdater:
+		VideoUpdaterDialog::Run(this, fs);
+		break;
+	case ID_MenuTestTest:
+		unitTests();
+		break;
+	case ID_MenuTestTryout:
+		//tryout(event, row);
+		break;
+	case ID_MenuTestToLogger:
+		toLogger();
+		break;
+	case ID_MenuHelpAbout:
+		break;
+	case ID_PageUp:
+		pageUp();
+		break;
+	case ID_PageDown:
+		pageDown();
+		break;
+	case ID_CursorUp:
+		cursorUp();
+		break;
+	case ID_CursorDown:
+		cursorDown();
+		break;
+	case ID_CursorLeft:
+		cursorLeft();
+		break;
+	case ID_CursorRight:
+		cursorRight();
+		break;
+	}
+}
+
+// gets the popup menu used by the grid and images browser,
+// N.B. the popup menu must be deleted by the caller
 wxMenu *MyFrame::getPopupMenu(const int item)
 {
 	FileSetT fs;
@@ -276,15 +306,12 @@ wxMenu *MyFrame::getPopupMenu(const int item)
 	else
 		menuItem->SetItemLabel(L"Preview mode on");
 
-//	menuItem->Enable(fs.get() != nullptr && fs->hasVideo());
-
 	menu->Bind(wxEVT_MENU, &MyFrame::menuSelectedDispatch, this, wxID_ANY);
 	return menu;
 }
 
-
 //--------------------------------------------------------------------------
-// functions 
+// the menu option handlers 
 //--------------------------------------------------------------------------
 
 void MyFrame::deleteFile(wxCommandEvent& event, const int row, FileSet& fileset)
@@ -401,286 +428,19 @@ void MyFrame::unitTests()
 	if (result) Logger::info(L"All unit tests passed");
 }
 
-
-//--------------------------------------------------------------------------
-// trying out area 
-//--------------------------------------------------------------------------
-
-//DWORD MyThread(void*)
-//{
-//	for (int i = 0; i < 10; ++i)
-//	{
-//		Logger::info(L"From thread %d", i);
-//		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-//	}
-//	return 0;
-//}
-
-void MyFrame::tryout(wxCommandEvent& event, const int row)
+void MyFrame::updateNoOfImages(const int delta)
 {
-//	std::wstring s(L"12:34:56");
-//
-//    const std::regex rex(R"(((\d{1,2}):)?(\d{1,2}):(\d{1,2}))");
-//
-//    std::smatch m;
-//    std::string s1 = SU::wStrToStr(s);
-//    int hh = 0, mm = 0, ss = 0;
-//
-//    if (std::regex_search(s1, m, rex))
-//    {
-//    	hh = atoi(m[1].str().c_str());
-//    	mm = atoi(m[3].str().c_str());
-//        ss = atoi(m[4].str().c_str());
-//    }
-//
-//
-//    s1 = "4:56";
-//    if (std::regex_search(s1, m, rex))
-//    {
-//    	hh = atoi(m[1].str().c_str());
-//    	mm = atoi(m[3].str().c_str());
-//        ss = atoi(m[4].str().c_str());
-//    }
-//
-
-
-
-    return;
-
-
-
-
-//	bool b = FileProperties::test();
-//
-//	if (!b) Logger::error(L"property test failed");
-//
-//	return;
-//
-////	FileProperties fp;
-//	std::wstring s;
-//	fp.setString(L"p1", L"v1");
-//	fp.setInt(L"p2", 2);
-//	fp.incCount(L"p3");
-//	fp.incCount(L"p3");
-//	fp.incCount(L"p3");
-//	fp.setDateTimeNow(L"p4");
-//	s = fp.toString();
-//
-//	fp.clear();
-//	s = fp.toString();
-//	fp.fromString(L"p1;v1;p2;2");
-//	s = fp.toString();
-//	int c = fp.getSize();
-//	s = fp.getString(L"p1");
-//	c = fp.getInt(L"p2");
-//	s = fp.getCount(L"p2");
-//	fp.remove(L"p1");
-//	s = fp.toString();
-//	fp.setString(L"p2", L"");
-//	s = fp.toString();
-//	fp.fromString(L"");
-//	s = fp.toString();
-//	fp.fromString(L"p1;v1;p2");
-//	s = fp.toString();
-//	fp.fromString(L"p1;v1;p2;2;");
-//	s = fp.toString();
-//	fp.fromString(L"p1;v1;p2;;");
-//	s = fp.toString();
-//	fp.fromString(L"p1;v1;p2;");
-//	s = fp.toString();
-
-
-
-
-	int n = 0;
-
-//	bool b;
-
-//
-//	std::wstring afn;
-//	int n;
-//
-//	afn = FU::abbreviateFilename(LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout1/a0123456789.jpg)", 30);
-//	n = afn.size();
-//	afn = FU::abbreviateFilename(LR"(/media/nas_share/Top/Data/Proects/WxWidgets/YipPreview/Tryout1/a0123456789.jpg)", 30);
-//	n = afn.size();
-//	afn = FU::abbreviateFilename(LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout1/a123456789.jpg)", 30);
-//	n = afn.size();
-//	afn = FU::abbreviateFilename(LR"(/media/nas_share/Top/Data/Projcts/WxWidgets/YipPreview/Tryout1/a012456789.jpg)", 29);
-//	n = afn.size();
-//	afn = FU::abbreviateFilename(LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/a0123456789.jpg)", 5);
-//	afn = FU::abbreviateFilename(LR"(/media/012345678901234567890123456789.jpg)", 30);
-//	afn = FU::abbreviateFilename(LR"(a0123456789.jpg)", 30);
-//
-//
-//
-//	b = FileSetManager::addFiles(FU::pathToLocal(LR"(\YipPreview\Tryout)").c_str());
-//	Logger::info(L"Files %ls", FileSetManager::toString().c_str());
-//	return;
-//
-//
-//
-//	b = SU::startsWith(L"abcde", L"abc");
-//	b = SU::startsWith(L"ab", L"abc");
-//	b = SU::startsWith(L"ab", L"");
-//	b = SU::startsWith(L"", L"abc");
-//	b = SU::startsWith(L"", L"");
-//
-//
-//
-//#ifdef WINDOWS_BUILD
-//	std::wstring s;
-//	s = FU::getFileStem(LR"(abc)");
-//	s = FU::getFileStem(LR"(abc.txt)");
-//	s = FU::getFileStem(LR"(\home\me\abc)");
-//	s = FU::getFileStem(LR"(\home\me\abc.txt)");
-//	s = FU::getFileStem(LR"(\home\me.you\abc)");
-//	s = FU::getFileStem(LR"(\home\me.you\abc.txt)");
-//	s = FU::getFileStem(LR"(\home\me\abc.txt.exe)");
-//
-//	s = FU::getPathNoExt(LR"(abc.txt)");
-//	s = FU::getPathNoExt(LR"(abc)");
-//	s = FU::getPathNoExt(LR"(\home\me\abc)");
-//	s = FU::getPathNoExt(LR"(\home\me\abc.txt)");
-//	s = FU::getPathNoExt(LR"(\home\me.you\abc.txt)");
-//	s = FU::getPathNoExt(LR"(\home\me.you\abc)");
-//
-//	s = FU::getExt(LR"(abc.txt)");
-//	s = FU::getExt(LR"(abc)");
-//	s = FU::getExt(LR"(\home\me\abc)");
-//	s = FU::getExt(LR"(\home\me\abc.txt)");
-//	s = FU::getExt(LR"(\home\me.you\abc)");
-//	s = FU::getExt(LR"(\home\me.you\abc.txt)");
-//	return;
-//#elif LINUX_BUILD
-//	std::wstring s;
-//	s = FU::getFileStem(LR"(abc)");
-//	s = FU::getFileStem(LR"(abc.txt)");
-//	s = FU::getFileStem(LR"(/home/me/abc)");
-//	s = FU::getFileStem(LR"(/home/me/abc.txt)");
-//	s = FU::getFileStem(LR"(/home/me.you/abc)");
-//	s = FU::getFileStem(LR"(/home/me.you/abc.txt)");
-//	s = FU::getFileStem(LR"(/home/me/abc.txt.exe)");
-//
-//	s = FU::getPathNoExt(LR"(abc.txt)");
-//	s = FU::getPathNoExt(LR"(abc)");
-//	s = FU::getPathNoExt(LR"(/home/me/abc)");
-//	s = FU::getPathNoExt(LR"(/home/me/abc.txt)");
-//	s = FU::getPathNoExt(LR"(/home/me.you/abc.txt)");
-//	s = FU::getPathNoExt(LR"(/home/me.you/abc)");
-//
-//	s = FU::getExt(LR"(abc.txt)");
-//	s = FU::getExt(LR"(abc)");
-//	s = FU::getExt(LR"(/home/me/abc)");
-//	s = FU::getExt(LR"(/home/me/abc.txt)");
-//	s = FU::getExt(LR"(/home/me.you/abc)");
-//	s = FU::getExt(LR"(/home/me.you/abc.txt)");
-//	return;
-//#endif
-//
-//
-//	ShellExecute::shellAsyncGui(LR"(cmd /c dir D:\_Ricks\c#\ZiPreview\Executable)",
-//		MyFrame::getMainFrame().GetEventHandler());
-//	return;
-//
-//	//CreateThread(NULL, 0, &MyThread, NULL, 0, NULL);
-//	//Logger::info(L"thread started");
-//	//return;
-//
-//	player_->setFile(FU::pathToLocal(LR"(\YipPreview\Tryout\f3.mp4)"));
-//	player_->startPreview();
-//	//	player_->Load(LR"(D:\Projects\WxWidgets\YipPreview\Tryout\f3.mp4)");
-//	return;
-//
-//
-//	// linux copy file
-//	b = FU::copyFile(
-//		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/a01.jpg)",
-//		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout1/a01.jpg)");
-//	b = FU::copyFile(
-//		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/a01.jpg)",
-//		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout1/a01.jpg)", false);
-//	b = FU::copyFile(
-//		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/a12345.jpg)",
-//		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout1/a12345.jpg)");
-//
-//	// linux file exists
-//	b = FU::fileExists(LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout1/a01.jpg)");
-//	b = FU::fileExists(LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout1)");
-//	b = FU::fileExists(LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout1/a12345.jpg)");
-//
-//	// linux delete file
-//	b = FU::deleteFile(LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout1/a01.jpg)");
-//	b = FU::deleteFile(LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout1/a01.jpg)");
-//
-//	// linux move file
-//	b = FU::moveFile(
-//		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/a01.jpg)",
-//		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout1/a01.jpg)");
-//	b = FU::moveFile(
-//		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/a01.jpg)",
-//		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout1/a01.jpg)", false);
-//	b = FU::moveFile(
-//		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/a01.jpg)",
-//		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout1/a01.jpg)");
-//	b = FU::moveFile(
-//		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/a03.jpg)",
-//		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout1/a01.jpg)");
-//	b = FU::moveFile(
-//		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/a03.jpg)",
-//		LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout2/a03.jpg)");
-//
-//	//b = FU::deleteFile(LR"(D:\IMAG0036_Copy.jpg)");
-	//b = FU::deleteFile(LR"(D:\IMAG0036_Copy.jpg)");
-//	bool b = FU::copyFile(LR"(D:\IMAG0036.jpg)", LR"(D:\IMAG0036_Copy.jpg)");
-//	b = FU::copyFile(LR"(D:\IMAG0036.jpg)", LR"(D:\IMAG0036_Copy.jpg)", false);
-	//b = FU::fileExists(LR"(D:\emails)");
-	//b = FU::fileExists(LR"(D:\myimage.jpg)");
-	//b = FU::fileExists(LR"(D:\xyz)");
-	//b = false;
-
-	// linux
-
-//	StringsT files;
-//	FU::findFiles(LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout)", files);
-//	Logger::info(files, L"All files");
-//
-//	files.clear();
-//	FU::findMatchingFiles(LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout)", files, L"a1*.jpg");
-//	Logger::info(files, L"a1*.jpg files");
-//
-//
-//	return;
-
-
-	// windows
-		//StringsT files;
-		//StringsT dirs;
-		//FU::findFilesDirs(LR"(D:\Projects\WxWidgets\YipPreview\Tryout)", files, dirs);
-		//Logger::info(files, L"All files");
-		//Logger::info(dirs, L"All directories");
-
-		//files.clear();
-		//FU::findMatchingFiles(LR"(D:\Projects\WxWidgets\YipPreview\Tryout)", files, L"*.mp4");
-		//Logger::info(files, L"mp4 files");
-
-		//files.clear();
-		//FU::findMatchingFilesRex(LR"(D:\Projects\WxWidgets\YipPreview\Tryout)", files, L"a0[1-6].jpg");
-		//Logger::info(files, L"regex a01.jpg to a06.jpg files");
-
-
-
-
-	//	TryOut::AsyncShell(GetEventHandler());
-	//	TryOut::WorkerThread();
-	//	TryOut::ExecIt();
-
-	//	ShellExecuteResult result;
-	//    ShellExecute::shellSync(L"/bin/ls /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview -al", result);
-	//    //ShellExecute::shellSync(L"/bin/nonexistentprogram", result);
-	//    //ShellExecute::shellSync(L"/bin/notepadqq", result, 5000);
-	//    std::wstring ws = result.toString();
-	//    Logger::info(ws.c_str());
+	int s = Constants::imageBrowserSize + delta;
+	if (s <= Constants::imageBrowserSizeMax && 
+		s >= Constants::imageBrowserSizeMin)
+	{
+		int t = images_->getTop();
+		images_->uninitialise();
+		Constants::imageBrowserSize = s;
+		images_->initialise();
+		images_->displayAt(t);
+		images_->Layout();
+	}
 }
 
 

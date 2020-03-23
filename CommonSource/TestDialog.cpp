@@ -33,25 +33,22 @@ TestDialog::TestDialog(wxWindow *parent, FileSetT &fileset) :
 	panel_->SetBackgroundColour(Constants::lightBlue);
 	sizer_->Add(panel_, 10, wxEXPAND);
 
-
 	button_ = new wxButton(getPanel(), wxID_ANY, L"Toggle", wxPoint(0, 0), wxSize(30, 30));
 	button_->Bind(wxEVT_BUTTON, &TestDialog::onButton, this);
 	sizer_->Add(button_, 1, wxEXPAND);
 
-
-
 	getPanel()->SetSizer(sizer_);
 
-//	// add controls to panel
-//	player_ = new MediaPreviewPlayer(getPanel()); //, wxID_ANY, wxPoint(0, 0), wxSize(100, 100));
-//
-//	wxBoxSizer *sizer_ = new wxBoxSizer(wxVERTICAL);
-//	sizer_->Add(player_, 1, wxSHAPED | wxALIGN_CENTER);
-//	getPanel()->SetSizer(sizer_);
-//
-//	// start the preview
-//	player_->setFile(fileset_->getVideo());
-//	player_->startPreview();
+	// add controls to panel
+	player_ = new MediaPreviewPlayer(getPanel()); //, wxID_ANY, wxPoint(0, 0), wxSize(100, 100));
+
+	wxBoxSizer *sizer_ = new wxBoxSizer(wxVERTICAL);
+	sizer_->Add(player_, 1, wxSHAPED | wxALIGN_CENTER);
+	getPanel()->SetSizer(sizer_);
+
+	// start the preview
+	player_->setFile(fileset_->getVideo());
+	player_->startPreview();
 }
 
 void TestDialog::onOk(wxCommandEvent &event)

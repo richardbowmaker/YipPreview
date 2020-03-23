@@ -176,6 +176,7 @@
     <ClInclude Include="..\..\..\CommonSource\VideoUpdaterDialog.h" />
     <ClInclude Include="..\..\..\CommonSource\Volume.h" />
     <ClInclude Include="..\..\..\CommonSource\VolumeManager.h" />
+    <ClInclude Include="..\..\..\CommonSource\VolumeSelectDialog.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="targetver.h" />
@@ -204,6 +205,7 @@
     <ClCompile Include="..\..\..\CommonSource\VideoUpdaterDialog.cpp" />
     <ClCompile Include="..\..\..\CommonSource\Volume.cpp" />
     <ClCompile Include="..\..\..\CommonSource\VolumeManager.cpp" />
+    <ClCompile Include="..\..\..\CommonSource\VolumeSelectDialog.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="YipPreview.rc" />

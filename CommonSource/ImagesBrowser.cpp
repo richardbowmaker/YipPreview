@@ -33,9 +33,7 @@ void ImagesBrowser::initialise()
 		ImagePanel* pnlImg = new ImagePanel(this, this, i, 5, true);
 		sizer->Add(pnlImg, 1, wxEXPAND, 0);
 	}
-
 	top_ = -1;
-	displayAt(0);
 }
 
 void ImagesBrowser::uninitialise()
@@ -50,11 +48,18 @@ void ImagesBrowser::uninitialise()
 		ImagePanel *imgPnl = reinterpret_cast<ImagePanel *>(panels[i]);
 		imgPnl->uninitialise();
 	}
+	DestroyChildren();
+	top_ = -1;
 }
 
 void ImagesBrowser::setTop(const int top)
 {
 	displayAt(top);
+}
+
+int ImagesBrowser::getTop()
+{
+	return top_;
 }
 
 void ImagesBrowser::displayAt(int top)

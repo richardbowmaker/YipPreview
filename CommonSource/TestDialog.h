@@ -24,6 +24,7 @@ class TestDialog : public DialogEx
 public:
 
 	TestDialog(wxWindow *parent, FileSetT &fileset);
+	virtual ~TestDialog() = default;
 
 	static int Run(wxWindow *parent, FileSetT &fileset);
 

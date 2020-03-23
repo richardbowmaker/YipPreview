@@ -22,14 +22,8 @@
 
 int VideoUpdaterDialog::Run(wxWindow *parent, FileSetT &fileset)
 {
-	//VideoUpdaterDialog dlg(parent, fileset);
-	//return dlg.ShowModal();
-
-	VideoUpdaterDialog *dlg = new VideoUpdaterDialog(parent, fileset);
-	int n = dlg->ShowModal();
-	dlg->Destroy();
-	delete dlg;
-	return n;
+	VideoUpdaterDialog dlg(parent, fileset);
+	return dlg.ShowModal();
 }
 
 VideoUpdaterDialog::VideoUpdaterDialog(wxWindow *parent, FileSetT &fileset) :
@@ -47,22 +41,24 @@ VideoUpdaterDialog::VideoUpdaterDialog(wxWindow *parent, FileSetT &fileset) :
 	txtDuration_ = new wxStaticText(getPanel(), wxID_ANY, L"Duration: ", wxPoint(10, 10), wxDefaultSize, wxALIGN_LEFT);
 
 	// add check boxes
-	chkAdjustVolume_ = new wxCheckBox(getPanel(), 1, L"Adjust volume", wxPoint(10, 35));
-	chkRemoveAudio_  = new wxCheckBox(getPanel(), 1, L"Remove audio",  wxPoint(10, 60));
-	chkCompress_     = new wxCheckBox(getPanel(), 1, L"Compress",      wxPoint(10, 85));
-	chkNewImage_     = new wxCheckBox(getPanel(), 1, L"New image",     wxPoint(10, 110));
+	chkAdjustVolume_ = new wxCheckBox(getPanel(), wxID_ANY, L"Adjust volume", wxPoint(10, 35));
+	chkRemoveAudio_  = new wxCheckBox(getPanel(), wxID_ANY, L"Remove audio",  wxPoint(10, 60));
+	chkCompress_     = new wxCheckBox(getPanel(), wxID_ANY, L"Compress",      wxPoint(10, 85));
+	chkNewImage_     = new wxCheckBox(getPanel(), wxID_ANY, L"New image",     wxPoint(10, 110));
 
 	Bind(wxEVT_CHECKBOX, [this](wxCommandEvent &) { updateGui(); });
-	updateGui();
 
 	// get duration from file set, if it does not have one
 	// then calculate it
-	std::wstring d = fileset_->getDurationStr();
-	if (d.size() > 0)
+	duration_ = fileset_->getDurationMs() / 1000;
+	if (duration_ > 0)
 		txtDuration_->SetLabelText(
-				std::wstring(txtDuration_->GetLabelText().wc_str()) + d);
+				std::wstring(txtDuration_->GetLabelText().wc_str()) + 
+			fileset_->getDurationStr());	
 	else
 		setDuration();
+
+	updateGui();
 }
 
 void VideoUpdaterDialog::setDuration()

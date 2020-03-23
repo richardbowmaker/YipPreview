@@ -22,9 +22,10 @@ class VideoUpdaterDialog : public DialogEx
 {
 public:
 
-	VideoUpdaterDialog(wxWindow *parent, FileSetT &fileset);
+	static int Run(wxWindow* parent, FileSetT& fileset);
 
-	static int Run(wxWindow *parent, FileSetT &fileset);
+	VideoUpdaterDialog(wxWindow *parent, FileSetT &fileset);
+	virtual ~VideoUpdaterDialog() = default;
 
 private:
 

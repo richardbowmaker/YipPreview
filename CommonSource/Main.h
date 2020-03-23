@@ -69,7 +69,6 @@ private:
 	virtual void gridSetSelected(const int selected);
 	virtual void gridGotFocus();
 
-
     void onFocus(wxFocusEvent& event);
 
     Logger *setupLogger(wxPanel *panel);
@@ -84,11 +83,9 @@ private:
 
     void deleteFile(wxCommandEvent& event, const int row, FileSet &fileset);
     void play(wxCommandEvent &event, const int row, FileSet &fileset);
-    void tryout(wxCommandEvent &event, const int row);
     void togglePreviewMode();
     void unitTests();
-
-    FileSet& getSelectedFileSet() const;
+	void updateNoOfImages(const int delta);
 
     void pageUp();
     void pageDown();
@@ -97,24 +94,22 @@ private:
 	void cursorLeft();
 	void cursorRight();
 
-    void OnClose(wxCloseEvent &event);
-    void OnThread(wxCommandEvent &event);
-	void OnProcessCustom(wxCommandEvent &event);
-	void OnShellExecute(wxShellExecuteEvent &event);
-
+    void onClose(wxCloseEvent &event);
+ 
+	// the images grid and its data
 	ImagesGrid *grid_;
     GridTable *table_;
 
     // images browser
     ImagesBrowser *images_;
-    int browserRows_;
-    int browserCols_;
 
+	// all the menus mapped by id
     std::map<int, wxMenuItem*> menus_;
+
+	// allow global access to MyFrame via
     static MyFrame* this_;
 
-    // temporarily here
-    VolumeT volume_;
+ 
 };
 
 #endif /* COMMON_MAIN_H_ */

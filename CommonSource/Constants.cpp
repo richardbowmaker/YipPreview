@@ -22,6 +22,9 @@
 std::wstring Constants::title = std::wstring(L"YipPreview");
 std::wstring Constants::workingDir;
 bool Constants::previewMode = false;
+int Constants::imageBrowserSize = 2;
+int Constants::imageBrowserSizeMin = 1;
+int Constants::imageBrowserSizeMax = 4;
 
 wxColour Constants::white;
 wxColour Constants::blue;

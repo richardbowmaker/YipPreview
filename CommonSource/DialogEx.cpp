@@ -18,6 +18,13 @@
 #include "Constants.h"
 #include "Utilities.h"
 
+
+int DialogEx::Run(wxWindow* parent)
+{
+	DialogEx dlg(parent, wxID_ANY, wxSize(200, 200));
+	return dlg.ShowModal();
+}
+
 DialogEx::DialogEx(
 		wxWindow *parent,
 		wxWindowID id,
@@ -82,10 +89,10 @@ DialogEx::DialogEx(
 	}
 
 	// set sizer proportions so that dialog buttons
-	// have just enough height
+	// have just enough height	
 	int h = ok_->GetSize().GetHeight();
 	panel_ = new wxPanel(this);
-	sizer->Add(panel_, size.GetHeight() - h, wxEXPAND);
+    sizer->Add(panel_, size.GetHeight() - h, wxEXPAND);
 	sizer->Add(buttonSizer, h, wxTOP | wxBOTTOM, 5);
 }
 

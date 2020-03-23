@@ -21,6 +21,8 @@ class DialogEx : public wxDialog
 {
 public:
 
+	static int Run(wxWindow* parent);
+
 	DialogEx(
 			wxWindow *parent,
 			wxWindowID id,
@@ -30,6 +32,8 @@ public:
 			const wxPoint &pos    = wxDefaultPosition,
 			long style            = wxDEFAULT_DIALOG_STYLE,
 			const wxString &name  = wxDialogNameStr);
+
+	virtual ~DialogEx() = default;
 
 protected:
 

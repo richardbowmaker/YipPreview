@@ -62,9 +62,7 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size) 
 	wxFrame(NULL, wxID_ANY, title, pos, size),
 	grid_(nullptr),
 	table_(nullptr),
-	images_(nullptr),
-	browserRows_(2),
-	browserCols_(2)
+	images_(nullptr)
 {
 	// keep static pointer to main frame
 	this_ = this;
@@ -72,14 +70,14 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size) 
 	Constants::initialise();
 	FileSetManager::initialise();
 
-	volume_ = std::make_shared<Volume>(FU::pathToLocal(LR"(/YipPreview/Tryout)"));
-	VolumeManager::add(volume_);
-	FileSetManager::addFiles(volume_);
+	VolumeT vol = std::make_shared<Volume>(FU::pathToLocal(LR"(/YipPreview/Tryout)"));
+	VolumeManager::add(vol);
+	FileSetManager::addFiles(vol);
 
 	setupMenus();
 	CreateStatusBar();
 
-	Bind(wxEVT_CLOSE_WINDOW, &MyFrame::OnClose, this, wxID_ANY);
+	Bind(wxEVT_CLOSE_WINDOW, &MyFrame::onClose, this, wxID_ANY);
 
 	// create vertical splitter, images in rh pane, grid and logger in lh
 	wxSplitterWindow* splitterVertical = new wxSplitterWindow(this, wxID_ANY);
@@ -137,14 +135,12 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size) 
 	images_ = new ImagesBrowser(pnlRh, this);
 	sizerRh->Add(images_, 1, wxEXPAND, 0);
 	images_->initialise();
-	images_->setTop(0);
+	images_->displayAt(0);
 
 	// added panels to horizontal splitter
 	splitterVertical->SplitVertically(pnlLh, pnlRh);
 
-	SetClientSize(wxSize(1000, 600));
-	Bind(wxEVT_SHELL_EXECUTE_RESULT, &MyFrame::OnShellExecute, this, wxID_ANY);
-
+	SetClientSize(wxSize(1500, 1000));
 }
 
 //--------------------------------------------------------------
@@ -191,12 +187,12 @@ void MyFrame::gridGotFocus()
 
 int MyFrame::browserGetNoOfRows()
 {
-	return browserRows_;
+	return Constants::imageBrowserSize;
 }
 
 int MyFrame::browserGetNoOfCols()
 {
-	return browserCols_;
+	return Constants::imageBrowserSize;
 }
 
 int MyFrame::browserGetNoOfImages()
@@ -248,10 +244,10 @@ Logger *MyFrame::setupLogger(wxPanel *panel)
 
 void MyFrame::onFocus(wxFocusEvent& event)
 {
-	Logger::info(L"Grid got focus");
 	images_->setFocus(false);
 }
-void MyFrame::OnClose(wxCloseEvent& event)
+
+void MyFrame::onClose(wxCloseEvent& event)
 {
 	Logger::info(L"images_->uninitialise()");
 	images_->uninitialise();
@@ -269,30 +265,4 @@ void MyFrame::OnClose(wxCloseEvent& event)
 	Destroy();  // you may also do:  event.Skip();
 				// since the default event handler does call Destroy(), too
 }
-
-FileSet dummyFS;
-
-FileSet& MyFrame::getSelectedFileSet() const
-{
-	return dummyFS;
-}
-
-
-void MyFrame::OnThread(wxCommandEvent& event)
-{
-}
-
-void MyFrame::OnProcessCustom(wxCommandEvent& event)
-{
-	Logger::info(event.GetString());
-}
-
-void MyFrame::OnShellExecute(wxShellExecuteEvent& event)
-{
-	Logger::info(L"Shell execute notify via GUI thread\n%ls", event.getResult().toString().c_str());
-	event.Skip();
-}
-
-
-
 

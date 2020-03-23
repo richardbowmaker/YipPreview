@@ -62,7 +62,9 @@ void ImagesGrid::eventDispatch(wxGridEvent &event)
 		{
 			SelectRow(row);
 			iServer_->gridSetSelected(row);
-			PopupMenu(iServer_->gridGetPopupMenu(row));
+			wxMenu* menu = iServer_->gridGetPopupMenu(row);
+			PopupMenu(menu);
+			delete menu;
 		}
 	}
 	if (id == wxEVT_GRID_SELECT_CELL)

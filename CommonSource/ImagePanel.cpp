@@ -194,8 +194,9 @@ void ImagePanel::rightClickUp(wxMouseEvent &event)
 	else if (notify_ != nullptr)
 	{
 		notify_->imageSelected(eventId_);
-		wxMenu *pm = notify_->getPopupMenu(eventId_);
-		PopupMenu(pm);
+		wxMenu *menu = notify_->getPopupMenu(eventId_);
+		PopupMenu(menu);
+		delete menu;
 	}
 }
 
@@ -237,6 +238,8 @@ void ImagePanel::render(wxDC &dc)
 		float scalex = (float)(dc.GetSize().GetWidth())  / (float)(image_->GetWidth());
 		float scaley = (float)(dc.GetSize().GetHeight()) / (float)(image_->GetHeight());
 
+		off_ = wxPoint(0, 0);
+
 		if (scalex <= scaley)
 		{
 			scalei_ = scalex;
@@ -265,47 +268,7 @@ void ImagePanel::render(wxDC &dc)
 
 void ImagePanel::onSize(wxSizeEvent &event)
 {
-//	// don't handle size until image has been displayed
-//	if (size_.GetWidth() == 0 || size_.GetHeight() == 0) return;
-//
-//	wxSize size = event.GetSize();
-//
-//	// get x and y scaling
-//	float xs = (float)size.GetWidth() / (float)size_.GetWidth();
-//	float ys = (float)size.GetHeight() / (float)size_.GetHeight();
-//
-//	int xoff = (int)((float)xoff_ * xs);
-//	int yoff = (int)((float)yoff_ * ys);
-//
-//	wxPoint spt = imageToScreenCoords(wxPoint(imgW_, imgH_));
-//	int wsy = size_.GetHeight() - spt.y;
-//	if (wsy < 0) wsy = 0;
-//
-//
-//	float sx = (float)(size.GetWidth() - xoff) / (float)(size_.GetWidth() - xoff_);
-//	float sy = (float)(size.GetHeight() - yoff) / (float)(size_.GetHeight() - yoff_);
-//	float s = 1.0f;
-//
-//	if (sx <= 1.0f && sy <= 1.0f) s = std::min(sx, sy);
-//	else if (sx >= 1.0f && sy >= 1.0f) s = std::max(sx, sy);
-//	else if (sx <= 1.0f) s = sx;
-//	else s = sy;
-//
-//
-//
-//
-//	xoff_ = xoff;
-//	yoff_ = yoff;
-//	scale_ *= s;
-//	scalei_*= s;
-//	size_ = size;
-//
-//	//Logger::info(L"old size (%d, %d), new size (%d, %d), xs %d, ys %d",
-//	//	size_.GetWidth(), size_.GetHeight(),
-//	//	size.GetWidth(), size.GetHeight(),
-//	//	xs, ys
-//	//	);
-
+	memDc_.reset();
 	wxClientDC dc(paneli_);
 	render(dc);
 }
