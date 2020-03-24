@@ -439,7 +439,6 @@ void MyFrame::updateNoOfImages(const int delta)
 		Constants::imageBrowserSize = s;
 		images_->initialise();
 		images_->displayAt(t);
-		images_->Layout();
 	}
 }
 

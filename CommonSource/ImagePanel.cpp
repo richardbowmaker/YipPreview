@@ -58,10 +58,10 @@ ImagePanel::~ImagePanel()
 void ImagePanel::uninitialise()
 {
 	if (inPreview()) stopPreview();
-
 	unbindEvents();
 	wxClientDC dc(this);
 	dc.Clear();
+	DestroyChildren();
 	memDc_.reset();
 	image_.reset();
 }
@@ -70,7 +70,6 @@ void ImagePanel::setBorderColour(const wxColour &colour)
 {
 	SetBackgroundColour(colour);
 	paneli_->SetBackgroundColour(Constants::white);
-	Refresh();
 }
 
 void ImagePanel::setImage(const std::wstring file, const wxBitmapType format)
@@ -90,8 +89,9 @@ void ImagePanel::setImage(const std::wstring file, const wxBitmapType format)
 		image_->LoadFile(file, format);
 
 		// render image
-		render(dc);
 		bindEvents();
+		Layout();
+		render(dc);
 	}
 }
 
@@ -214,7 +214,6 @@ void ImagePanel::onPaint(wxPaintEvent &evt)
 
 void ImagePanel::onKeyUp(wxKeyEvent& event)
 {
-	//int n = 0;
 }
 
 void ImagePanel::render(wxDC &dc)
@@ -224,8 +223,7 @@ void ImagePanel::render(wxDC &dc)
 
 	// the first calls to render occur before the client area
 	// size is set, so ignore these
-	wxSize size = dc.GetSize();
-	if (size.GetWidth() == 0) return;
+	if (dc.GetSize().GetWidth() <= 1) return;
 
 	// quit if no image set, nothing to render
 	if (image_.get() == nullptr) return;
@@ -332,11 +330,8 @@ void ImagePanel::startPreview(const std::wstring file)
 	// add preview player to inner panel
 	preview_ = new 	MediaPreviewPlayer(paneli_);
 	sizeri_->Add(preview_, 1, wxSHAPED | wxALIGN_CENTER, 0);
-
+	paneli_->Layout();
 	preview_->setFile(file).startPreview();
-
-	Layout();
-	Refresh();
 }
 
 void ImagePanel::stopPreview()
@@ -350,8 +345,6 @@ void ImagePanel::stopPreview()
 	preview_->Destroy();
 	preview_ = nullptr;
 
-	Layout();
-	Refresh();
 }
 
 bool ImagePanel::inPreview() const

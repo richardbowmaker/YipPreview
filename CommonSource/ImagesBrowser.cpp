@@ -34,6 +34,7 @@ void ImagesBrowser::initialise()
 		sizer->Add(pnlImg, 1, wxEXPAND, 0);
 	}
 	top_ = -1;
+	Layout();
 }
 
 void ImagesBrowser::uninitialise()
@@ -48,6 +49,8 @@ void ImagesBrowser::uninitialise()
 		ImagePanel *imgPnl = reinterpret_cast<ImagePanel *>(panels[i]);
 		imgPnl->uninitialise();
 	}
+	GetSizer()->Clear();
+	SetSizer(nullptr);
 	DestroyChildren();
 	top_ = -1;
 }
@@ -65,6 +68,8 @@ int ImagesBrowser::getTop()
 void ImagesBrowser::displayAt(int top)
 {
 	if (top == top_) return;
+
+	Logger::error(L"display at %d", top);
 
 	// total images
 	int n = iServer_->browserGetNoOfRows() * iServer_->browserGetNoOfCols();
@@ -105,7 +110,6 @@ void ImagesBrowser::displayAt(int top)
 		}
 	}
 	top_ = top;
-	Refresh();
 }
 
 void ImagesBrowser::setSelected(const int selected)
