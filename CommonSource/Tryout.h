@@ -17,6 +17,7 @@ public:
 	static void AsyncShell(wxEvtHandler *handler);
 	static void ReadAsync();
 	static void ShellAsync();
+	static void tryout();
 
 
 };

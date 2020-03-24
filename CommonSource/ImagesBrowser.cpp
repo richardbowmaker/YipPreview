@@ -7,6 +7,7 @@
 #include "Constants.h"
 #include "ImagePanel.h"
 #include "Logger.h"
+#include "Utilities.h"
 
 ImagesBrowser::ImagesBrowser(wxWindow *parent, ImagesBrowserServer *iServer) :
 	wxPanel(parent),
@@ -69,8 +70,6 @@ void ImagesBrowser::displayAt(int top)
 {
 	if (top == top_) return;
 
-	Logger::error(L"display at %d", top);
-
 	// total images
 	int n = iServer_->browserGetNoOfRows() * iServer_->browserGetNoOfCols();
 	stopPreview();
@@ -90,24 +89,29 @@ void ImagesBrowser::displayAt(int top)
 	for (int i = 0; i < n; ++i)
 	{
 		ImagePanel *imgPnl = reinterpret_cast<ImagePanel *>(panels[i]);
-		imgPnl->setImage(iServer_->browserGetImage(top + i), wxBITMAP_TYPE_JPEG);
-
-		if (si != -1)
+		if (top + i < iServer_->browserGetNoOfImages())
 		{
-			if (top + i == iServer_->browserGetSelected())
-			{
-				if (focus_)
-					imgPnl->setBorderColour(Constants::blue);
-				else
-					imgPnl->setBorderColour(Constants::grey);
+			imgPnl->setImage(iServer_->browserGetImage(top + i), wxBITMAP_TYPE_JPEG);
 
-				// start preview
-				if (Constants::previewMode)
-					imgPnl->startPreview(iServer_->browserGetVideo(top + i));
+			if (si != -1)
+			{
+				if (top + i == iServer_->browserGetSelected())
+				{
+					if (focus_)
+						imgPnl->setBorderColour(Constants::blue);
+					else
+						imgPnl->setBorderColour(Constants::grey);
+
+					// start preview
+					if (Constants::previewMode)
+						imgPnl->startPreview(iServer_->browserGetVideo(top + i));
+				}
+				else
+					imgPnl->setBorderColour(Constants::white);
 			}
-			else
-				imgPnl->setBorderColour(Constants::white);
 		}
+		else
+			imgPnl->setImage(L"", wxBITMAP_TYPE_JPEG);
 	}
 	top_ = top;
 }

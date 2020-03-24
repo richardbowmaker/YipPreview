@@ -54,8 +54,24 @@
 #include "Tryout.h"
 #include "Utilities.h"
 #include "ShellExecute.h"
+#include "Volume.h"
 
 wxDEFINE_EVENT(wxEVT_MY_CUSTOM_COMMAND, wxCommandEvent);
+
+void TryOut::tryout()
+{
+//	Volume vol(LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Encrypted/TestVol1.hc)");
+//	vol.mount();
+//	vol.unmount();
+
+//	bool b = FU::fileExists(L"/media/volume01");
+//	b = FU::fileExists(L"/media/volume02");
+//	b = FU::fileExists(L"/media/volume03");
+//
+//	int n = 0;
+
+	FU::mkDir(L"/media/volume04");
+}
 
 // a thread class that will periodically send events to the GUI thread
 class MyThread : public wxThread

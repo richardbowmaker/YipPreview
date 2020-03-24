@@ -17,24 +17,35 @@ public:
 	virtual ~VolumeManager();
 
 	static VolumeManager &get();
+	static void initialise();
 	static void uninitialise();
 	static void add(VolumeT &volume);
 	static VolumeCollT& getVolumes();
 	static void toLogger();
 	static void writeProperties();
+	static bool isMountInUse(const std::wstring &mount);
+	static std::wstring nextFreeMount();
+	static bool mountVolumes();
+	static bool unmountVolumes();
 
 private:
 
 	VolumeManager() = default;
 	VolumeManager(const VolumeManager &) = default;
 
+	void initialiseImpl();
 	void uninitialiseImpl();
 	void addImpl(VolumeT &volume);
 	VolumeCollT& getVolumesImpl();
 	void toLoggerImpl() const;
 	void writePropertiesImpl() const;
+	bool isMountInUseImpl(const std::wstring &mount) const;
+	std::wstring nextFreeMountImpl() const;
+	bool mountVolumesImpl();
+	bool unmountVolumesImpl();
 
 	VolumeCollT volumes_;
+	StringCollT mounts_;
 };
 
 #endif /* COMMON_VOLUMEMANAGER_H_ */

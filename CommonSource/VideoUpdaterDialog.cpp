@@ -19,6 +19,7 @@
 #include "Logger.h"
 #include "Main.h"
 #include "ShellExecute.h"
+#include "Utilities.h"
 
 int VideoUpdaterDialog::Run(wxWindow *parent, FileSetT &fileset)
 {

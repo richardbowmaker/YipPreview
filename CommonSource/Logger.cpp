@@ -241,7 +241,7 @@ void Logger::info(const wchar_t* format, ...)
 	}
 }
 
-void Logger::error(const StringsT &strings, const wchar_t* format, ...)
+void Logger::error(const StringCollT &strings, const wchar_t* format, ...)
 {
 	va_list vl;
 	va_start(vl, format);
@@ -249,7 +249,7 @@ void Logger::error(const StringsT &strings, const wchar_t* format, ...)
 	for (auto s : strings) append(Error, s.c_str());
 }
 
-void Logger::warning(const StringsT &strings, const wchar_t* format, ...)
+void Logger::warning(const StringCollT &strings, const wchar_t* format, ...)
 {
 	if (level_ <= Warning)
 	{
@@ -260,7 +260,7 @@ void Logger::warning(const StringsT &strings, const wchar_t* format, ...)
 	}
 }
 
-void Logger::info(const StringsT &strings, const wchar_t* format, ...)
+void Logger::info(const StringCollT &strings, const wchar_t* format, ...)
 {
 	if (level_ <= Info)
 	{

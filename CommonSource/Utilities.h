@@ -8,10 +8,9 @@
 #ifndef COMMON_UTILITIES_H_
 #define COMMON_UTILITIES_H_
 
-#include <string>
-#include <vector>
+#include <wx/wx.h>
 
-typedef std::vector<std::wstring> StringsT;
+#include "_Types.h"
 
 class Utilities
 {
@@ -25,6 +24,12 @@ public:
 	static int pageDown(const int total, const int top, const int visible);
 	static int pageUp(const int total, const int top, const int visible);
 	static int getRand(const int min, const int max);
+	static int messageBox(
+			const wchar_t *format, // the message, supports printf formatting
+			const wchar_t *caption,
+			const int style = wxOK | wxCENTRE, // see wxMessageDialog for style options
+			wxWindow * parent = NULL,
+			...);
 
 private:
 
@@ -72,37 +77,38 @@ public:
 	static std::wstring getPathSeparator();
 	static bool findFiles(
 			const std::wstring directory,
-			StringsT &files,
+			StringCollT &files,
 			const bool sort = false);
 	static bool findMatchingFiles(
 			const std::wstring directory,
-			StringsT &files,
+			StringCollT &files,
 			const std::wstring filter,
 			const bool sort = false);
 	static bool findFilesDirs(
 			const std::wstring directory,
-			StringsT &files,
-			StringsT &dirs,
+			StringCollT &files,
+			StringCollT &dirs,
 			const bool sort = false);
 	static bool findMatchingFilesDirs(
 			const std::wstring directory,
-			StringsT &files,
+			StringCollT &files,
 			const std::wstring filter,
-			StringsT &dirs,
+			StringCollT &dirs,
 			const bool sort = false);
 	static bool findMatchingFilesRex(
 			const std::wstring directory,
-			StringsT &files,
+			StringCollT &files,
 			const std::wstring regex,
 			const bool sort = false);
 	static bool findMatchingFilesDirsRex(
 			const std::wstring directory,
-			StringsT &files,
+			StringCollT &files,
 			const std::wstring regex,
-			StringsT &dirs,
+			StringCollT &dirs,
 			const bool sort = false);
 	static std::wstring pathToLocal(const wchar_t *path);
 	static std::wstring abbreviateFilename(const std::wstring &file, const int max);
+	static bool mkDir(const std::wstring dir);
 
 private:
 
@@ -112,10 +118,10 @@ private:
 
 	static bool findFiles(
 			const std::wstring directory,
-			StringsT *files,
+			StringCollT *files,
 			const std::wstring *filter,
 			const std::wstring *regex,
-			StringsT *dirs,
+			StringCollT *dirs,
 			const bool sort);
 };
 

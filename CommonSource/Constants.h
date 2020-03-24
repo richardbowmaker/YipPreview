@@ -34,6 +34,8 @@ public:
 	static int imageBrowserSize;  // no. of images in browser, vertically or horizontally (always the same)
 	static int imageBrowserSizeMin;  
 	static int imageBrowserSizeMax;
+    static std::wstring veracrypt;
+    static std::wstring pathSeparator;
 
     // colours
     static wxColour blue;

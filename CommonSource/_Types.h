@@ -32,6 +32,7 @@ using FilePropertiesT = std::shared_ptr<FileProperties>;
 using PropertyT = std::pair<std::wstring, std::wstring>;
 using PropertiesT = std::map<std::wstring, std::wstring>;
 
+using StringCollT = std::vector<std::wstring>;
 
 
 #endif /* COMMON_TYPES_H_ */

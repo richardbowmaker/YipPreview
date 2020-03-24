@@ -18,6 +18,7 @@
 	#include <time.h>
 	#include <utility>
 	#include <windows.h>
+	#include <wx/wx.h>
 #elif LINUX_BUILD
 	#include <algorithm>
 	#include <dirent.h>
@@ -31,11 +32,14 @@
 	#include <string.h>
 	#include <sys/syscall.h>
 	#include <sys/stat.h>
+	#include <sys/types.h>
 	#include <time.h>
 	#include <unistd.h>
 	#include <utility>
+	#include <wx/wx.h>
 #endif
 
+#include "Constants.h"
 #include "Logger.h"
 #include "ShellExecute.h"
 
@@ -108,6 +112,28 @@ int Utilities::getRand(const int min, const int max)
 	return min + (rand() % (max - min + 1));
 }
 
+int Utilities::messageBox(
+		const wchar_t *format,
+		const wchar_t *caption,
+		const int style 	   /*= wxOK | wxCENTRE*/,
+		wxWindow * parent 	   /*= NULL*/,
+		...)
+{
+	// format message
+	va_list vl;
+	va_start(vl, format);
+	wchar_t buf[4000];
+	vswprintf(buf, sizeof(buf) / sizeof(wchar_t), format, vl);
+
+	std::wstring c = Constants::title + std::wstring(L" - ") + std::wstring(caption);
+	return wxMessageBox(buf, c.c_str(), style,  parent);
+
+}
+
+//--------------------------------------------------
+// String utilities
+//--------------------------------------------------
+
 std::wstring SU::strToWStr(const char* str, int len /*= 0*/)
 {
 	std::size_t l = (len == 0 ? strlen(str) : static_cast<std::size_t>(len));
@@ -145,6 +171,10 @@ bool SU::startsWith(const std::wstring str, const std::wstring prefix)
 {
 	return startsWith(str.c_str(), prefix.c_str());
 }
+
+//--------------------------------------------------
+// File utilities
+//--------------------------------------------------
 
 bool FU::deleteFile(const std::wstring file)
 {
@@ -267,10 +297,10 @@ bool FU::moveFile(const std::wstring src, const std::wstring dest, const bool ov
 
 bool FU::findFiles(
 	const std::wstring directory,
-	StringsT *files,
+	StringCollT *files,
 	const std::wstring *filter,
 	const std::wstring *regex,
-	StringsT *dirs,
+	StringCollT *dirs,
 	const bool sort)
 {
 #ifdef WINDOWS_BUILD
@@ -407,7 +437,7 @@ bool FU::findFiles(
 
 bool FU::findFiles(
 	const std::wstring directory,
-	StringsT &files,
+	StringCollT &files,
 	const bool sort)
 {
 	return FU::findFiles(directory, &files, nullptr, nullptr, nullptr, sort);
@@ -415,7 +445,7 @@ bool FU::findFiles(
 
 bool FU::findMatchingFiles(
 		const std::wstring directory,
-		StringsT &files,
+		StringCollT &files,
 		const std::wstring filter,
 		const bool sort)
 {
@@ -424,8 +454,8 @@ bool FU::findMatchingFiles(
 
 bool FU::findFilesDirs(
 		const std::wstring directory,
-		StringsT &files,
-		StringsT &dirs,
+		StringCollT &files,
+		StringCollT &dirs,
 		const bool sort)
 {
 	return FU::findFiles(directory, &files, nullptr, nullptr, &dirs, sort);
@@ -433,9 +463,9 @@ bool FU::findFilesDirs(
 
 bool FU::findMatchingFilesDirs(
 		const std::wstring directory,
-		StringsT &files,
+		StringCollT &files,
 		const std::wstring filter,
-		StringsT &dirs,
+		StringCollT &dirs,
 		const bool sort)
 {
 	return FU::findFiles(directory, &files, &filter, nullptr, &dirs, sort);
@@ -443,7 +473,7 @@ bool FU::findMatchingFilesDirs(
 
 bool FU::findMatchingFilesRex(
 		const std::wstring directory,
-		StringsT &files,
+		StringCollT &files,
 		const std::wstring regex,
 		const bool sort)
 {
@@ -452,9 +482,9 @@ bool FU::findMatchingFilesRex(
 
 bool FU::findMatchingFilesDirsRex(
 		const std::wstring directory,
-		StringsT &files,
+		StringCollT &files,
 		const std::wstring regex,
-		StringsT &dirs,
+		StringCollT &dirs,
 		const bool sort)
 {
 	return FU::findFiles(directory, &files, nullptr, &regex, &dirs, sort);
@@ -686,6 +716,27 @@ bool Duration::test()
 
 	return result;
 }
+
+bool FU::mkDir(const std::wstring dir)
+{
+#ifdef WINDOWS_BUILD
+	TODO
+#elif LINUX_BUILD
+
+	int status = mkdir(SU::wStrToStr(dir).c_str(), S_IRWXU | S_IRWXG);
+
+
+	if (status != 0)
+	{
+		Logger::error(L"FU::mkdir() error creating folder %ls", dir.c_str());
+		return false;
+	}
+	else
+		return true;
+
+#endif
+}
+
 
 
 //bool SU::parseDuration(const std::wstring &str, DurationT &duration)

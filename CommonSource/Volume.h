@@ -24,22 +24,30 @@ class Volume
 {
 public:
 
-	Volume(std::wstring root);
+	Volume(const std::wstring file, const bool isMountable);
 	virtual ~Volume();
 
-	std::wstring getRoot() const;
+	std::wstring getMount() const;
+	bool getIsMountable() const;
 	bool getIsMounted() const;
 	std::wstring getPropertiesFile() const;
 	std::wstring getFilesDirectory() const;
 	void addFileSet(FileSetT &fileset);
 	void readProperties();
 	void writeProperties();
+	bool mount(std::wstring &mount);
+	void unmount();
+
 	void toLogger() const;
 
 private:
 
-	std::wstring root_;
+	std::wstring file_;
+	std::wstring mount_;
+	bool isMountable_;
 	bool isMounted_;
+	bool isDirty_;
+	bool isSelected_;
 	FileSetCollT filesets_;
 };
 

@@ -9,6 +9,7 @@
 
 #include <map>
 
+#include "_Types.h"
 #include "FileSet.h"
 #include "Logger.h"
 #include "Utilities.h"
@@ -80,7 +81,7 @@ bool FileSetManager::addFilesImpl(VolumeT volume)
 {
 	// scan the volume's directory for files and add
 	// them to the filesets_ collection
-	StringsT files;
+	StringCollT files;
 	if (FU::findMatchingFiles(volume->getFilesDirectory(), files, L"*"))
 	{
 		for (auto f : files)

@@ -70,9 +70,12 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size) 
 	Constants::initialise();
 	FileSetManager::initialise();
 
-	VolumeT vol = std::make_shared<Volume>(FU::pathToLocal(LR"(/YipPreview/Tryout)"));
-	VolumeManager::add(vol);
-	FileSetManager::addFiles(vol);
+	VolumeManager::initialise();
+	VolumeT vol1 = std::make_shared<Volume>(FU::pathToLocal(LR"(/YipPreview/Tryout)"), false);
+	VolumeT vol2 = std::make_shared<Volume>(FU::pathToLocal(LR"(/YipPreview/Encrypted/TestVol1.hc)"), true);
+	VolumeManager::add(vol1);
+	VolumeManager::add(vol2);
+//	FileSetManager::addFiles(vol);
 
 	setupMenus();
 	CreateStatusBar();
@@ -141,6 +144,8 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size) 
 	splitterVertical->SplitVertically(pnlLh, pnlRh);
 
 	SetClientSize(wxSize(1500, 1000));
+
+
 }
 
 //--------------------------------------------------------------
@@ -224,7 +229,6 @@ wxMenu *MyFrame::browserGetPopupMenu(const int item)
 {
 	return getPopupMenu(item);
 }
-
 
 //--------------------------------------------------------------
 //

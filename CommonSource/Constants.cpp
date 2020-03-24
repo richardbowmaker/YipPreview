@@ -8,18 +8,23 @@
 #include "Constants.h"
 
 #ifdef WINDOWS_BUILD
-    std::wstring Constants::ffmpeg = std::wstring(LR"(D:\Projects\WxWidgets\YipPreview\ffmpeg.exe)");
-    std::wstring Constants::ffmpegEnd = std::wstring(L" 2>&1");
-    std::wstring Constants::filesDir = std::wstring(LR"(\Files\All)");
-    std::wstring Constants::propertiesCache = std::wstring(LR"(\PropertyCache.txt)");
+    std::wstring Constants::ffmpeg{LR"(D:\Projects\WxWidgets\YipPreview\ffmpeg.exe)"};
+    std::wstring Constants::ffmpegEnd{L" 2>&1"};
+    std::wstring Constants::filesDir{LR"(\Files\All)"};
+    std::wstring Constants::propertiesCache{LR"(\PropertyCache.txt)"};
+    std::wstring Constants::veracrypt{LR"("C:\Program Files\VeraCrypt\VeraCrypt.exe")"};
+    std::wstring pathSeparator{LR"(\)"};
+
 #elif LINUX_BUILD
-	std::wstring Constants::ffmpeg = std::wstring(LR"(/usr/bin/ffmpeg)");
-    std::wstring Constants::ffmpegEnd = std::wstring(L" &2>1");
-    std::wstring Constants::filesDir = std::wstring(LR"(/Files/All)");
-    std::wstring Constants::propertiesCache = std::wstring(LR"(/PropertyCache.txt)");
+	std::wstring Constants::ffmpeg{LR"(/usr/bin/ffmpeg)"};
+    std::wstring Constants::ffmpegEnd{L" &2>1"};
+    std::wstring Constants::filesDir{LR"(/Files/All)"};
+    std::wstring Constants::propertiesCache{LR"(/PropertyCache.txt)"};
+    std::wstring Constants::veracrypt{LR"(/usr/bin/veracrypt)"};
+    std::wstring pathSeparator{LR"(/)"};
 #endif
 
-std::wstring Constants::title = std::wstring(L"YipPreview");
+std::wstring Constants::title{L"YipPreview"};
 std::wstring Constants::workingDir;
 bool Constants::previewMode = false;
 int Constants::imageBrowserSize = 2;

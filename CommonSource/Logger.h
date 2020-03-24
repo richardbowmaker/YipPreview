@@ -5,7 +5,7 @@
 #include <sys/types.h>
 #include <wx/wx.h>
 
-#include "Utilities.h"
+#include "_Types.h"
 
 // This class is a hybrid wxListBox control and static class for providing
 // thread safe global static logging functions.
@@ -42,9 +42,9 @@ public:
 	static void error(const wchar_t* format, ...);
 	static void warning(const wchar_t* format, ...);
 	static void info(const wchar_t* format, ...);
-	static void error(const StringsT &strings, const wchar_t* format, ...);
-	static void warning(const StringsT &strings, const wchar_t* format, ...);
-	static void info(const StringsT &strings, const wchar_t* format, ...);
+	static void error(const StringCollT &strings, const wchar_t* format, ...);
+	static void warning(const StringCollT &strings, const wchar_t* format, ...);
+	static void info(const StringCollT &strings, const wchar_t* format, ...);
 
 	static bool test(const bool result, const wchar_t* format, ...);
 

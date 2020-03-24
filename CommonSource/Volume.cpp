@@ -8,26 +8,78 @@
 #include "Volume.h"
 
 #include <fstream>
+#include <sstream>
 #include <stdio.h>
 
 #include "_Types.h"
 #include "Constants.h"
 #include "Logger.h"
+#include "ShellExecute.h"
 #include "Utilities.h"
 
-Volume::Volume(std::wstring root) :
-	root_(root),
-	isMounted_(true)
+
+//          // mount:
+//            //      "C:\Program Files\VeraCrypt\VeraCrypt.exe" /q /a /nowaitdlg y /hash sha512 /v VolAccounts.hc /l x /p password
+//            string cmd = Constants.VeracryptExe;
+//            string args = "/q /a /nowaitdlg y /hash sha512" + " /v \"" + Filename + "\" /l " + drive.Substring(0, 1).ToLower() + " /p " + Constants.Password;
+//            string wdir = Constants.WorkingFolder;
+//
+
+// sudo /usr/bin/veracrypt /q /a /nowaitdlg y /hash sha512 /v TestVol1.hc /l x /p dummypassword
+
+
+// windows
+// "C:\Program Files\VeraCrypt\VeraCrypt.exe" /q /a /nowaitdlg y /hash sha512 /v VolAccounts.hc /l x /p password
+// 	/q = background mode
+//	/a = automatically mount specified volume
+//  /nowaitdlg y = no wait dialog displayed
+//  /hash sha512 = hashing alogrithm
+//  /v file = volume file
+//  /l x = drive letter x
+//  /p password
+
+// linux
+// /usr/bin/veracrypt --hash=sha512 --mount=file --password=dummypassword --slot=n
+
+// /usr/bin/veracrypt --hash=sha512 --mount=TestVol1.hc --password=dummypassword --slot=1
+//
+// /usr/bin/veracrypt --hash=sha512 --password=dummypassword --slot=1 --mount=/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Encrypted/TestVol1.hc
+
+
+/*
+ *
+ * /usr/bin/veracrypt -t /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Encrypted/TestVol1.hc /media/veracrypt1
+ * /usr/bin/veracrypt --password=dummypassword --slot=3 --hash=sha512 /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Encrypted/TestVol1.hc /media/veracrypt1
+ *
+ * dismount = /usr/bin/veracrypt -d /media/veracrypt1
+ *
+ *
+ *
+ */
+
+
+
+Volume::Volume(std::wstring file, const bool isMountable) :
+	file_(file),
+	isMountable_(isMountable),
+	isMounted_(false),
+	isSelected_(false)
 {
+	mount_ = file_;
 }
 
 Volume::~Volume()
 {
 }
 
-std::wstring Volume::getRoot() const
+std::wstring Volume::getMount() const
 {
-	return root_;
+	return mount_;
+}
+
+bool Volume::getIsMountable() const
+{
+	return isMountable_;
 }
 
 bool Volume::getIsMounted() const
@@ -37,12 +89,12 @@ bool Volume::getIsMounted() const
 
 std::wstring Volume::getPropertiesFile() const
 {
-	return root_ + Constants::propertiesCache;
+	return mount_ + Constants::propertiesCache;
 }
 
 std::wstring Volume::getFilesDirectory() const
 {
-	return root_ + Constants::filesDir;
+	return mount_ + Constants::filesDir;
 }
 
 void Volume::addFileSet(FileSetT &fileset)
@@ -97,12 +149,74 @@ void Volume::writeProperties()
 	pcache.close();
 }
 
+bool Volume::mount(std::wstring &mount)
+{
+	if (isMounted_)
+	{
+		Logger::error(L"Volume::mount(), volume already mounted %ls as %ls, %ls !!",
+				file_.c_str(), mount_.c_str(), mount.c_str());
+		return false;
+	}
+
+#ifdef WINDOWS_BUILD
+#elif LINUX_BUILD
+
+	// /usr/bin/veracrypt --password=... --slot=n --hash=sha512 file.hc /media/...
+	// /usr/bin/veracrypt --password=dummypassword --slot=3 --hash=sha512 /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Encrypted/TestVol1.hc /media/veracrypt1
+
+	std::wstringstream cmd;
+	cmd 	<< Constants::veracrypt
+			<< L" --password=dummypassword --slot=1 --hash=sha512 "
+			<< file_
+			<< " "
+			<< mount;
+
+	std::wstring s = cmd.str();
+
+	ShellExecuteResult result;
+	ShellExecute::shellSync(cmd.str(), result, 60000);
+
+	if (result.getSuccess())
+	{
+		mount_ = mount;
+		isMounted_ = true;
+		isDirty_ = false;
+	}
+	else
+		return false;
+
+#endif
+}
+
+void Volume::unmount()
+{
+	if (!isMounted_)
+	{
+		Logger::error(L"Volume::unmount(), volume not mounted %ls", file_.c_str());
+		return;
+	}
+#ifdef WINDOWS_BUILD
+#elif LINUX_BUILD
+
+	std::wstringstream cmd;
+	cmd << Constants::veracrypt << L" -d " << " " << mount_;
+
+	ShellExecuteResult result;
+	ShellExecute::shellSync(cmd.str(), result, 5000);
+
+
+
+#endif
+}
+
 void Volume::toLogger() const
 {
 	Logger::info(L"Volume");
-	Logger::info(L"\troot %ls", root_.c_str());
 	if (isMounted_)
+	{
 		Logger::info(L"\tmounted");
+		Logger::info(L"\mount %ls", mount_.c_str());
+	}
 	else
 		Logger::info(L"\tnot mounted");
 
