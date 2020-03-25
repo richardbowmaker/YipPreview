@@ -70,7 +70,20 @@ void TryOut::tryout()
 //
 //	int n = 0;
 
-	FU::mkDir(L"/media/volume04");
+	bool b = FU::mkDir(L"/media/volume04");
+
+	{
+		SudoMode sm;
+
+		{
+			SudoMode sm;
+			b = FU::mkDir(L"/media/volume04");
+			sm.release();
+			sm.release();
+			sm.release();
+			sm.release();
+		}
+	}
 }
 
 // a thread class that will periodically send events to the GUI thread

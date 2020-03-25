@@ -134,6 +134,91 @@ int Utilities::messageBox(
 // String utilities
 //--------------------------------------------------
 
+bool SudoMode::active_ = false;
+int SudoMode::refs_ = 0;
+int SudoMode::uid_ = 0;
+
+SudoMode::SudoMode() : got_(false)
+{
+#if LINUX_BUILD
+	if (!active_) return;
+
+	if (refs_ == 0)
+	{
+		int r = seteuid(0);
+		if (r == 0)
+		{
+			Logger::info(L"Sudo mode enter OK");
+			refs_++;
+			got_ = true;
+		}
+		else
+			Logger::systemError(errno, L"Sudo mode enter error");
+	}
+	else
+	{
+		refs_++;
+		got_ = true;
+		Logger::info(L"Sudo mode enter, refs %d", refs_);
+	}
+#endif
+}
+
+SudoMode::~SudoMode()
+{
+#if LINUX_BUILD
+	release();
+#endif
+}
+
+void SudoMode::release()
+{
+#if LINUX_BUILD
+	if (!active_) return;
+	if (!got_) return;
+
+	if (refs_ == 1)
+	{
+		int r = seteuid(uid_);
+		if (r == 0)
+		{
+			Logger::info(L"Sudo mode exit OK");
+			refs_ = 0;
+			got_ = false;
+		}
+		else
+			Logger::systemError(errno, L"Sudo mode exit error");
+	}
+	else if (refs_ > 1)
+	{
+		refs_--;
+		Logger::info(L"Sudo mode exit, refs %d", refs_);
+	}
+#endif
+}
+
+// must be called at program start whilst still in sudo mode
+// if program is run in user mode, then the sudo mode class does nothing
+void SudoMode::initialise(const int uid)
+{
+	if (inSudoMode())
+	{
+		// we are in sudo mode, lower privileges
+		active_ = true;
+		uid_ = uid;
+		seteuid(uid);
+	}
+}
+
+bool SudoMode::inSudoMode()
+{
+	return geteuid() == 0;
+}
+
+//--------------------------------------------------
+// String utilities
+//--------------------------------------------------
+
 std::wstring SU::strToWStr(const char* str, int len /*= 0*/)
 {
 	std::size_t l = (len == 0 ? strlen(str) : static_cast<std::size_t>(len));
@@ -599,6 +684,26 @@ std::wstring FU::abbreviateFilename(const std::wstring &file, const int max)
 	return file.substr(0, (n/2) + (n%2)) + std::wstring(L"...") + file.substr(m - (n/2));
 }
 
+bool FU::mkDir(const std::wstring dir)
+{
+#ifdef WINDOWS_BUILD
+	TODO
+#elif LINUX_BUILD
+
+	int status = mkdir(SU::wStrToStr(dir).c_str(), S_IRWXU | S_IRWXG | S_IRWXO);
+
+	if (status != 0)
+	{
+		Logger::systemError(errno, L"FU::mkdir() error creating folder %ls", dir.c_str());
+		return false;
+	}
+	else
+		return true;
+
+#endif
+}
+
+
 //---------------------------------------------
 // Duration
 //---------------------------------------------
@@ -715,26 +820,6 @@ bool Duration::test()
 	if (result) Logger::info(L"Duration::test() all tests passed");
 
 	return result;
-}
-
-bool FU::mkDir(const std::wstring dir)
-{
-#ifdef WINDOWS_BUILD
-	TODO
-#elif LINUX_BUILD
-
-	int status = mkdir(SU::wStrToStr(dir).c_str(), S_IRWXU | S_IRWXG);
-
-
-	if (status != 0)
-	{
-		Logger::error(L"FU::mkdir() error creating folder %ls", dir.c_str());
-		return false;
-	}
-	else
-		return true;
-
-#endif
 }
 
 

@@ -16,6 +16,7 @@
 #endif
 
 #include <cstdlib>
+#include <wx/cmdline.h>
 #include <wx/splitter.h>
 #include <wx/sizer.h>
 #ifdef LINUX_BUILD
@@ -51,6 +52,34 @@ bool MyApp::OnInit()
 {
 	wxInitAllImageHandlers();
 	
+	// when running in sudo mode the user id must be supplied via the command
+	// line so that privileges can be lowered immediately and only raised when needed
+	if (SudoMode::inSudoMode())
+	{
+		if (argc == 3)
+		{
+			std::string s{this->argv[1]};
+			if (s.compare("-uid") == 0)
+			{
+				int uid = atoi(this->argv[2]);
+				SudoMode::initialise(uid);
+			}
+		}
+		else
+		{
+			std::cout << "Invalid argument, usage is YipPreview -uid <user id>" << std::endl;
+			return false;
+		}
+	}
+	else
+	{
+		if (argc > 1)
+		{
+			std::cout << "arguments only valid when running in SUDO mode" << std::endl;
+			return false;
+		}
+	}
+
 	MyFrame *frame = new MyFrame( "Hello World", wxPoint(50, 50), wxSize(450, 340) );
     frame->Show( true );
     return true;
@@ -66,6 +95,8 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size) 
 {
 	// keep static pointer to main frame
 	this_ = this;
+
+	SudoMode::initialise(1000);
 
 	Constants::initialise();
 	FileSetManager::initialise();
@@ -145,7 +176,8 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size) 
 
 	SetClientSize(wxSize(1500, 1000));
 
-
+	if (SudoMode::inSudoMode())
+		Logger::error(L"Application is currently running at SUDO level");
 }
 
 //--------------------------------------------------------------

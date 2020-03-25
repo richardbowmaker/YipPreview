@@ -8,9 +8,13 @@
 #ifndef COMMON_UTILITIES_H_
 #define COMMON_UTILITIES_H_
 
+#include <sys/types.h>
+#include <unistd.h>
+
 #include <wx/wx.h>
 
 #include "_Types.h"
+#include "Logger.h"
 
 class Utilities
 {
@@ -38,6 +42,29 @@ private:
 	Utilities(Utilities&&);
 
 	static bool srand_;
+};
+
+// class for boosting program up to sudo mode
+// only valid for linux programs started in sudo mode
+// in windows or linux programs running at user level this class can be used but does nothing
+class SudoMode
+{
+public:
+
+	SudoMode();		// construct to raise upto sudo
+	~SudoMode();	// when object is destroyed, release will be called
+	static void initialise(const int uid);  // must be called by application to set the
+											// user id
+	static bool inSudoMode();
+	void release(); // release sudo mdoe before object is destroyed
+
+
+private:
+
+	static bool active_; // only true when the program is run under linux in sudo mode
+	static int refs_; // nested ref count
+	static int uid_;
+	bool got_;	// true when this instance has a ref count
 };
 
 // String Utilities
