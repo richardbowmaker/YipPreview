@@ -65,7 +65,9 @@ Volume::Volume(std::wstring file, const bool isMountable) :
 	isMounted_(false),
 	isSelected_(false)
 {
-	mount_ = file_;
+	// if file is not a mountable volume then take the
+	// file to be a directory containing files that a mounted volume would
+	if (!isMountable_) mount_ = file_;
 }
 
 Volume::~Volume()
@@ -132,7 +134,7 @@ void Volume::readProperties()
 
 void Volume::writeProperties()
 {
-	if (!isMounted_) return;
+	if (isMountable_ && !isMounted_) return;
 
 	std::string pf = SU::wStrToStr(getPropertiesFile());
 	std::ofstream pcache(pf);
@@ -149,12 +151,12 @@ void Volume::writeProperties()
 	pcache.close();
 }
 
-bool Volume::mount(std::wstring &mount)
+bool Volume::mount(const std::wstring &m, const std::wstring &password)
 {
 	if (isMounted_)
 	{
 		Logger::error(L"Volume::mount(), volume already mounted %ls as %ls, %ls !!",
-				file_.c_str(), mount_.c_str(), mount.c_str());
+				file_.c_str(), m.c_str(), m.c_str());
 		return false;
 	}
 
@@ -166,46 +168,76 @@ bool Volume::mount(std::wstring &mount)
 
 	std::wstringstream cmd;
 	cmd 	<< Constants::veracrypt
-			<< L" --password=dummypassword --slot=1 --hash=sha512 "
-			<< file_
-			<< " "
-			<< mount;
+			<< L" --password=" << password
+			<< " --slot=1 --hash=sha512 "
+			<< '\"' << file_ << "\" "
+			<< m;
 
 	std::wstring s = cmd.str();
 
+	// mount must be in sudo mode
+	SudoMode sudo;
 	ShellExecuteResult result;
-	ShellExecute::shellSync(cmd.str(), result, 60000);
+
+	// if running in the IDE, i.e. not at sudo level, then bigger timeout
+	// will allow the user to type in their password
+	int tout = sudo.inSudoMode() ? 10000 : 60000;
+	ShellExecute::shellSync(cmd.str(), result, tout);
+	sudo.lower();
+
+	Logger::info(L"%ls", result.toString().c_str());
 
 	if (result.getSuccess())
 	{
-		mount_ = mount;
+		Logger::info(L"Volume %ls mounted ok as %ls", file_.c_str(), m.c_str());
+		mount_ = m;
 		isMounted_ = true;
 		isDirty_ = false;
 	}
 	else
+	{
+		Logger::error(L"Volume %ls failed to mount as %ls", file_.c_str(), m.c_str());
 		return false;
+	}
 
 #endif
 }
 
-void Volume::unmount()
+bool Volume::unmount()
 {
 	if (!isMounted_)
 	{
 		Logger::error(L"Volume::unmount(), volume not mounted %ls", file_.c_str());
-		return;
+		return false;
 	}
 #ifdef WINDOWS_BUILD
 #elif LINUX_BUILD
-
 	std::wstringstream cmd;
 	cmd << Constants::veracrypt << L" -d " << " " << mount_;
 
+	SudoMode sudo;
 	ShellExecuteResult result;
 	ShellExecute::shellSync(cmd.str(), result, 5000);
+	sudo.lower();
+
+	Logger::info(L"%ls", result.toString().c_str());
 
 
-
+	if (result.getSuccess())
+	{
+		Logger::info(L"Volume::unmount(), Volume %ls unmounted ok, %ls", file_.c_str(), mount_.c_str());
+		if (isDirty_)
+			Logger::warning(L"Volume::unmount(), Dirty volume %ls unmounted, %ls", file_.c_str(), mount_.c_str());
+		mount_.clear();
+		isMounted_ = false;
+		isDirty_ = false;
+		return true;
+	}
+	else
+	{
+		Logger::error(L"Volume::unmount(), Volume %ls failed to unmount, %ls", file_.c_str(), mount_.c_str());
+		return false;
+	}
 #endif
 }
 

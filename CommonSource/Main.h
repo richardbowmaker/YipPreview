@@ -50,6 +50,8 @@ public:
     static MyFrame& get();
 
     void refresh(const FileSet &fileset);
+    void refresh();
+    void populateGui();
 
 private:
 

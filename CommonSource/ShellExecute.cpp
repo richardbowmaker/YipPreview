@@ -462,13 +462,13 @@ bool ShellExecute::shellStart(ShellThreadData &data)
 	int fdStdout[2] = {0};
 	int fdStderr[2] = {0};
 
-	if (pipe(fdStdout) == -1)
+	if (pipe2(fdStdout, O_CLOEXEC) == -1)
 	{
 	    Logger::systemError(errno, L"Error creating stdout pipe");
 	    return false;
 	}
 
-	if (pipe(fdStderr) == -1)
+	if (pipe2(fdStderr, O_CLOEXEC) == -1)
 	{
 	    Logger::systemError(errno, L"Error creating stderr pipe");
 	    return false;
@@ -526,6 +526,8 @@ bool ShellExecute::shellWait(ShellThreadData &data)
 
 	while (true)
 	{
+		Utilities::delay(250);
+
 		// std out handling
 		rerr = read(fileno(data.fpStdout_), buff, sizeof(buff) - 1);
 		if (rerr == 0)

@@ -55,11 +55,14 @@
 #include "Utilities.h"
 #include "ShellExecute.h"
 #include "Volume.h"
+#include "VolumeManager.h"
 
 wxDEFINE_EVENT(wxEVT_MY_CUSTOM_COMMAND, wxCommandEvent);
 
 void TryOut::tryout()
 {
+
+
 //	Volume vol(LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Encrypted/TestVol1.hc)");
 //	vol.mount();
 //	vol.unmount();
@@ -70,20 +73,36 @@ void TryOut::tryout()
 //
 //	int n = 0;
 
-	bool b = FU::mkDir(L"/media/volume04");
+//	bool b = FU::mkDir(L"/media/volume04");
+//
+//	{
+//		SudoMode sm;
+//
+//		{
+//			SudoMode sm;
+//			b = FU::mkDir(L"/media/volume04");
+//			sm.release();
+//			sm.release();
+//			sm.release();
+//			sm.release();
+//		}
+//	}
+//
+//	Utilities::messageBox(L"folder created", L"", wxOK, nullptr);
+//
+//	b = FU::rmDir(L"/media/volume04");
+//
+//	{
+//		SudoMode sm;
+//		sm.acquire();
+//		sm.acquire();
+//		sm.acquire();
+//		sm.acquire();
+//
+//		b = FU::rmDir(L"/media/volume04");
+//
+//	}
 
-	{
-		SudoMode sm;
-
-		{
-			SudoMode sm;
-			b = FU::mkDir(L"/media/volume04");
-			sm.release();
-			sm.release();
-			sm.release();
-			sm.release();
-		}
-	}
 }
 
 // a thread class that will periodically send events to the GUI thread

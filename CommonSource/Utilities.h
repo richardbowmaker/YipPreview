@@ -8,9 +8,9 @@
 #ifndef COMMON_UTILITIES_H_
 #define COMMON_UTILITIES_H_
 
+#include <mutex>
 #include <sys/types.h>
 #include <unistd.h>
-
 #include <wx/wx.h>
 
 #include "_Types.h"
@@ -34,6 +34,7 @@ public:
 			const int style = wxOK | wxCENTRE, // see wxMessageDialog for style options
 			wxWindow * parent = NULL,
 			...);
+	static void delay(int ms);
 
 private:
 
@@ -47,20 +48,55 @@ private:
 // class for boosting program up to sudo mode
 // only valid for linux programs started in sudo mode
 // in windows or linux programs running at user level this class can be used but does nothing
+
+/* SudoMode class supports an application that needs sudo mode for some parts of its code.
+ * The application is launched in sudo mode and should immediately drops down to user level,
+ * (by calling SudoMode::initialise(uid) at the start)
+ * thereafter the application can acquire sudo mode on an as needed basis.
+ * E.g. sample code;
+ *
+ * ... user level code ...
+ * {
+ * 		SudoMode sudo;	// raises to sudo mode
+ * 		... sudo level code ...
+ * }					// destructor lowers back to user level
+ * ... user level code ...
+ *
+ * As the application is launched in sudo mode the user level id must be passed in
+ * as a parameter to the program so that it can lower the privileges. This can be
+ * done via a shell as follows;
+ *
+ * .
+ * export LD_LIBRARY_PATH=<libraries>
+ * export PATH=$PATH:<extra paths>
+ *
+ * # capture user id
+ * MYUID=$(id -u)
+ *
+ * # run program in sudo mode, pass in user id
+ * sudo PATH="$PATH" LD_LIBRARY_PATH="$LD_LIBRARY_PATH" <program> -uid $MYUID
+ * .
+ *
+ * The class is thread safe in that many threads can raise to sudo level,
+ * a reference count will ensure that the level is lowered when the final
+ * thread lowers to user level.
+ * If one thread raises to sudo level then all threads are now in sudo level.
+ */
+
 class SudoMode
 {
 public:
 
-	SudoMode();		// construct to raise upto sudo
-	~SudoMode();	// when object is destroyed, release will be called
-	static void initialise(const int uid);  // must be called by application to set the
-											// user id
+	SudoMode();
+	~SudoMode();
+	static void initialise(const int uid);
 	static bool inSudoMode();
-	void release(); // release sudo mdoe before object is destroyed
-
+	void raise();
+	void lower();
 
 private:
 
+	static std::mutex lock_; // protects updates to reference count refs_
 	static bool active_; // only true when the program is run under linux in sudo mode
 	static int refs_; // nested ref count
 	static int uid_;
@@ -136,6 +172,7 @@ public:
 	static std::wstring pathToLocal(const wchar_t *path);
 	static std::wstring abbreviateFilename(const std::wstring &file, const int max);
 	static bool mkDir(const std::wstring dir);
+	static bool rmDir(const std::wstring dir);
 
 private:
 

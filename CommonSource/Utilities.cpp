@@ -18,7 +18,6 @@
 	#include <time.h>
 	#include <utility>
 	#include <windows.h>
-	#include <wx/wx.h>
 #elif LINUX_BUILD
 	#include <algorithm>
 	#include <dirent.h>
@@ -36,8 +35,12 @@
 	#include <time.h>
 	#include <unistd.h>
 	#include <utility>
-	#include <wx/wx.h>
 #endif
+
+#include <chrono>
+#include <thread>
+#include <wx/wx.h>
+
 
 #include "Constants.h"
 #include "Logger.h"
@@ -130,10 +133,17 @@ int Utilities::messageBox(
 
 }
 
+void Utilities::delay(int ms)
+{
+	std::this_thread::sleep_for (std::chrono::milliseconds(ms));
+}
+
+
 //--------------------------------------------------
 // String utilities
 //--------------------------------------------------
 
+std::mutex SudoMode::lock_;
 bool SudoMode::active_ = false;
 int SudoMode::refs_ = 0;
 int SudoMode::uid_ = 0;
@@ -141,14 +151,30 @@ int SudoMode::uid_ = 0;
 SudoMode::SudoMode() : got_(false)
 {
 #if LINUX_BUILD
-	if (!active_) return;
+	raise();
+#endif
+}
 
+SudoMode::~SudoMode()
+{
+#if LINUX_BUILD
+	lower();
+#endif
+}
+
+void SudoMode::raise()
+{
+#if LINUX_BUILD
+	if (!active_) return;
+	if (got_) return;
+
+	const std::lock_guard<std::mutex> lock(lock_);
 	if (refs_ == 0)
 	{
 		int r = seteuid(0);
 		if (r == 0)
 		{
-			Logger::info(L"Sudo mode enter OK");
+			Logger::info(L"Sudo mode entered OK");
 			refs_++;
 			got_ = true;
 		}
@@ -159,40 +185,34 @@ SudoMode::SudoMode() : got_(false)
 	{
 		refs_++;
 		got_ = true;
-		Logger::info(L"Sudo mode enter, refs %d", refs_);
+		Logger::info(L"Sudo mode raise, refs %d", refs_);
 	}
 #endif
 }
 
-SudoMode::~SudoMode()
-{
-#if LINUX_BUILD
-	release();
-#endif
-}
-
-void SudoMode::release()
+void SudoMode::lower()
 {
 #if LINUX_BUILD
 	if (!active_) return;
 	if (!got_) return;
 
+	const std::lock_guard<std::mutex> lock(lock_);
 	if (refs_ == 1)
 	{
 		int r = seteuid(uid_);
 		if (r == 0)
 		{
-			Logger::info(L"Sudo mode exit OK");
+			Logger::info(L"Sudo mode exited OK");
 			refs_ = 0;
 			got_ = false;
 		}
 		else
-			Logger::systemError(errno, L"Sudo mode exit error");
+			Logger::systemError(errno, L"Sudo mode lower error");
 	}
 	else if (refs_ > 1)
 	{
 		refs_--;
-		Logger::info(L"Sudo mode exit, refs %d", refs_);
+		Logger::info(L"Sudo mode lower, refs %d", refs_);
 	}
 #endif
 }
@@ -684,6 +704,7 @@ std::wstring FU::abbreviateFilename(const std::wstring &file, const int max)
 	return file.substr(0, (n/2) + (n%2)) + std::wstring(L"...") + file.substr(m - (n/2));
 }
 
+// requires sudo mode
 bool FU::mkDir(const std::wstring dir)
 {
 #ifdef WINDOWS_BUILD
@@ -692,17 +713,40 @@ bool FU::mkDir(const std::wstring dir)
 
 	int status = mkdir(SU::wStrToStr(dir).c_str(), S_IRWXU | S_IRWXG | S_IRWXO);
 
-	if (status != 0)
+	if (status == 0)
 	{
-		Logger::systemError(errno, L"FU::mkdir() error creating folder %ls", dir.c_str());
-		return false;
+		Logger::info(L"FU::mkDir() created directory %ls", dir.c_str());
+		return true;
 	}
 	else
-		return true;
-
+	{
+		Logger::systemError(errno, L"FU::mkDir() error creating directory %ls", dir.c_str());
+		return false;
+	}
 #endif
 }
 
+// requires sudo mode
+bool FU::rmDir(const std::wstring dir)
+{
+#ifdef WINDOWS_BUILD
+	TODO
+#elif LINUX_BUILD
+
+	int status = rmdir(SU::wStrToStr(dir).c_str());
+
+	if (status == 0)
+	{
+		Logger::info(L"FU::rmDir() removed directory %ls", dir.c_str());
+		return true;
+	}
+	else
+	{
+		Logger::systemError(errno, L"FU::rmDir() error removing directory %ls", dir.c_str());
+		return false;
+	}
+#endif
+}
 
 //---------------------------------------------
 // Duration

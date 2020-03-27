@@ -3,5 +3,16 @@
 #
 
 export LD_LIBRARY_PATH=/usr/local/wxwidgets/debug/shared/lib/
-#export PATH=$PATH:/usr/local/wxwidgets/debug/shared/bin/
-./Debug/YipPreview -uid 1000
+export PATH=$PATH:/usr/local/wxwidgets/debug/shared/bin/
+
+# capture user id
+MYUID=$(id -u)
+
+# run YipPreview in sudo mode, pass in user id
+sudo PATH="$PATH" LD_LIBRARY_PATH="$LD_LIBRARY_PATH" ./Debug/YipPreview -uid $MYUID
+#./Debug/YipPreview
+
+
+
+
+

@@ -7,6 +7,7 @@
 
 #include "VolumeManager.h"
 
+#include <algorithm>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -40,7 +41,7 @@ void VolumeManager::add(VolumeT& volume)
 	get().addImpl(volume);
 }
 
-VolumeCollT& VolumeManager::getVolumes()
+VolumeCollT VolumeManager::getVolumes()
 {
 	return get().getVolumesImpl();
 }
@@ -60,9 +61,9 @@ std::wstring VolumeManager::nextFreeMount()
 	return get().nextFreeMountImpl();
 }
 
-bool VolumeManager::mountVolumes()
+bool VolumeManager::mountVolumes(const std::wstring &password)
 {
-	return get().mountVolumesImpl();
+	return get().mountVolumesImpl(password);
 }
 
 bool VolumeManager::unmountVolumes()
@@ -73,6 +74,11 @@ bool VolumeManager::unmountVolumes()
 void VolumeManager::toLogger()
 {
 	get().toLoggerImpl();
+}
+
+bool VolumeManager::hasMountedVolumes()
+{
+	return get().hasMountedVolumesImpl();
 }
 
 //---------------------------------------------
@@ -104,7 +110,7 @@ void VolumeManager::addImpl(VolumeT& volume)
 	volumes_.push_back(volume);
 }
 
-VolumeCollT& VolumeManager::getVolumesImpl()
+VolumeCollT VolumeManager::getVolumesImpl()
 {
 	return volumes_;
 }
@@ -132,8 +138,10 @@ std::wstring VolumeManager::nextFreeMountImpl() const
 	return L"";
 }
 
-bool VolumeManager::mountVolumesImpl()
+bool VolumeManager::mountVolumesImpl(const std::wstring &password)
 {
+	bool result = true;
+
 	for (auto v : volumes_)
 	{
 		if (v->getIsMountable() && !v->getIsMounted())
@@ -146,44 +154,56 @@ bool VolumeManager::mountVolumesImpl()
 				if (FU::fileExists(m))
 				{
 					int r = Utilities::messageBox(
-							L"Mount point already %ls exists, do you want to use it ?", L"Mount volume",
-							wxYES_NO | wxCANCEL, &MyFrame::get());
+							L"Mount folder \'%ls\' already exists, do you want to use it ?", L"Mount volume",
+							wxYES_NO | wxCANCEL, &MyFrame::get(), m.c_str());
 
 					if (r == wxCANCEL) return false;
 					if (r == wxNO) continue;
 				}
 				else
 				{
-					// create the mount point folder
-
+					// create the mount directory, if fails to create move
+					SudoMode sudo;
+					if (!FU::mkDir(m))
+					{
+						result = false;
+						continue;
+					}
 				}
-
-
-
-			// check folder exists, if not create it
-
-
-			// mount volume
+				result &= (v->mount(m, password));
 			}
-
 		}
 	}
-
-	return true;
+	if (result)
+		Logger::info(L"All volumes mounted OK");
+	return result;
 }
 
 bool VolumeManager::unmountVolumesImpl()
 {
+	bool result = true;
 	for (auto v : volumes_)
 	{
 		if (v->getIsMountable() && v->getIsMounted())
 		{
 			// unmount volume
-			// delete mount folder
+			std::wstring m = v->getMount();
+			result &= v->unmount();
+
+			SudoMode sudo;
+			if (!FU::rmDir(m)) result = false;
+			sudo.lower();
 		}
 	}
+	if (result)
+		Logger::info(L"All volumes unmounted OK");
+	return result;
+}
 
-	return true;
+bool VolumeManager::hasMountedVolumesImpl() const
+{
+	return std::any_of(volumes_.cbegin(), volumes_.cend(),
+			[](auto &v){ return v->getIsMountable() && v->getIsMounted();});
 }
 
 void VolumeManager::toLoggerImpl() const

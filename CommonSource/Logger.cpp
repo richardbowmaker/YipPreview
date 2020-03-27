@@ -91,7 +91,7 @@ void Logger::append(const LevelT level, const wchar_t* text)
 			n += swprintf(&buf[n], (sizeof(buf) / sizeof(wchar_t)) - n, L"%05ld: ", lineNo_);
 
 		// show level
-		switch (level_)
+		switch (level)
 		{
 		case Error:
 			n += swprintf(&buf[n], (sizeof(buf) / sizeof(wchar_t)) - n, L"%ls: ", L"Error  ");
@@ -133,7 +133,7 @@ void Logger::append(const LevelT level, const wchar_t* text)
 				n += swprintf(&buf[n], (sizeof(buf) / sizeof(wchar_t)) - n, L"%05ld: ", lineNo_++);
 
 			// show level
-			switch (level_)
+			switch (level)
 			{
 			case Error: 
 				n += swprintf(&buf[n], (sizeof(buf) / sizeof(wchar_t)) - n, L"%ls: ", L"Error  ");

@@ -178,6 +178,10 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size) 
 
 	if (SudoMode::inSudoMode())
 		Logger::error(L"Application is currently running at SUDO level");
+
+	Logger::info(L"euid %d", geteuid());
+
+	Logger::error(L"test");
 }
 
 //--------------------------------------------------------------
@@ -191,7 +195,21 @@ MyFrame &MyFrame::get()
 
 void MyFrame::refresh(const FileSet &fileset)
 {
+	// better solution required
 	grid_->refresh();
+}
+
+void MyFrame::refresh()
+{
+	grid_->refresh();
+}
+
+void MyFrame::populateGui()
+{
+	grid_->populate();
+	images_->uninitialise();
+	images_->initialise();
+	images_->displayAt(0);
 }
 
 //--------------------------------------------------------------
@@ -285,16 +303,25 @@ void MyFrame::onFocus(wxFocusEvent& event)
 
 void MyFrame::onClose(wxCloseEvent& event)
 {
-	Logger::info(L"images_->uninitialise()");
+	int unmount{wxNO};
+	if (VolumeManager::hasMountedVolumes())
+	{
+		unmount = Utilities::messageBox(L"Do you want to unmount all volumes ?",
+				L"Close", wxYES_NO | wxCANCEL , this);
+		if (unmount == wxCANCEL)
+		{
+			event.Veto(true);
+			return;
+		}
+	}
+
 	images_->uninitialise();
-	Logger::info(L"grid_->uninitialise()");
 	grid_->uninitialise();
-	Logger::info(L"VolumeManager::writeProperties()");
 	VolumeManager::writeProperties();
-	Logger::info(L"VolumeManager::uninitialise()");
-	VolumeManager::uninitialise();
-	Logger::info(L"FileSetManager::uninitialise()");
 	FileSetManager::uninitialise();
+	if (unmount == wxYES) VolumeManager::unmountVolumes();
+	VolumeManager::uninitialise();
+
 	if (table_ != nullptr)
 		delete table_;
 

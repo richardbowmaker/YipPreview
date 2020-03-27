@@ -35,8 +35,8 @@ public:
 	void addFileSet(FileSetT &fileset);
 	void readProperties();
 	void writeProperties();
-	bool mount(std::wstring &mount);
-	void unmount();
+	bool mount(const std::wstring &m, const std::wstring &password);
+	bool unmount();
 
 	void toLogger() const;
 
