@@ -95,7 +95,7 @@ void VideoUpdaterDialog::onShellExecute(wxShellExecuteEvent& event)
 				fileset_->getDurationStr());
 		Layout();
 		updateGui();
-		MyFrame::get().refresh(*fileset_);
+		Main::get().refresh(*fileset_);
 	}
 }
 

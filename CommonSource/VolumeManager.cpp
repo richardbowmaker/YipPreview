@@ -155,7 +155,7 @@ bool VolumeManager::mountVolumesImpl(const std::wstring &password)
 				{
 					int r = Utilities::messageBox(
 							L"Mount folder \'%ls\' already exists, do you want to use it ?", L"Mount volume",
-							wxYES_NO | wxCANCEL, &MyFrame::get(), m.c_str());
+							wxYES_NO | wxCANCEL, &Main::get(), m.c_str());
 
 					if (r == wxCANCEL) return false;
 					if (r == wxNO) continue;

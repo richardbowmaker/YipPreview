@@ -57,7 +57,7 @@ void VolumeSelectDialog::onOk(wxCommandEvent& event)
 	VolumeManager::mountVolumes(pwd);
 	VolumeCollT vols = VolumeManager::getVolumes();
 	std::for_each(vols.begin(), vols.end(), FileSetManager::addFiles);
-	MyFrame::get().populateGui();
+	Main::get().populateGui();
 	DialogEx::onOk(event);
 }
 

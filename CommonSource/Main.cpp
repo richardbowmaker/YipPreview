@@ -80,14 +80,14 @@ bool MyApp::OnInit()
 		}
 	}
 
-	MyFrame *frame = new MyFrame( "Hello World", wxPoint(50, 50), wxSize(450, 340) );
+	Main *frame = new Main( "Hello World", wxPoint(50, 50), wxSize(450, 340) );
     frame->Show( true );
     return true;
 }
 
-MyFrame *MyFrame::this_;
+Main *Main::this_;
 
-MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size) :
+Main::Main(const wxString& title, const wxPoint& pos, const wxSize& size) :
 	wxFrame(NULL, wxID_ANY, title, pos, size),
 	grid_(nullptr),
 	table_(nullptr),
@@ -111,7 +111,7 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size) 
 	setupMenus();
 	CreateStatusBar();
 
-	Bind(wxEVT_CLOSE_WINDOW, &MyFrame::onClose, this, wxID_ANY);
+	Bind(wxEVT_CLOSE_WINDOW, &Main::onClose, this, wxID_ANY);
 
 	// create vertical splitter, images in rh pane, grid and logger in lh
 	wxSplitterWindow* splitterVertical = new wxSplitterWindow(this, wxID_ANY);
@@ -188,23 +188,23 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size) 
 // public methods
 //--------------------------------------------------------------
 
-MyFrame &MyFrame::get()
+Main &Main::get()
 {
 	return *this_;
 }
 
-void MyFrame::refresh(const FileSet &fileset)
+void Main::refresh(const FileSet &fileset)
 {
 	// better solution required
 	grid_->refresh();
 }
 
-void MyFrame::refresh()
+void Main::refresh()
 {
 	grid_->refresh();
 }
 
-void MyFrame::populateGui()
+void Main::populateGui()
 {
 	grid_->populate();
 	images_->uninitialise();
@@ -216,22 +216,22 @@ void MyFrame::populateGui()
 // ImagesGridServer interface
 //--------------------------------------------------------------
 
-wxMenu *MyFrame::gridGetPopupMenu(const int item)
+wxMenu *Main::gridGetPopupMenu(const int item)
 {
 	return getPopupMenu(item);
 }
 
-wxGridTableBase *MyFrame::gridGetTable()
+wxGridTableBase *Main::gridGetTable()
 {
 	return table_;
 }
 
-void MyFrame::gridSetSelected(const int selected)
+void Main::gridSetSelected(const int selected)
 {
 	images_->setSelected(selected);
 }
 
-void MyFrame::gridGotFocus()
+void Main::gridGotFocus()
 {
 	images_->setFocus(false);
 }
@@ -240,42 +240,42 @@ void MyFrame::gridGotFocus()
 // ImagesBrowserData interface
 //--------------------------------------------------------------
 
-int MyFrame::browserGetNoOfRows()
+int Main::browserGetNoOfRows()
 {
 	return Constants::imageBrowserSize;
 }
 
-int MyFrame::browserGetNoOfCols()
+int Main::browserGetNoOfCols()
 {
 	return Constants::imageBrowserSize;
 }
 
-int MyFrame::browserGetNoOfImages()
+int Main::browserGetNoOfImages()
 {
 	return FileSetManager::getNoOfFileSets();
 }
 
-int MyFrame::browserGetSelected()
+int Main::browserGetSelected()
 {
 	return grid_->getSelectedRow();
 }
 
-void MyFrame::browserSetSelected(const int selected)
+void Main::browserSetSelected(const int selected)
 {
 	grid_->SelectRow(selected);
 }
 
-std::wstring MyFrame::browserGetImage(const int n)
+std::wstring Main::browserGetImage(const int n)
 {
 	return FileSetManager::getFileSet(n)->getImage();
 }
 
-std::wstring MyFrame::browserGetVideo(const int n)
+std::wstring Main::browserGetVideo(const int n)
 {
 	return FileSetManager::getFileSet(n)->getVideo();
 }
 
-wxMenu *MyFrame::browserGetPopupMenu(const int item)
+wxMenu *Main::browserGetPopupMenu(const int item)
 {
 	return getPopupMenu(item);
 }
@@ -284,7 +284,7 @@ wxMenu *MyFrame::browserGetPopupMenu(const int item)
 //
 //--------------------------------------------------------------
 
-Logger *MyFrame::setupLogger(wxPanel *panel)
+Logger *Main::setupLogger(wxPanel *panel)
 {
 	Logger* logger = new Logger(panel, wxID_ANY);
 	logger->SetMinSize(wxSize(800, 500));
@@ -292,16 +292,16 @@ Logger *MyFrame::setupLogger(wxPanel *panel)
 	Logger::enableTime(true);
 	Logger::enableLineCount(true);
 	Logger::enableIdeOutput(true);
-	logger->Bind(wxEVT_SET_FOCUS, &MyFrame::onFocus, this, wxID_ANY);
+	logger->Bind(wxEVT_SET_FOCUS, &Main::onFocus, this, wxID_ANY);
 	return logger;
 }
 
-void MyFrame::onFocus(wxFocusEvent& event)
+void Main::onFocus(wxFocusEvent& event)
 {
 	images_->setFocus(false);
 }
 
-void MyFrame::onClose(wxCloseEvent& event)
+void Main::onClose(wxCloseEvent& event)
 {
 	int unmount{wxNO};
 	if (VolumeManager::hasMountedVolumes())

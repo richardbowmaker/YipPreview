@@ -79,7 +79,7 @@ enum MenuIDsT
 };
 
 // sets up the menu bar and menus
-void MyFrame::setupMenus()
+void Main::setupMenus()
 {
 	// file menu
 	wxMenu* menuFile = new wxMenu;
@@ -156,7 +156,7 @@ void MyFrame::setupMenus()
 	SetMenuBar(menuBar);
 
 	// bind the menu selected event to the dispatch function
-	Bind(wxEVT_MENU, &MyFrame::menuSelectedDispatch, this, wxID_ANY);
+	Bind(wxEVT_MENU, &Main::menuSelectedDispatch, this, wxID_ANY);
 
 	// accelerators
 	std::vector<wxAcceleratorEntry> keys;
@@ -181,7 +181,7 @@ void MyFrame::setupMenus()
 }
 
 // called as the menu is about to be  displayed, enable and check status etc. can be updated here
-void MyFrame::menuConfigure(wxMenuEvent& event, int menuId)
+void Main::menuConfigure(wxMenuEvent& event, int menuId)
 {
 	// is there a row selected
 	bool isSelected = false;
@@ -219,7 +219,7 @@ void MyFrame::menuConfigure(wxMenuEvent& event, int menuId)
 }
 
 // called when a menu option has been selected
-void MyFrame::menuSelectedDispatch(wxCommandEvent& event)
+void Main::menuSelectedDispatch(wxCommandEvent& event)
 {
 	FileSetT fs;
 	int row = grid_->getSelectedRow();
@@ -283,7 +283,7 @@ void MyFrame::menuSelectedDispatch(wxCommandEvent& event)
 
 // gets the popup menu used by the grid and images browser,
 // N.B. the popup menu must be deleted by the caller
-wxMenu *MyFrame::getPopupMenu(const int item)
+wxMenu *Main::getPopupMenu(const int item)
 {
 	FileSetT fs;
 	if (item != -1) fs = FileSetManager::getFileSet(item);
@@ -306,7 +306,7 @@ wxMenu *MyFrame::getPopupMenu(const int item)
 	else
 		menuItem->SetItemLabel(L"Preview mode on");
 
-	menu->Bind(wxEVT_MENU, &MyFrame::menuSelectedDispatch, this, wxID_ANY);
+	menu->Bind(wxEVT_MENU, &Main::menuSelectedDispatch, this, wxID_ANY);
 	return menu;
 }
 
@@ -314,12 +314,12 @@ wxMenu *MyFrame::getPopupMenu(const int item)
 // the menu option handlers 
 //--------------------------------------------------------------------------
 
-void MyFrame::deleteFile(wxCommandEvent& event, const int row, FileSet& fileset)
+void Main::deleteFile(wxCommandEvent& event, const int row, FileSet& fileset)
 {
 	Logger::info(L"Delete file %ls, %d", fileset.getId().c_str(), row);
 }
 
-void MyFrame::play(wxCommandEvent& event, const int row, FileSet &fileset)
+void Main::play(wxCommandEvent& event, const int row, FileSet &fileset)
 {
 	Logger::info(L"Play %ls, %d", fileset.getId().c_str(), row);
 
@@ -328,7 +328,7 @@ void MyFrame::play(wxCommandEvent& event, const int row, FileSet &fileset)
 	refresh(fileset);
 }
 
-void MyFrame::pageUp()
+void Main::pageUp()
 {
 	if (images_->hasFocus())
 		images_->pageUp();
@@ -341,7 +341,7 @@ void MyFrame::pageUp()
 	}
 }
 
-void MyFrame::pageDown()
+void Main::pageDown()
 {
 	if (images_->hasFocus())
 		images_->pageDown();
@@ -354,7 +354,7 @@ void MyFrame::pageDown()
 	}
 }
 
-void MyFrame::cursorUp()
+void Main::cursorUp()
 {
 	if (images_->hasFocus())
 		images_->cursorUp();
@@ -367,7 +367,7 @@ void MyFrame::cursorUp()
 	}
 }
 
-void MyFrame::cursorDown()
+void Main::cursorDown()
 {
 	if (images_->hasFocus())
 		images_->cursorDown();
@@ -380,7 +380,7 @@ void MyFrame::cursorDown()
 	}
 }
 
-void MyFrame::cursorLeft()
+void Main::cursorLeft()
 {
 	if (images_->hasFocus())
 		images_->cursorLeft();
@@ -393,7 +393,7 @@ void MyFrame::cursorLeft()
 	}
 }
 
-void MyFrame::cursorRight()
+void Main::cursorRight()
 {
 	if (images_->hasFocus())
 		images_->cursorRight();
@@ -406,19 +406,19 @@ void MyFrame::cursorRight()
 	}
 }
 
-void MyFrame::toLogger()
+void Main::toLogger()
 {
 	VolumeManager::toLogger();
 	FileSetManager::toLogger();
 }
 
-void MyFrame::togglePreviewMode()
+void Main::togglePreviewMode()
 {
 	if (Constants::previewMode) images_->stopPreview();
 	Constants::previewMode = !Constants::previewMode;
 }
 
-void MyFrame::unitTests()
+void Main::unitTests()
 {
 	bool result = true;
 
@@ -428,7 +428,7 @@ void MyFrame::unitTests()
 	if (result) Logger::info(L"All unit tests passed");
 }
 
-void MyFrame::updateNoOfImages(const int delta)
+void Main::updateNoOfImages(const int delta)
 {
 	int s = Constants::imageBrowserSize + delta;
 	if (s <= Constants::imageBrowserSizeMax && 

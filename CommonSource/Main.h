@@ -40,14 +40,14 @@ public:
     virtual bool OnInit();
 };
 
-class MyFrame: public wxFrame, ImagesBrowserServer, ImagesGridServer
+class Main: public wxFrame, ImagesBrowserServer, ImagesGridServer
 {
 public:
 
-    MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size);
-    ~MyFrame() = default;
+    Main(const wxString& title, const wxPoint& pos, const wxSize& size);
+    ~Main() = default;
 
-    static MyFrame& get();
+    static Main& get();
 
     void refresh(const FileSet &fileset);
     void refresh();
@@ -109,7 +109,7 @@ private:
     std::map<int, wxMenuItem*> menus_;
 
 	// allow global access to MyFrame via
-    static MyFrame* this_;
+    static Main* this_;
 
  
 };
