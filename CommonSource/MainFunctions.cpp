@@ -234,6 +234,9 @@ void Main::menuSelectedDispatch(wxCommandEvent& event)
 	case ID_MenuFileDelete:
 		deleteFile(event, row, *fs.get());
 		break;
+	case wxID_EXIT:
+		Close();
+		break;
 	case ID_MenuViewPlay:
 		play(event, row, *fs.get());
 		break;

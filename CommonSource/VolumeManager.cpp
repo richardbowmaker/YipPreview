@@ -36,14 +36,29 @@ void VolumeManager::uninitialise()
 	get().uninitialiseImpl();
 }
 
+void VolumeManager::clear()
+{
+	get().clearImpl();
+}
+
 void VolumeManager::add(VolumeT& volume)
 {
 	get().addImpl(volume);
 }
 
-VolumeCollT VolumeManager::getVolumes()
+void VolumeManager::add(const std::wstring &file, const bool isMountable)
+{
+	get().addImpl(file, isMountable);
+}
+
+VolumeCollT &VolumeManager::getVolumes()
 {
 	return get().getVolumesImpl();
+}
+
+VolumeT VolumeManager::getVolume(const int n)
+{
+	return get().getVolumeImpl(n);
 }
 
 void VolumeManager::writeProperties()
@@ -85,18 +100,19 @@ bool VolumeManager::hasMountedVolumes()
 
 void VolumeManager::initialiseImpl()
 {
+#ifdef WINDOWS_BUILD
 	// built a list of candidate mount points
+	wchar_t l{'H'};
+	for (int i = 0; i < 10; ++i)
+		mounts_.push_back(std::wstring(1, l++) + std::wstring(LR"(:)"));
+#elif LINUX_BUILD
 	for (int i = 0; i < 10; ++i)
 	{
-#ifdef WINDOWS_BUILD
-		wchar_t l{'H' + i};
-		mounts_.push_back(std::wstring(l, 1) + std::wstring(LR"(:)"));
-#elif LINUX_BUILD
 		wchar_t buf[200];
 		swprintf(buf, sizeof(buf) / sizeof(wchar_t), LR"(/media/volume%02d)", i + 1);
 		mounts_.push_back(std::wstring(buf));
-#endif
 	}
+#endif
 }
 
 void VolumeManager::uninitialiseImpl()
@@ -105,14 +121,45 @@ void VolumeManager::uninitialiseImpl()
 	mounts_.clear();
 }
 
-void VolumeManager::addImpl(VolumeT& volume)
+void VolumeManager::clearImpl()
 {
-	volumes_.push_back(volume);
+	volumes_.clear();
 }
 
-VolumeCollT VolumeManager::getVolumesImpl()
+void VolumeManager::addImpl(VolumeT& volume)
+{
+	// add volume to collection if not already in it
+	auto n = std::find_if(volumes_.cbegin(), volumes_.cend(),
+			[&volume](auto &v){return v->getFile().compare(volume->getFile()) == 0;});
+
+	if (n == volumes_.cend())
+		volumes_.push_back(volume);
+}
+
+void VolumeManager::addImpl(const std::wstring &file, const bool isMountable)
+{
+	// add volume to collection if not already in it
+	auto n = std::find_if(volumes_.cbegin(), volumes_.cend(),
+			[&file](auto &v){return v->getFile().compare(file) == 0;});
+
+	if (n == volumes_.cend())
+		volumes_.emplace_back(std::make_shared<Volume>(file, isMountable));
+}
+
+VolumeCollT &VolumeManager::getVolumesImpl()
 {
 	return volumes_;
+}
+
+VolumeT VolumeManager::getVolumeImpl(const int n)
+{
+	if (n >= 0 && n < volumes_.size())
+		return volumes_[n];
+	else
+	{
+		Logger::error(L"VolumeManager::getVolumeImpl() no such volume %d", n);
+		return nullptr;
+	}
 }
 
 void VolumeManager::writePropertiesImpl() const
@@ -144,11 +191,13 @@ bool VolumeManager::mountVolumesImpl(const std::wstring &password)
 
 	for (auto v : volumes_)
 	{
-		if (v->getIsMountable() && !v->getIsMounted())
+		if (v->getIsSelected() && v->getIsMountable() && !v->getIsMounted())
 		{
 			std::wstring m = nextFreeMountImpl();
 			if (m.size()> 0)
 			{
+#ifdef LINUX_BUILD
+				// in linux have to create a mount folder
 				// if the mount already exists then this is unexpected,
 				// use has to decide whether to use it or not
 				if (FU::fileExists(m))
@@ -170,6 +219,7 @@ bool VolumeManager::mountVolumesImpl(const std::wstring &password)
 						continue;
 					}
 				}
+#endif
 				result &= (v->mount(m, password));
 			}
 		}
@@ -189,10 +239,12 @@ bool VolumeManager::unmountVolumesImpl()
 			// unmount volume
 			std::wstring m = v->getMount();
 			result &= v->unmount();
-
+#ifdef LINUX_BUILD
+			// in linux remove the mount directory
 			SudoMode sudo;
 			if (!FU::rmDir(m)) result = false;
 			sudo.lower();
+#endif
 		}
 	}
 	if (result)

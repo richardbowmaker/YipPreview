@@ -27,9 +27,12 @@ public:
 	Volume(const std::wstring file, const bool isMountable);
 	virtual ~Volume();
 
+	std::wstring getFile() const;
 	std::wstring getMount() const;
 	bool getIsMountable() const;
 	bool getIsMounted() const;
+	bool getIsSelected() const;
+	void setIsSelected(const bool isSelected);
 	std::wstring getPropertiesFile() const;
 	std::wstring getFilesDirectory() const;
 	void addFileSet(FileSetT &fileset);
@@ -37,7 +40,7 @@ public:
 	void writeProperties();
 	bool mount(const std::wstring &m, const std::wstring &password);
 	bool unmount();
-
+	std::wstring toString() const;
 	void toLogger() const;
 
 private:

@@ -28,10 +28,17 @@ void FileProperties::setString(const std::wstring& property,
 		properties_[property] = value;
 }
 
-void FileProperties::setInt(const std::wstring& property, const int& value)
+void FileProperties::setInt(const std::wstring& property, const int value)
 {
 	wchar_t buf[100];
 	swprintf(buf, sizeof(buf) / sizeof(wchar_t), L"%d", value);
+	setString(property, buf);
+}
+
+void FileProperties::setFloat(const std::wstring& property, const float value)
+{
+	wchar_t buf[100];
+	swprintf(buf, sizeof(buf) / sizeof(wchar_t), L"%f", value);
 	setString(property, buf);
 }
 
@@ -73,6 +80,17 @@ int FileProperties::getInt(const std::wstring& property) const
 	else return 0;
 }
 
+float FileProperties::getFloat(const std::wstring& property) const
+{
+	std::wstring s = getString(property);
+	if (s.size() > 0)
+	{
+		wchar_t* p;
+		return wcstod(s.c_str(), &p);
+	}
+	else return 0.0f;
+}
+
 int FileProperties::getCount(const std::wstring& property) const
 {
 	return getInt(property);
@@ -80,7 +98,8 @@ int FileProperties::getCount(const std::wstring& property) const
 
 std::wstring FileProperties::toString() const
 {
-//	\Files\All\file20110102030031;times;2;lasttime;28/12/2019;maxvol;-2.5;duration;9:28
+// old - \Files\All\file20110102030031;times;2;lasttime;28/12/2019;maxvol;-2.5;duration;9:28
+// new - a01;averagevol;2.20;duration;03:25:45.678;lasttime;15:52:59 28/03/2020;maxvol;1.10;selected;X;times;2
 
 	if (properties_.size() == 0) return L"";
 

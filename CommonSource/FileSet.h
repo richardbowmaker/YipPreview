@@ -40,6 +40,14 @@ public:
 	std::wstring getDurationStr() const;
 	std::wstring getLastTime() const;
 	std::wstring getTimes() const;
+	float getMaxVol() const;
+	std::wstring getMaxVolStr() const;
+	void setMaxVol(const float maxvol);
+	float getAverageVol() const;
+	std::wstring getAverageVolStr() const;
+	void setAverageVol(const float averagevol);
+	void setIsSelected(const bool selected);
+	std::wstring getIsSelected() const;
 	void toLogger();
 
 	// properties

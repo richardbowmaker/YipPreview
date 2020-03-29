@@ -25,11 +25,13 @@ public:
 	static bool test();
 
 	void setString(const std::wstring &property, const std::wstring &value);
-	void setInt(const std::wstring &property, const int &value);
+	void setInt(const std::wstring &property, const int value);
+	void setFloat(const std::wstring &property, const float value);
 	void incCount(const std::wstring &property);
 	void setDateTimeNow(const std::wstring &property);
 	std::wstring getString(const std::wstring &property) const;
 	int getInt(const std::wstring &property) const;
+	float getFloat(const std::wstring &property) const;
 	int getCount(const std::wstring &property) const;
 	std::wstring toString() const;
 	void fromString(const std::wstring &s);

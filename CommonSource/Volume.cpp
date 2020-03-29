@@ -57,12 +57,11 @@
  *
  */
 
-
-
 Volume::Volume(std::wstring file, const bool isMountable) :
 	file_(file),
 	isMountable_(isMountable),
 	isMounted_(false),
+	isDirty_(false),
 	isSelected_(false)
 {
 	// if file is not a mountable volume then take the
@@ -72,6 +71,11 @@ Volume::Volume(std::wstring file, const bool isMountable) :
 
 Volume::~Volume()
 {
+}
+
+std::wstring Volume::getFile() const
+{
+	return file_;
 }
 
 std::wstring Volume::getMount() const
@@ -87,6 +91,16 @@ bool Volume::getIsMountable() const
 bool Volume::getIsMounted() const
 {
 	return isMounted_;
+}
+
+bool Volume::getIsSelected() const
+{
+	return isSelected_;
+}
+
+void Volume::setIsSelected(const bool isSelected)
+{
+	isSelected_ = isSelected;
 }
 
 std::wstring Volume::getPropertiesFile() const
@@ -159,22 +173,24 @@ bool Volume::mount(const std::wstring &m, const std::wstring &password)
 				file_.c_str(), m.c_str(), m.c_str());
 		return false;
 	}
+	std::wstringstream cmd;
 
 #ifdef WINDOWS_BUILD
+//  "C:\Program Files\VeraCrypt\VeraCrypt.exe" /q /a /nowaitdlg y /hash sha512 /v VolAccounts.hc /l x /p password
+	cmd << Constants::veracrypt
+		<< LR"( /q /a /nowaitdlg y /hash sha512)"
+		<< LR"( /v ")" << file_ << LR"(")"
+		<< LR"( /l )" << m[0]
+		<< LR"( /p )" << password;
 #elif LINUX_BUILD
-
-	// /usr/bin/veracrypt --password=... --slot=n --hash=sha512 file.hc /media/...
-	// /usr/bin/veracrypt --password=dummypassword --slot=3 --hash=sha512 /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Encrypted/TestVol1.hc /media/veracrypt1
-
-	std::wstringstream cmd;
+// /usr/bin/veracrypt --password=... --slot=n --hash=sha512 file.hc /media/...
+// /usr/bin/veracrypt --password=dummypassword --slot=3 --hash=sha512 /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Encrypted/TestVol1.hc /media/veracrypt1
 	cmd 	<< Constants::veracrypt
 			<< L" --password=" << password
-			<< " --slot=1 --hash=sha512 "
-			<< '\"' << file_ << "\" "
+			<< L" --slot=1 --hash=sha512 "
+			<< L'\"' << file_ << L"\" "
 			<< m;
-
-	std::wstring s = cmd.str();
-
+#endif
 	// mount must be in sudo mode
 	SudoMode sudo;
 	ShellExecuteResult result;
@@ -199,8 +215,6 @@ bool Volume::mount(const std::wstring &m, const std::wstring &password)
 		Logger::error(L"Volume %ls failed to mount as %ls", file_.c_str(), m.c_str());
 		return false;
 	}
-
-#endif
 }
 
 bool Volume::unmount()
@@ -210,18 +224,20 @@ bool Volume::unmount()
 		Logger::error(L"Volume::unmount(), volume not mounted %ls", file_.c_str());
 		return false;
 	}
-#ifdef WINDOWS_BUILD
-#elif LINUX_BUILD
-	std::wstringstream cmd;
-	cmd << Constants::veracrypt << L" -d " << " " << mount_;
 
+	std::wstringstream cmd;
+#ifdef WINDOWS_BUILD
+//  "C:\Program Files\VeraCrypt\VeraCrypt.exe" /q /nowaitdlg y /force /d x
+	cmd << Constants::veracrypt << LR"( /q /nowaitdlg y /force /d )" << mount_[0];
+#elif LINUX_BUILD
+	cmd << Constants::veracrypt << L" -d " << " " << mount_;
+#endif
 	SudoMode sudo;
 	ShellExecuteResult result;
 	ShellExecute::shellSync(cmd.str(), result, 5000);
 	sudo.lower();
 
 	Logger::info(L"%ls", result.toString().c_str());
-
 
 	if (result.getSuccess())
 	{
@@ -238,7 +254,16 @@ bool Volume::unmount()
 		Logger::error(L"Volume::unmount(), Volume %ls failed to unmount, %ls", file_.c_str(), mount_.c_str());
 		return false;
 	}
-#endif
+}
+
+std::wstring Volume::toString() const
+{
+	std::wstringstream s;
+	s << file_;
+	if (isMountable_ && isMounted_) s << L", mount=" << mount_;
+	if (isDirty_) s << L" *";
+	if (isSelected_) s << L" X";
+	return s.str();
 }
 
 void Volume::toLogger() const

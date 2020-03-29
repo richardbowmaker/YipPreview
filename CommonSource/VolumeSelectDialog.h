@@ -19,6 +19,7 @@
 class wxShellExecuteEvent;
 class wxDirPickerCtrl;
 class wxFileDirPickerEvent;
+class wxCheckListBox;
 
 class VolumeSelectDialog : public DialogEx
 {
@@ -32,12 +33,17 @@ public:
 private:
 
 	virtual void onOk(wxCommandEvent &event);
+	virtual void onFind(wxCommandEvent &event);
+	virtual void onCheck(wxCommandEvent &event);
 	void updateGui();
 	void onDirPicker(wxFileDirPickerEvent &event);
+	void populateListBox();
 
 	wxTextCtrl* password_;
 	wxTextCtrl *filter_;
 	wxDirPickerCtrl *dirPicker_;
+	wxCheckListBox *volumeList_;
+	wxButton *butFind_;
 
 };
 

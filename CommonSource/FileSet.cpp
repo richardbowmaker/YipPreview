@@ -1,6 +1,7 @@
 
 #include "FileSet.h"
 
+#include <cwchar>
 #include <filesystem>
 #include <regex>
 #include <stdlib.h>
@@ -226,6 +227,52 @@ std::wstring FileSet::getTimes() const
 {
 	return properties_.getString(L"times");
 }
+
+float FileSet::getMaxVol() const
+{
+	return properties_.getFloat(L"maxvol");
+}
+
+std::wstring FileSet::getMaxVolStr() const
+{
+	return properties_.getString(L"maxvol");
+}
+
+void FileSet::setMaxVol(const float maxvol)
+{
+	wchar_t buf[100];
+	swprintf(buf, sizeof(buf) / sizeof(wchar_t), L"%.2f", maxvol);
+	properties_.setString(L"maxvol", std::wstring(buf));
+}
+
+float FileSet::getAverageVol() const
+{
+	return properties_.getFloat(L"averagevol");
+}
+
+std::wstring FileSet::getAverageVolStr() const
+{
+	return properties_.getString(L"averagevol");
+}
+
+void FileSet::setAverageVol(const float averagevol)
+{
+	wchar_t buf[100];
+	swprintf(buf, sizeof(buf) / sizeof(wchar_t), L"%.2f", averagevol);
+	properties_.setString(L"averagevol", std::wstring(buf));
+}
+
+void FileSet::setIsSelected(const bool selected)
+{
+	properties_.setString(L"selected", selected ? L"X" : L"");
+}
+
+std::wstring FileSet::getIsSelected() const
+{
+	return properties_.getString(L"selected");
+}
+
+
 
 
 

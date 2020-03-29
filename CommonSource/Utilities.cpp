@@ -221,18 +221,27 @@ void SudoMode::lower()
 // if program is run in user mode, then the sudo mode class does nothing
 void SudoMode::initialise(const int uid)
 {
+#if LINUX_BUILD
 	if (inSudoMode())
 	{
 		// we are in sudo mode, lower privileges
 		active_ = true;
 		uid_ = uid;
 		seteuid(uid);
+
+		Logger::info(L"euid %d", geteuid());
+
 	}
+#endif
 }
 
 bool SudoMode::inSudoMode()
 {
+#ifdef WINDOWS_BUILD
+	return true;
+#elif LINUX_BUILD
 	return geteuid() == 0;
+#endif
 }
 
 //--------------------------------------------------
@@ -406,6 +415,7 @@ bool FU::findFiles(
 	const std::wstring *filter,
 	const std::wstring *regex,
 	StringCollT *dirs,
+	const bool subdirs,
 	const bool sort)
 {
 #ifdef WINDOWS_BUILD
@@ -444,8 +454,18 @@ bool FU::findFiles(
 		}
 		else if (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 		{
-			if (dirs != nullptr)
-				dirs->emplace_back(data.cFileName);
+			if (dirs != nullptr || subdirs)
+			{
+				std::wstring d{data.cFileName};
+					if (dirs != nullptr) dirs->emplace_back(d);
+					if (subdirs)
+					{
+						if (!FU::findFiles(directory + std::wstring(LR"(/)") + d,
+								files, filter, regex, dirs, subdirs, false))
+							return false;
+					}
+				}
+			}
 		}
 	} while (FindNextFile(hFind, &data));
 	FindClose(hFind);
@@ -500,15 +520,17 @@ bool FU::findFiles(
 			break;
 		case DT_DIR:
 		{
-			if (dirs != nullptr)
+			if (dirs != nullptr || subdirs)
 			{
-				int len = strlen(ent->d_name);
-				for (int i = 0; i < len; ++i)
+				std::wstring d{SU::strToWStr(ent->d_name)};
+				if (d.compare(L".") != 0 && d.compare(L"..") != 0)
 				{
-					if (ent->d_name[i] != '.')
+					if (dirs != nullptr) dirs->emplace_back(d);
+					if (subdirs)
 					{
-						dirs->push_back(SU::strToWStr(ent->d_name));
-						break;
+						if (!FU::findFiles(directory + std::wstring(LR"(/)") + d,
+								files, filter, regex, dirs, subdirs, false))
+							return false;
 					}
 				}
 			}
@@ -543,27 +565,30 @@ bool FU::findFiles(
 bool FU::findFiles(
 	const std::wstring directory,
 	StringCollT &files,
+	const bool subdirs,
 	const bool sort)
 {
-	return FU::findFiles(directory, &files, nullptr, nullptr, nullptr, sort);
+	return FU::findFiles(directory, &files, nullptr, nullptr, nullptr, subdirs, sort);
 }
 
 bool FU::findMatchingFiles(
 		const std::wstring directory,
 		StringCollT &files,
 		const std::wstring filter,
+		const bool subdirs,
 		const bool sort)
 {
-	return FU::findFiles(directory, &files, &filter, nullptr, nullptr, sort);
+	return FU::findFiles(directory, &files, &filter, nullptr, nullptr, subdirs, sort);
 }
 
 bool FU::findFilesDirs(
 		const std::wstring directory,
 		StringCollT &files,
 		StringCollT &dirs,
+		const bool subdirs,
 		const bool sort)
 {
-	return FU::findFiles(directory, &files, nullptr, nullptr, &dirs, sort);
+	return FU::findFiles(directory, &files, nullptr, nullptr, &dirs, subdirs, sort);
 }
 
 bool FU::findMatchingFilesDirs(
@@ -571,18 +596,20 @@ bool FU::findMatchingFilesDirs(
 		StringCollT &files,
 		const std::wstring filter,
 		StringCollT &dirs,
+		const bool subdirs,
 		const bool sort)
 {
-	return FU::findFiles(directory, &files, &filter, nullptr, &dirs, sort);
+	return FU::findFiles(directory, &files, &filter, nullptr, &dirs, subdirs, sort);
 }
 
 bool FU::findMatchingFilesRex(
 		const std::wstring directory,
 		StringCollT &files,
 		const std::wstring regex,
+		const bool subdirs,
 		const bool sort)
 {
-	return FU::findFiles(directory, &files, nullptr, &regex, nullptr, sort);
+	return FU::findFiles(directory, &files, nullptr, &regex, nullptr, subdirs, sort);
 }
 
 bool FU::findMatchingFilesDirsRex(
@@ -590,9 +617,10 @@ bool FU::findMatchingFilesDirsRex(
 		StringCollT &files,
 		const std::wstring regex,
 		StringCollT &dirs,
+		const bool subdirs,
 		const bool sort)
 {
-	return FU::findFiles(directory, &files, nullptr, &regex, &dirs, sort);
+	return FU::findFiles(directory, &files, nullptr, &regex, &dirs, subdirs, sort);
 }
 
 std::wstring FU::getFileStem(const std::wstring path)
@@ -708,11 +736,19 @@ std::wstring FU::abbreviateFilename(const std::wstring &file, const int max)
 bool FU::mkDir(const std::wstring dir)
 {
 #ifdef WINDOWS_BUILD
-	TODO
+	if (CreateDirectory(dir.c_str(), NULL))
+	{
+		Logger::info(L"FU::mkDir() created directory %ls", dir.c_str());
+		return true;
+	}
+	else
+	{
+		DWORD err = GetLastError();
+		Logger::systemError(err, L"FU::mkDir() error creating directory %ls", dir.c_str());
+		return false;
+	}
 #elif LINUX_BUILD
-
 	int status = mkdir(SU::wStrToStr(dir).c_str(), S_IRWXU | S_IRWXG | S_IRWXO);
-
 	if (status == 0)
 	{
 		Logger::info(L"FU::mkDir() created directory %ls", dir.c_str());
@@ -730,7 +766,17 @@ bool FU::mkDir(const std::wstring dir)
 bool FU::rmDir(const std::wstring dir)
 {
 #ifdef WINDOWS_BUILD
-	TODO
+	if (RemoveDirectory(dir.c_str()))
+	{
+		Logger::info(L"FU::mkDir() removed directory %ls", dir.c_str());
+		return true;
+	}
+	else
+	{
+		DWORD err = GetLastError();
+		Logger::systemError(err, L"FU::mkDir() error removing directory %ls", dir.c_str());
+		return false;
+	}
 #elif LINUX_BUILD
 
 	int status = rmdir(SU::wStrToStr(dir).c_str());

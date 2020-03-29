@@ -50,6 +50,8 @@
 #endif
 
 
+#include "_Types.h"
+#include "FileSetManager.h"
 #include "Logger.h"
 #include "Tryout.h"
 #include "Utilities.h"
@@ -61,6 +63,16 @@ wxDEFINE_EVENT(wxEVT_MY_CUSTOM_COMMAND, wxCommandEvent);
 
 void TryOut::tryout()
 {
+	StringCollT files;
+
+
+	FU::findFiles(FU::pathToLocal(LR"(/YipPreview/Tryout)"), files, true );
+
+
+	Logger::info(files, L"files");
+	return;
+
+
 
 
 //	Volume vol(LR"(/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Encrypted/TestVol1.hc)");

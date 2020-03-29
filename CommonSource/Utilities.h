@@ -8,9 +8,13 @@
 #ifndef COMMON_UTILITIES_H_
 #define COMMON_UTILITIES_H_
 
+#ifdef WINDOWS_BUILD
+#elif LINUX_BUILD
+	#include <sys/types.h>
+	#include <unistd.h>
+#endif
+
 #include <mutex>
-#include <sys/types.h>
-#include <unistd.h>
 #include <wx/wx.h>
 
 #include "_Types.h"
@@ -141,33 +145,39 @@ public:
 	static bool findFiles(
 			const std::wstring directory,
 			StringCollT &files,
+			const bool subdirs = false,
 			const bool sort = false);
 	static bool findMatchingFiles(
 			const std::wstring directory,
 			StringCollT &files,
 			const std::wstring filter,
+			const bool subdirs = false,
 			const bool sort = false);
 	static bool findFilesDirs(
 			const std::wstring directory,
 			StringCollT &files,
 			StringCollT &dirs,
+			const bool subdirs = false,
 			const bool sort = false);
 	static bool findMatchingFilesDirs(
 			const std::wstring directory,
 			StringCollT &files,
 			const std::wstring filter,
 			StringCollT &dirs,
+			const bool subdirs = false,
 			const bool sort = false);
 	static bool findMatchingFilesRex(
 			const std::wstring directory,
 			StringCollT &files,
 			const std::wstring regex,
+			const bool subdirs = false,
 			const bool sort = false);
 	static bool findMatchingFilesDirsRex(
 			const std::wstring directory,
 			StringCollT &files,
 			const std::wstring regex,
 			StringCollT &dirs,
+			const bool subdirs = false,
 			const bool sort = false);
 	static std::wstring pathToLocal(const wchar_t *path);
 	static std::wstring abbreviateFilename(const std::wstring &file, const int max);
@@ -186,6 +196,7 @@ private:
 			const std::wstring *filter,
 			const std::wstring *regex,
 			StringCollT *dirs,
+			const bool subdirs,
 			const bool sort);
 };
 

@@ -54,6 +54,7 @@ bool MyApp::OnInit()
 	
 	// when running in sudo mode the user id must be supplied via the command
 	// line so that privileges can be lowered immediately and only raised when needed
+#ifdef LINUX_BUILD
 	if (SudoMode::inSudoMode())
 	{
 		if (argc == 3)
@@ -79,8 +80,8 @@ bool MyApp::OnInit()
 			return false;
 		}
 	}
-
-	Main *frame = new Main( "Hello World", wxPoint(50, 50), wxSize(450, 340) );
+#endif
+	Main *frame = new Main("YipPreview", wxPoint(50, 50), wxSize(450, 340) );
     frame->Show( true );
     return true;
 }
@@ -102,11 +103,10 @@ Main::Main(const wxString& title, const wxPoint& pos, const wxSize& size) :
 	FileSetManager::initialise();
 
 	VolumeManager::initialise();
-	VolumeT vol1 = std::make_shared<Volume>(FU::pathToLocal(LR"(/YipPreview/Tryout)"), false);
-	VolumeT vol2 = std::make_shared<Volume>(FU::pathToLocal(LR"(/YipPreview/Encrypted/TestVol1.hc)"), true);
-	VolumeManager::add(vol1);
-	VolumeManager::add(vol2);
-//	FileSetManager::addFiles(vol);
+//	VolumeT vol1 = std::make_shared<Volume>(FU::pathToLocal(LR"(/YipPreview/Tryout)"), false);
+//	VolumeT vol2 = std::make_shared<Volume>(FU::pathToLocal(LR"(/YipPreview/Encrypted/TestVol1.hc)"), true);
+//	VolumeManager::add(vol1);
+//	VolumeManager::add(vol2);
 
 	setupMenus();
 	CreateStatusBar();
@@ -145,8 +145,6 @@ Main::Main(const wxString& title, const wxPoint& pos, const wxSize& size) :
 	pnlTop->SetSizer(sizerTop);
 
 // create grid and add it to top panel
-//	initialiseGrid(pnlTop);
-//	populateGrid();
 	grid_ = new ImagesGrid(pnlTop, wxID_ANY);
 	table_ = new GridTable();
 	grid_->initialise(this);
@@ -176,12 +174,10 @@ Main::Main(const wxString& title, const wxPoint& pos, const wxSize& size) :
 
 	SetClientSize(wxSize(1500, 1000));
 
+#ifdef LINUX_BUILD
 	if (SudoMode::inSudoMode())
 		Logger::error(L"Application is currently running at SUDO level");
-
-	Logger::info(L"euid %d", geteuid());
-
-	Logger::error(L"test");
+#endif
 }
 
 //--------------------------------------------------------------

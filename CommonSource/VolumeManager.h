@@ -19,8 +19,11 @@ public:
 	static VolumeManager &get();
 	static void initialise();
 	static void uninitialise();
+	static void clear();
 	static void add(VolumeT &volume);
-	static VolumeCollT getVolumes();
+	static void add(const std::wstring &file, const bool isMountable);
+	static VolumeCollT &getVolumes();
+	static VolumeT getVolume(const int n);
 	static void toLogger();
 	static void writeProperties();
 	static bool isMountInUse(const std::wstring &mount);
@@ -36,8 +39,11 @@ private:
 
 	void initialiseImpl();
 	void uninitialiseImpl();
+	void clearImpl();
 	void addImpl(VolumeT &volume);
-	VolumeCollT getVolumesImpl();
+	void addImpl(const std::wstring &file, const bool isMountable);
+	VolumeCollT &getVolumesImpl();
+	VolumeT getVolumeImpl(const int n);
 	void toLoggerImpl() const;
 	void writePropertiesImpl() const;
 	bool isMountInUseImpl(const std::wstring &mount) const;
@@ -45,6 +51,7 @@ private:
 	bool mountVolumesImpl(const std::wstring &password);
 	bool unmountVolumesImpl();
 	bool hasMountedVolumesImpl() const;
+
 
 	VolumeCollT volumes_;
 	StringCollT mounts_;
