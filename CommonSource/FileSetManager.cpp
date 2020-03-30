@@ -7,6 +7,7 @@
 
 #include "FileSetManager.h"
 
+#include <algorithm>
 #include <map>
 
 #include "_Types.h"
@@ -39,11 +40,6 @@ FileSetManager& FileSetManager::get()
 	return instance;
 }
 
-bool FileSetManager::addFiles(VolumeT volume)
-{
-	return get().addFilesImpl(volume);
-}
-
 int FileSetManager::getNoOfFileSets()
 {
 	return get().getNoOfFileSetsImpl();
@@ -57,6 +53,11 @@ FileSetT FileSetManager::getFileSet(const int n)
 std::wstring FileSetManager::toString()
 {
 	return get().toStringImpl();
+}
+
+void FileSetManager::setFileSets(const FileSetCollT &fileSets)
+{
+	get().setFileSetsImpl(fileSets);
 }
 
 void FileSetManager::toLogger()
@@ -77,55 +78,11 @@ void FileSetManager::uninitialiseImpl()
 	fileSets_.clear();
 }
 
-bool FileSetManager::addFilesImpl(VolumeT volume)
-{
-	// scan the volume's directory for files and add
-	// them to the filesets_ collection
-	StringCollT files;
-	if (FU::findMatchingFiles(volume->getFilesDirectory(), files, L"*"))
-	{
-		for (auto f : files)
-		{
-			if (FileSet::isValidType(f))
-			{
-				// search for existing file set entry
-				std::wstring id = FileSet::filenameToId(f);
-
-				IdFileSetPairCollT::const_iterator it =
-					std::find_if(fileSets_.begin(), fileSets_.end(),
-							[id](const IdFileSetPairT &fs) { return fs.first.compare(id) == 0; });
-
-				if (it != fileSets_.end())
-				{
-					it->second->set(f);
-				}
-				else
-				{
-					// create file set object and add to collection
-					VolumeWRefT vref(volume);
-					FileSetT fs = std::make_shared<FileSet>(vref, f);
-					fileSets_.push_back(IdFileSetPairT(id, fs));
-
-					// add file set to volume
-					volume->addFileSet(fs);
-				}
-			}
-		}
-		volume->readProperties();
-	}
-	else
-		Logger::warning(
-				L"FileSetManager::addFilesImpl empty directory %ls",
-				volume->getFilesDirectory().c_str());
-
-	return true;
-}
-
 std::wstring FileSetManager::toStringImpl()
 {
 	std::wstring s;
 	for (auto fs : fileSets_)
-		s += fs.second->toString() + L"\n";
+		s += fs->toString() + L"\n";
 	return s;
 }
 
@@ -136,7 +93,18 @@ int FileSetManager::getNoOfFileSetsImpl() const
 
 FileSetT FileSetManager::getFileSetImpl(const int n) const
 {
-	return fileSets_[n].second;
+	return fileSets_[n];
+}
+
+void FileSetManager::setFileSetsImpl(const FileSetCollT &fileSets)
+{
+	// new set of file sets, they must be sorted
+	fileSets_ = fileSets;
+
+	std::sort(fileSets_.begin(),
+			  fileSets_.end(),
+			  [](const FileSetT &f1, const FileSetT &f2)
+			      { return f1->getId().compare(f2->getId()) < 0; });
 }
 
 void FileSetManager::toLoggerImpl() const
@@ -144,10 +112,7 @@ void FileSetManager::toLoggerImpl() const
 	Logger::info(L"File Set Manager, %d", fileSets_.size());
 
 	for (auto fs : fileSets_)
-	{
-		Logger::info(L"\tkey %ls", fs.first.c_str());
-		fs.second->toLogger();
-	}
+		fs->toLogger();
 }
 
 

@@ -15,12 +15,10 @@
 
 class FileSet;
 using FileSetT = std::shared_ptr<FileSet>;
-using FileSetWRefT = std::weak_ptr<FileSet>;
 using FileSetCollT = std::vector<FileSetT>;
 
 class Volume;
 using VolumeT = std::shared_ptr<Volume>;
-using VolumeWRefT = std::weak_ptr<Volume>;
 using VolumeCollT = std::vector<VolumeT>;
 
 using StringStringT = std::pair<std::wstring, std::wstring>;

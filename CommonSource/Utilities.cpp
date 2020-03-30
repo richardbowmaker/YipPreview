@@ -124,7 +124,11 @@ int Utilities::messageBox(
 {
 	// format message
 	va_list vl;
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wvarargs"
 	va_start(vl, format);
+#pragma GCC diagnostic pop
 	wchar_t buf[4000];
 	vswprintf(buf, sizeof(buf) / sizeof(wchar_t), format, vl);
 
@@ -829,7 +833,7 @@ bool Duration::parse(const std::string &str)
 {
     setMs(0);
     if (str.size() == 0) return true;
-    const std::regex rex(R"(((\d{1,2}):)?(\d{1,2}):(\d{1,2})(\.(\d{1,3}(\s)?))?)");
+    std::regex rex(R"(((\d{1,2}):)?(\d{1,2}):(\d{1,2})(\.(\d{1,3}(\s)?))?)");
     std::smatch m;
     if (std::regex_search(str, m, rex))
     {

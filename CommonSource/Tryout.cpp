@@ -961,9 +961,6 @@ void tryout(wxCommandEvent& event, const int row)
 
 
 
-
-	int n = 0;
-
 	//	bool b;
 
 	//

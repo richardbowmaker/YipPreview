@@ -12,6 +12,7 @@
 #include <stdlib.h>
 
 #include "Constants.h"
+#include "FileSetManager.h"
 #include "Logger.h"
 #include "Main.h"
 #include "Utilities.h"
@@ -96,6 +97,11 @@ bool VolumeManager::hasMountedVolumes()
 	return get().hasMountedVolumesImpl();
 }
 
+FileSetCollT VolumeManager::getFileSets()
+{
+	return get().getFileSetsImpl();
+}
+
 //---------------------------------------------
 
 void VolumeManager::initialiseImpl()
@@ -153,7 +159,7 @@ VolumeCollT &VolumeManager::getVolumesImpl()
 
 VolumeT VolumeManager::getVolumeImpl(const int n)
 {
-	if (n >= 0 && n < volumes_.size())
+	if (n >= 0 && n < static_cast<int>(volumes_.size()))
 		return volumes_[n];
 	else
 	{
@@ -191,7 +197,19 @@ bool VolumeManager::mountVolumesImpl(const std::wstring &password)
 
 	for (auto v : volumes_)
 	{
-		if (v->getIsSelected() && v->getIsMountable() && !v->getIsMounted())
+		if (v->getIsSelected() && !v->getIsMountable())
+		{
+			// non-mounting directories, just load the files
+			v->loadFiles();
+			v->readProperties();
+		}
+		else if (!v->getIsSelected() && !v->getIsMountable())
+		{
+			// non-mounting directories, just clear the files
+			v->writeProperties();
+			v->clearFiles();
+		}
+		else if (v->getIsSelected() && v->getIsMountable() && !v->getIsMounted())
 		{
 			std::wstring m = nextFreeMountImpl();
 			if (m.size()> 0)
@@ -220,8 +238,29 @@ bool VolumeManager::mountVolumesImpl(const std::wstring &password)
 					}
 				}
 #endif
-				result &= (v->mount(m, password));
+				if (v->mount(m, password))
+				{
+					v->loadFiles();
+					v->readProperties();
+					result &= true;
+				}
+				else
+					result &= false;
 			}
+		}
+		else if (!v->getIsSelected() && v->getIsMountable() && v->getIsMounted())
+		{
+			// unmount volume
+			std::wstring m = v->getMount();
+			v->writeProperties();
+			v->clearFiles();
+			result &= v->unmount();
+#ifdef LINUX_BUILD
+			// in linux remove the mount directory
+			SudoMode sudo;
+			if (!FU::rmDir(m)) result = false;
+			sudo.lower();
+#endif
 		}
 	}
 	if (result)
@@ -256,6 +295,17 @@ bool VolumeManager::hasMountedVolumesImpl() const
 {
 	return std::any_of(volumes_.cbegin(), volumes_.cend(),
 			[](auto &v){ return v->getIsMountable() && v->getIsMounted();});
+}
+
+FileSetCollT VolumeManager::getFileSetsImpl() const
+{
+	FileSetCollT fileSets;
+	for (const auto v : volumes_)
+	{
+		FileSetCollT fs = v->getFileSets();
+		fileSets.insert(fileSets.cbegin(), fs.cbegin(), fs.cend());
+	}
+	return fileSets;
 }
 
 void VolumeManager::toLoggerImpl() const

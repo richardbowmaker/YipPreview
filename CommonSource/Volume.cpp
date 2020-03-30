@@ -115,7 +115,7 @@ std::wstring Volume::getFilesDirectory() const
 
 void Volume::addFileSet(FileSetT &fileset)
 {
-	filesets_.push_back(fileset);
+	fileSets_.push_back(fileset);
 }
 
 void Volume::readProperties()
@@ -127,7 +127,7 @@ void Volume::readProperties()
 	while (std::getline(pcache, sl))
 	{
 		std::wstring wl = SU::strToWStr(sl);
-		int n = wl.find(L";");
+		size_t n = wl.find(L";");
 
 		if (n != std::wstring::npos)
 		{
@@ -136,10 +136,10 @@ void Volume::readProperties()
 			std::wstring ps = wl.substr(n + 1);
 
 			FileSetCollT::const_iterator it =
-				std::find_if(filesets_.begin(), filesets_.end(),
+				std::find_if(fileSets_.begin(), fileSets_.end(),
 						[id](const FileSetT &fs) { return fs->getId().compare(id) == 0; });
 
-			if (it != filesets_.end())
+			if (it != fileSets_.end())
 				(*it)->properties().fromString(ps);
 		}
 	}
@@ -152,7 +152,7 @@ void Volume::writeProperties()
 
 	std::string pf = SU::wStrToStr(getPropertiesFile());
 	std::ofstream pcache(pf);
-	for (auto fs : filesets_)
+	for (auto fs : fileSets_)
 	{
 		if (fs->properties().getSize() > 0)
 		{
@@ -209,6 +209,7 @@ bool Volume::mount(const std::wstring &m, const std::wstring &password)
 		mount_ = m;
 		isMounted_ = true;
 		isDirty_ = false;
+		return true;
 	}
 	else
 	{
@@ -256,6 +257,53 @@ bool Volume::unmount()
 	}
 }
 
+void Volume::loadFiles()
+{
+	fileSets_.clear();
+
+	StringCollT files;
+	if (FU::findMatchingFiles(getFilesDirectory(), files, L"*"))
+	{
+		for (auto f : files)
+		{
+			if (FileSet::isValidType(f))
+			{
+				// search for existing file set entry
+				std::wstring id = FileSet::filenameToId(f);
+
+				FileSetCollT::const_iterator it =
+					std::find_if(fileSets_.begin(), fileSets_.end(),
+							[id](const FileSetT &fs) { return fs->getId().compare(id) == 0; });
+
+				if (it != fileSets_.end())
+				{
+					(*it)->set(f);
+				}
+				else
+				{
+					// create file set object and add to collection
+					FileSetT fs = std::make_shared<FileSet>(this, f);
+					fileSets_.push_back(fs);
+				}
+			}
+		}
+	}
+	else
+		Logger::warning(
+				L"Volume::loadFiles() empty directory %ls",
+				getFilesDirectory().c_str());
+}
+
+void Volume::clearFiles()
+{
+	fileSets_.clear();
+}
+
+FileSetCollT Volume::getFileSets() const
+{
+	return fileSets_;
+}
+
 std::wstring Volume::toString() const
 {
 	std::wstringstream s;
@@ -272,12 +320,12 @@ void Volume::toLogger() const
 	if (isMounted_)
 	{
 		Logger::info(L"\tmounted");
-		Logger::info(L"\mount %ls", mount_.c_str());
+		Logger::info(L"\tmount %ls", mount_.c_str());
 	}
 	else
 		Logger::info(L"\tnot mounted");
 
-	for (auto fs : filesets_)
+	for (auto fs : fileSets_)
 		fs->toLogger();
 }
 

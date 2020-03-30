@@ -16,7 +16,7 @@ class FileSet
 public:
 
 	FileSet();
-	FileSet(const VolumeWRefT &volume, const std::wstring file);
+	FileSet(const Volume *volume, const std::wstring file);
 	virtual ~FileSet();
 
 	void set(const std::wstring file);
@@ -70,7 +70,7 @@ private:
 	std::wstring link_;
 
 	FileProperties properties_;
-	VolumeWRefT volume_;
+	const Volume* volume_;
 };
 
 

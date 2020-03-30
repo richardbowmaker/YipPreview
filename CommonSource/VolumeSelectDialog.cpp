@@ -78,8 +78,7 @@ void VolumeSelectDialog::populateListBox()
 void VolumeSelectDialog::onOk(wxCommandEvent& event)
 {
 	VolumeManager::mountVolumes(password_->GetValue().wc_str());
-	VolumeCollT vols = VolumeManager::getVolumes();
-	std::for_each(vols.begin(), vols.end(), FileSetManager::addFiles);
+	FileSetManager::setFileSets(VolumeManager::getFileSets());
 	Main::get().populateGui();
 	DialogEx::onOk(event);
 }

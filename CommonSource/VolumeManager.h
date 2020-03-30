@@ -31,6 +31,7 @@ public:
 	static bool mountVolumes(const std::wstring &password);
 	static bool unmountVolumes();
 	static bool hasMountedVolumes();
+	static FileSetCollT getFileSets();
 
 private:
 
@@ -51,6 +52,7 @@ private:
 	bool mountVolumesImpl(const std::wstring &password);
 	bool unmountVolumesImpl();
 	bool hasMountedVolumesImpl() const;
+	FileSetCollT getFileSetsImpl() const;
 
 
 	VolumeCollT volumes_;

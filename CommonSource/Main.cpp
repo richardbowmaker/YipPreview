@@ -103,9 +103,9 @@ Main::Main(const wxString& title, const wxPoint& pos, const wxSize& size) :
 	FileSetManager::initialise();
 
 	VolumeManager::initialise();
-//	VolumeT vol1 = std::make_shared<Volume>(FU::pathToLocal(LR"(/YipPreview/Tryout)"), false);
+	VolumeT vol1 = std::make_shared<Volume>(FU::pathToLocal(LR"(/YipPreview/Tryout)"), false);
 //	VolumeT vol2 = std::make_shared<Volume>(FU::pathToLocal(LR"(/YipPreview/Encrypted/TestVol1.hc)"), true);
-//	VolumeManager::add(vol1);
+	VolumeManager::add(vol1);
 //	VolumeManager::add(vol2);
 
 	setupMenus();
@@ -313,7 +313,6 @@ void Main::onClose(wxCloseEvent& event)
 
 	images_->uninitialise();
 	grid_->uninitialise();
-	VolumeManager::writeProperties();
 	FileSetManager::uninitialise();
 	if (unmount == wxYES) VolumeManager::unmountVolumes();
 	VolumeManager::uninitialise();

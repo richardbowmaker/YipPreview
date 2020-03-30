@@ -26,16 +26,14 @@ public:
 	static FileSetManager& get();
 	virtual ~FileSetManager();
 
-	static bool addFiles(VolumeT volume);
+//	static bool addFiles(VolumeT volume);
 	static std::wstring toString();
 	static int getNoOfFileSets();
 	static FileSetT getFileSet(const int n);
+	static void setFileSets(const FileSetCollT &fileSets);
 	static void toLogger();
 
 private:
-
-	using IdFileSetPairT = std::pair<std::wstring, FileSetT>;
-	using IdFileSetPairCollT = std::vector<IdFileSetPairT>;
 
 	FileSetManager();
 	FileSetManager(const FileSetManager&);
@@ -43,12 +41,13 @@ private:
 	void initialiseImpl();
 	void uninitialiseImpl();
 	std::wstring toStringImpl();
-	bool addFilesImpl(VolumeT volume);
+//	bool addFilesImpl(VolumeT volume);
 	int getNoOfFileSetsImpl() const;
 	FileSetT getFileSetImpl(const int n) const;
+	void setFileSetsImpl(const FileSetCollT &fileSets);
 	void toLoggerImpl() const;
 
-	IdFileSetPairCollT fileSets_;
+	FileSetCollT fileSets_;
 };
 
 #endif /* COMMON_FILESETMANAGER_H_ */

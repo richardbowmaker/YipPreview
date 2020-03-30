@@ -35,11 +35,14 @@ public:
 	void setIsSelected(const bool isSelected);
 	std::wstring getPropertiesFile() const;
 	std::wstring getFilesDirectory() const;
+	FileSetCollT getFileSets() const;
 	void addFileSet(FileSetT &fileset);
 	void readProperties();
 	void writeProperties();
 	bool mount(const std::wstring &m, const std::wstring &password);
 	bool unmount();
+	void loadFiles();
+	void clearFiles();
 	std::wstring toString() const;
 	void toLogger() const;
 
@@ -51,7 +54,7 @@ private:
 	bool isMounted_;
 	bool isDirty_;
 	bool isSelected_;
-	FileSetCollT filesets_;
+	FileSetCollT fileSets_;
 };
 
 #endif /* COMMON_VOLUME_H_ */

@@ -12,11 +12,11 @@
 #include "Utilities.h"
 
 
-FileSet::FileSet()
+FileSet::FileSet() : volume_(nullptr)
 {
 }
 
-FileSet::FileSet(const VolumeWRefT &volume, const std::wstring file)
+FileSet::FileSet(const Volume *volume, const std::wstring file)
 {
 	volume_ = volume;
 	set(file);
