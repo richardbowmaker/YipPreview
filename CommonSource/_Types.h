@@ -32,5 +32,18 @@ using PropertiesT = std::map<std::wstring, std::wstring>;
 
 using StringCollT = std::vector<std::wstring>;
 
+enum ColT
+{
+	FileCol = 0,
+	TypeCol,
+	SelectedCol,
+	DurationCol,
+	LastTimeCol,
+	TimesCol,
+	MaxVolCol,
+	AverageVolCol
+
+};
+
 
 #endif /* COMMON_TYPES_H_ */

@@ -314,7 +314,10 @@ void Main::onClose(wxCloseEvent& event)
 	images_->uninitialise();
 	grid_->uninitialise();
 	FileSetManager::uninitialise();
-	if (unmount == wxYES) VolumeManager::unmountVolumes();
+	if (unmount == wxYES)
+		VolumeManager::unmountVolumes();
+	else
+		VolumeManager::writeProperties();
 	VolumeManager::uninitialise();
 
 	if (table_ != nullptr)

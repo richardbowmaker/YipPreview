@@ -1,13 +1,16 @@
 
 #include "FileSet.h"
 
+#include <algorithm>
 #include <cwchar>
 #include <filesystem>
 #include <regex>
+#include <sstream>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string>
 
+#include "_Types.h"
 #include "Logger.h"
 #include "Utilities.h"
 
@@ -159,6 +162,129 @@ std::wstring FileSet::toString() const
 	return std::wstring(L"ID = ") + id_ + std::wstring(L", ") + typesToString();
 }
 
+bool FileSet::sort(const int col, FileSetT &other, const bool ascending)
+{
+/* sort() is used by the grid column sort function.
+ *
+ * Column sorted by value, if two values are the same then sorted by the file id.
+ * If the value is blank it will be displayed beneath those rows that do have a value
+ * (i.e. to stop the values of interest being sorted pushed to the end of the grid)
+ * Those rows with a blank in the column will always be sorted by ascending file id
+ *
+ *  if v1 = v2 return id1 < id2
+ *  if v1 empty && !v2 empty return false
+ *  if !v1 empty && v2 empty return true
+ *
+ * if ascending
+ * 		if v1 < v2 then return true;
+ * 		else if v2 < v1 return false;
+ * 		else return id1 < id2
+ *
+ * if descending
+ * 		if v1 > v2 then return true;
+ * 		else if v1 < v2 return true;
+ * 		else return id1 < id2
+ *
+ *
+ */
+
+
+	// helper to format a volume float to sortable string
+	auto volToString = [](FileSet &fs, const std::wstring field)
+	{
+		std::wstring s;
+		wchar_t buf[100];
+		if (fs.properties().getString(field).size() > 0)
+		{
+			float f = fs.properties().getFloat(field);
+			swprintf(buf, sizeof(buf) / sizeof(wchar_t), L"%3.2f", std::abs(f));
+			s = std::wstring(buf);
+			if (f >= 0)
+				s = std::wstring(1, L'+') + s;
+			else
+				s = std::wstring(1, L'-') + s;
+		}
+		return s;
+	};
+
+	// time field to a sortable string
+	auto timeToString = [](const std::wstring &t) -> std::wstring
+	{
+		// 0123456789012345678
+		// 15:13:54 30/03/2020
+		std::wstringstream s;
+		if (t.size() == 10)
+			s << t.substr(15, 4) << t.substr(12, 2) << t.substr(9, 2) << L"12:00:00";
+		else if (t.size() == 19)
+			s << t.substr(15, 4) << t.substr(12, 2) << t.substr(9, 2) << t.substr(0, 8);
+		return s.str();
+	};
+
+	auto timesToString = [](const int ts) -> std::wstring
+	{
+		std::wstring s;
+		if (ts > 0)
+		{
+			wchar_t buf[100];
+			swprintf(buf, sizeof(buf) / sizeof(wchar_t), L"%05d", ts);
+			s = std::wstring(buf);
+		}
+		return s;
+   };
+
+	// the sort fields
+	std::wstring s1;
+	std::wstring s2;
+
+	switch (col)
+	{
+	case FileCol:
+		s1 = id_;
+		s2 = other->getId();
+		break;
+	case TypeCol:
+		s1 = typesToString();
+		s2 = other->typesToString();
+		break;
+	case SelectedCol:
+		s1 = getIsSelected();
+		s2 = other->getIsSelected();
+		break;
+	case DurationCol:
+		s1 = getIsSelected();
+		s2 = other->getIsSelected();
+		break;
+	case LastTimeCol:
+		s1 = timeToString(getLastTime());
+		s2 = timeToString(other->getLastTime());
+		break;
+	case TimesCol:
+		s1 = timesToString(properties_.getInt(L"times"));
+		s2 = timesToString(other->properties().getInt(L"times"));
+
+		break;
+	case MaxVolCol:
+		s1 = volToString(*this, L"maxvol");
+		s2 = volToString(*other.get(), L"maxvol");
+		break;
+	case AverageVolCol:
+		s1 = volToString(*this, L"averagevol");
+		s2 = volToString(*other.get(), L"averagevol");
+		break;
+
+	default:
+		break;
+	}
+
+	// see header for explanation
+	int n = s1.compare(s2);
+	if (n == 0) return (id_.compare(other->getId()) < 0);
+	if (s1.size() == 0) return false;
+	if (s2.size() == 0) return true;
+	if (ascending) return n < 0;
+	else return n > 0;
+}
+
 void FileSet::toLogger()
 {
 	Logger::info(L"File Set");
@@ -166,7 +292,7 @@ void FileSet::toLogger()
 	Logger::info(L"\tID %ls",         id_.c_str());
 	Logger::info(L"\tShortname %ls",  short_.c_str());
 	Logger::info(L"\tImage file %ls", image_.c_str());
-	Logger::info(L"\tVideo file %ls",  video_.c_str());
+	Logger::info(L"\tVideo file %ls", video_.c_str());
 	Logger::info(L"\tLink file %ls",  link_.c_str());
 	properties_.toLogger();
 }

@@ -31,6 +31,7 @@ public:
 	static int getNoOfFileSets();
 	static FileSetT getFileSet(const int n);
 	static void setFileSets(const FileSetCollT &fileSets);
+	static void sort(const ColT col);
 	static void toLogger();
 
 private:
@@ -45,9 +46,12 @@ private:
 	int getNoOfFileSetsImpl() const;
 	FileSetT getFileSetImpl(const int n) const;
 	void setFileSetsImpl(const FileSetCollT &fileSets);
+	void sortImpl(const ColT col);
 	void toLoggerImpl() const;
 
 	FileSetCollT fileSets_;
+	ColT sortCol_;
+	bool sortAscend_;
 };
 
 #endif /* COMMON_FILESETMANAGER_H_ */

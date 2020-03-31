@@ -3,6 +3,7 @@
 
 #include "FileSetManager.h"
 #include "Logger.h"
+#include "Main.h"
 #include "VolumeManager.h"
 
 ImagesGrid::ImagesGrid(wxWindow* parent,
@@ -23,6 +24,7 @@ void ImagesGrid::initialise(ImagesGridServer *iServer)
 	Bind(wxEVT_GRID_CELL_RIGHT_CLICK, &ImagesGrid::eventDispatch, this, wxID_ANY);
 	Bind(wxEVT_GRID_SELECT_CELL, &ImagesGrid::eventDispatch, this, wxID_ANY);
 	Bind(wxEVT_SET_FOCUS, &ImagesGrid::onFocus, this, wxID_ANY);
+	Bind(wxEVT_GRID_COL_SORT, &ImagesGrid::onColSort, this, wxID_ANY);
 
 	SetColLabelSize(GetDefaultRowSize());
 }
@@ -32,6 +34,7 @@ void ImagesGrid::uninitialise()
 	Unbind(wxEVT_GRID_CELL_RIGHT_CLICK, &ImagesGrid::eventDispatch, this, wxID_ANY);
 	Unbind(wxEVT_GRID_SELECT_CELL, &ImagesGrid::eventDispatch, this, wxID_ANY);
 	Unbind(wxEVT_SET_FOCUS, &ImagesGrid::onFocus, this, wxID_ANY);
+	Unbind(wxEVT_GRID_COL_SORT, &ImagesGrid::onColSort, this, wxID_ANY);
 
 	SetTable(nullptr);
 }
@@ -79,6 +82,13 @@ void ImagesGrid::eventDispatch(wxGridEvent &event)
 void ImagesGrid::onFocus(wxFocusEvent& event)
 {
 	iServer_->gridGotFocus();
+}
+
+void ImagesGrid::onColSort(wxGridEvent &event)
+{
+	ColT col = static_cast<ColT>(event.GetCol());
+	FileSetManager::sort(col);
+	Main::get().refresh();
 }
 
 void ImagesGrid::refreshRowsAppended(const int noOfRows)

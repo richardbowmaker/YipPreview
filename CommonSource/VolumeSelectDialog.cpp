@@ -28,8 +28,15 @@
 #include "VolumeManager.h"
 
 
+std::wstring VolumeSelectDialog::password_{L"dummypassword"};
+std::wstring VolumeSelectDialog::filter_{L"*.hc"};
+std::wstring VolumeSelectDialog::dir_;
+
 int VolumeSelectDialog::Run(wxWindow *parent)
 {
+	if (dir_.size() == 0)
+		dir_ = FU::pathToLocal(LR"(/YipPreview/Encrypted)");
+
 	VolumeSelectDialog dlg(parent);
 	return dlg.ShowModal();
 }
@@ -41,18 +48,20 @@ VolumeSelectDialog::VolumeSelectDialog(wxWindow *parent) :
 
 	dirPicker_  = new wxDirPickerCtrl(getPanel(), wxID_ANY, L"", L"Select volumes folder",
 					wxPoint(10, 10), wxSize(600, 25), wxDIRP_DIR_MUST_EXIST | wxDIRP_USE_TEXTCTRL | wxDIRP_SMALL);
-	filter_     = new wxTextCtrl(getPanel(), wxID_ANY, wxEmptyString, wxPoint(10, 45), wxSize(100, 25));
+	txtFilter_     = new wxTextCtrl(getPanel(), wxID_ANY, wxEmptyString, wxPoint(10, 45), wxSize(100, 25));
 	butFind_    = new wxButton(getPanel(), wxID_ANY, L"Find", wxPoint(150, 45));
-	password_   = new wxTextCtrl  (getPanel(), wxID_ANY, wxEmptyString, wxPoint(10, 80), wxSize(300, 25));
+	txtPassword_   = new wxTextCtrl  (getPanel(), wxID_ANY, wxEmptyString, wxPoint(10, 80), wxSize(300, 25));
 	volumeList_ = new wxCheckListBox(getPanel(), wxID_ANY, wxPoint(10, 115), wxSize(800, 500), 0, nullptr, wxLB_SINGLE);
+
+	// load last values used
+	dirPicker_->SetPath(dir_);
+	txtPassword_->SetValue(password_);
+	txtFilter_->SetValue(filter_);
 
 	dirPicker_->Bind(wxEVT_DIRPICKER_CHANGED, &VolumeSelectDialog::onDirPicker, this);
 	butFind_->Bind(wxEVT_BUTTON, &VolumeSelectDialog::onFind, this);
 	volumeList_->Bind(wxEVT_CHECKLISTBOX, &VolumeSelectDialog::onCheck, this);
 
-	password_->SetValue(L"dummypassword");
-	filter_->SetValue(L"*.hc");
-	dirPicker_->SetPath(FU::pathToLocal(LR"(/YipPreview/Encrypted)"));
 	dirPicker_->SetFocus();
 
 	populateListBox();
@@ -77,9 +86,15 @@ void VolumeSelectDialog::populateListBox()
 
 void VolumeSelectDialog::onOk(wxCommandEvent& event)
 {
-	VolumeManager::mountVolumes(password_->GetValue().wc_str());
+	VolumeManager::mountVolumes(txtPassword_->GetValue().wc_str());
 	FileSetManager::setFileSets(VolumeManager::getFileSets());
 	Main::get().populateGui();
+
+	// save values used
+	dir_ = dirPicker_->GetPath();
+	password_ = txtPassword_->GetValue();
+	filter_ = txtFilter_->GetValue();
+
 	DialogEx::onOk(event);
 }
 
@@ -89,7 +104,7 @@ void VolumeSelectDialog::onFind(wxCommandEvent &event)
 	if (FU::findMatchingFiles(
 			dirPicker_->GetPath().wc_str(),
 			files,
-			filter_->GetValue().wc_str(),
+			txtFilter_->GetValue().wc_str(),
 			true))
 	{
 		for (auto f : files) VolumeManager::add(f, true);
@@ -98,13 +113,13 @@ void VolumeSelectDialog::onFind(wxCommandEvent &event)
 	else
 		Logger::error(L"VolumeSelectDialog::onFind() error search %ls for matching file %ls",
 				dirPicker_->GetPath().wc_str(),
-				filter_->GetValue().wc_str());
+				txtFilter_->GetValue().wc_str());
 }
 
 void VolumeSelectDialog::onDirPicker(wxFileDirPickerEvent& event)
 {
 	Logger::info(L"selected folder %ls", dirPicker_->GetPath().wc_str());
-	filter_->SetFocus();
+	txtFilter_->SetFocus();
 }
 
 void VolumeSelectDialog::onCheck(wxCommandEvent &event)

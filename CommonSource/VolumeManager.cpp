@@ -223,7 +223,6 @@ bool VolumeManager::mountVolumesImpl(const std::wstring &password)
 					int r = Utilities::messageBox(
 							L"Mount folder \'%ls\' already exists, do you want to use it ?", L"Mount volume",
 							wxYES_NO | wxCANCEL, &Main::get(), m.c_str());
-
 					if (r == wxCANCEL) return false;
 					if (r == wxNO) continue;
 				}
@@ -276,6 +275,7 @@ bool VolumeManager::unmountVolumesImpl()
 		if (v->getIsMountable() && v->getIsMounted())
 		{
 			// unmount volume
+			v->writeProperties();
 			std::wstring m = v->getMount();
 			result &= v->unmount();
 #ifdef LINUX_BUILD
@@ -285,6 +285,8 @@ bool VolumeManager::unmountVolumesImpl()
 			sudo.lower();
 #endif
 		}
+		if (!v->getIsMountable())
+			v->writeProperties();
 	}
 	if (result)
 		Logger::info(L"All volumes unmounted OK");

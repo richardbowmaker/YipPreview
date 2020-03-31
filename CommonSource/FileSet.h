@@ -48,7 +48,10 @@ public:
 	void setAverageVol(const float averagevol);
 	void setIsSelected(const bool selected);
 	std::wstring getIsSelected() const;
+	bool sort(const int col, FileSetT &other, const bool ascending);
 	void toLogger();
+
+
 
 	// properties
 	FileProperties& properties();

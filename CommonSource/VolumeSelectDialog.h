@@ -39,11 +39,15 @@ private:
 	void onDirPicker(wxFileDirPickerEvent &event);
 	void populateListBox();
 
-	wxTextCtrl* password_;
-	wxTextCtrl *filter_;
+	wxTextCtrl* txtPassword_;
+	wxTextCtrl *txtFilter_;
 	wxDirPickerCtrl *dirPicker_;
 	wxCheckListBox *volumeList_;
 	wxButton *butFind_;
+
+	static std::wstring password_;
+	static std::wstring filter_;
+	static std::wstring dir_;
 
 };
 

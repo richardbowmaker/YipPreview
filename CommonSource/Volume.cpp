@@ -187,9 +187,10 @@ bool Volume::mount(const std::wstring &m, const std::wstring &password)
 // /usr/bin/veracrypt --password=dummypassword --slot=3 --hash=sha512 /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Encrypted/TestVol1.hc /media/veracrypt1
 	cmd 	<< Constants::veracrypt
 			<< L" --password=" << password
-			<< L" --slot=1 --hash=sha512 "
+			<< L" --slot=" << m.substr(m.size() - 2, 2) << " --hash=sha512 "
 			<< L'\"' << file_ << L"\" "
 			<< m;
+	Logger::error(L"Volume::mount() TODO, sort out slot number");
 #endif
 	// mount must be in sudo mode
 	SudoMode sudo;

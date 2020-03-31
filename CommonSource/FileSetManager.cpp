@@ -13,10 +13,13 @@
 #include "_Types.h"
 #include "FileSet.h"
 #include "Logger.h"
+#include "Main.h"
 #include "Utilities.h"
 #include "VolumeManager.h"
 
-FileSetManager::FileSetManager()
+FileSetManager::FileSetManager() :
+	sortCol_(FileCol),
+	sortAscend_(true)
 {
 }
 
@@ -60,6 +63,11 @@ void FileSetManager::setFileSets(const FileSetCollT &fileSets)
 	get().setFileSetsImpl(fileSets);
 }
 
+void FileSetManager::sort(const ColT col)
+{
+	get().sortImpl(col);
+}
+
 void FileSetManager::toLogger()
 {
 	get().toLoggerImpl();
@@ -100,11 +108,27 @@ void FileSetManager::setFileSetsImpl(const FileSetCollT &fileSets)
 {
 	// new set of file sets, they must be sorted
 	fileSets_ = fileSets;
+	sortAscend_ = false;
+	sortImpl(FileCol);
+	sortAscend_ = false; // so that after a refresh clicking the file column keeps ascending order
+}
 
-	std::sort(fileSets_.begin(),
-			  fileSets_.end(),
-			  [](const FileSetT &f1, const FileSetT &f2)
-			      { return f1->getId().compare(f2->getId()) < 0; });
+void FileSetManager::sortImpl(const ColT col)
+{
+	if (sortCol_ == col)
+		sortAscend_ = !sortAscend_;
+	else
+	{
+		sortCol_ = col;
+		sortAscend_ = true;
+	}
+
+	Logger::info(L"FileSetManager::sortImpl() %d %ls", col, (sortAscend_ ? L"ascending" : L"descending"));
+
+	std::sort(fileSets_.begin(), fileSets_.end(),
+		[this, col](FileSetT &f1, FileSetT &f2) { return f1->sort(col, f2, sortAscend_); });
+
+	Main::get().refresh();
 }
 
 void FileSetManager::toLoggerImpl() const

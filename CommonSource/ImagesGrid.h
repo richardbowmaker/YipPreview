@@ -8,8 +8,12 @@
 #ifndef COMMON_IMAGESGRID_H_
 #define COMMON_IMAGESGRID_H_
 
+#include <string>
 #include <wx/wx.h>
 #include <wx/grid.h>
+
+#include "_Types.h"
+#include "FileSet.h"
 
 class ImagesGridServer
 {
@@ -35,7 +39,6 @@ public:
     void initialise(ImagesGridServer *iServer);
     void uninitialise();
     void populate();
-    void eventDispatch(wxGridEvent &event);
 
     // grid functions
     void refreshRowsAppended(const int noOfRows);
@@ -49,6 +52,8 @@ public:
 private:
 
     void onFocus(wxFocusEvent& event);
+    void eventDispatch(wxGridEvent &event);
+    void onColSort(wxGridEvent &event);
 
     ImagesGridServer *iServer_;
 };
