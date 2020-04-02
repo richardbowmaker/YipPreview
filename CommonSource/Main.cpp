@@ -103,8 +103,8 @@ Main::Main(const wxString& title, const wxPoint& pos, const wxSize& size) :
 	FileSetManager::initialise();
 
 	VolumeManager::initialise();
-	VolumeT vol1 = std::make_shared<Volume>(FU::pathToLocal(LR"(/YipPreview/Tryout)"), false);
-//	VolumeT vol2 = std::make_shared<Volume>(FU::pathToLocal(LR"(/YipPreview/Encrypted/TestVol1.hc)"), true);
+	VolumeT vol1 = std::make_shared<Volume>(FU::pathToLocal(R"(/YipPreview/Tryout)"), false);
+//	VolumeT vol2 = std::make_shared<Volume>(FU::pathToLocal(R"(/YipPreview/Encrypted/TestVol1.hc)"), true);
 	VolumeManager::add(vol1);
 //	VolumeManager::add(vol2);
 
@@ -176,7 +176,7 @@ Main::Main(const wxString& title, const wxPoint& pos, const wxSize& size) :
 
 #ifdef LINUX_BUILD
 	if (SudoMode::inSudoMode())
-		Logger::error(L"Application is currently running at SUDO level");
+		Logger::error("Application is currently running at SUDO level");
 #endif
 }
 
@@ -261,12 +261,12 @@ void Main::browserSetSelected(const int selected)
 	grid_->SelectRow(selected);
 }
 
-std::wstring Main::browserGetImage(const int n)
+std::string Main::browserGetImage(const int n)
 {
 	return FileSetManager::getFileSet(n)->getImage();
 }
 
-std::wstring Main::browserGetVideo(const int n)
+std::string Main::browserGetVideo(const int n)
 {
 	return FileSetManager::getFileSet(n)->getVideo();
 }
@@ -302,8 +302,8 @@ void Main::onClose(wxCloseEvent& event)
 	int unmount{wxNO};
 	if (VolumeManager::hasMountedVolumes())
 	{
-		unmount = Utilities::messageBox(L"Do you want to unmount all volumes ?",
-				L"Close", wxYES_NO | wxCANCEL , this);
+		unmount = Utilities::messageBox("Do you want to unmount all volumes ?",
+				"Close", wxYES_NO | wxCANCEL , this);
 		if (unmount == wxCANCEL)
 		{
 			event.Veto(true);

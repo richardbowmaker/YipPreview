@@ -43,7 +43,7 @@ void Logger::onLogger(wxLoggerEvent& event)
 {
 	// add to message box
 	wxListBox* lb = dynamic_cast<wxListBox*>(event.GetEventObject());
-	if (lb != nullptr) append(event.getLevel(), event.GetString().wc_str());
+	if (lb != nullptr) append(event.getLevel(), event.GetString().c_str());
 }
 
 void Logger::setLevel(const LevelT level)
@@ -70,9 +70,9 @@ void Logger::enableLineCount(const bool enable)
 	lcEnable_ = enable;
 }
 
-void Logger::append(const LevelT level, const wchar_t* text)
+void Logger::append(const LevelT level, const char* text)
 {
-	wchar_t buf[kBufferMax];
+	char buf[kBufferMax];
 
 	// first call, set ticks at time zero
 	long t = Utilities::getMsCounter();
@@ -84,32 +84,32 @@ void Logger::append(const LevelT level, const wchar_t* text)
 
 		// show time
 		if (showTime_)
-			n = swprintf(buf, sizeof(buf) / sizeof(wchar_t), L"***** %08ld: ", t - tzero_);
+			n = snprintf(buf, sizeof(buf) / sizeof(char), "***** %08ld: ", t - tzero_);
 
 		// show line count
 		if (lcEnable_)
-			n += swprintf(&buf[n], (sizeof(buf) / sizeof(wchar_t)) - n, L"%05ld: ", lineNo_);
+			n += snprintf(&buf[n], (sizeof(buf) / sizeof(char)) - n, "%05ld: ", lineNo_);
 
 		// show level
 		switch (level)
 		{
 		case Error:
-			n += swprintf(&buf[n], (sizeof(buf) / sizeof(wchar_t)) - n, L"%ls: ", L"Error  ");
+			n += snprintf(&buf[n], (sizeof(buf) / sizeof(char)) - n, "%s: ", "Error  ");
 			break;
 		case Warning:
-			n += swprintf(&buf[n], (sizeof(buf) / sizeof(wchar_t)) - n, L"%ls: ", L"Warning");
+			n += snprintf(&buf[n], (sizeof(buf) / sizeof(char)) - n, "%s: ", "Warning");
 			break;
 		case Info:
-			n += swprintf(&buf[n], (sizeof(buf) / sizeof(wchar_t)) - n, L"%ls: ", L"Info   ");
+			n += snprintf(&buf[n], (sizeof(buf) / sizeof(char)) - n, "%s: ", "Info   ");
 			break;
 		}
 
 		// show message
-		swprintf(&buf[n], (sizeof(buf) / sizeof(wchar_t)) - n, L"%ls\n", text);
+		snprintf(&buf[n], (sizeof(buf) / sizeof(char)) - n, "%s\n", text);
 #ifdef WINDOWS_BUILD
 		OutputDebugString(buf);
 #elif LINUX_BUILD
-		std::cout << SU::wStrToStr(buf);
+		std::cout << buf;
 #endif
 	}
 
@@ -118,36 +118,36 @@ void Logger::append(const LevelT level, const wchar_t* text)
 	if (tid_ == Utilities::getThreadId())
 	{
 		// in GUI thread, so update list box
-		std::wstring str(text), temp;
-		std::wstringstream wss(str);
-		while(std::getline(wss, temp, L'\n'))
+		std::string str(text), temp;
+		std::stringstream ss(str);
+		while(std::getline(ss, temp, '\n'))
 		{
 			int n = 0;
 
 			// display tick count
 			if (showTime_)
-				n = swprintf(buf, sizeof(buf) / sizeof(wchar_t), L"%08ld: ", t - tzero_);
+				n = snprintf(buf, sizeof(buf) / sizeof(char), "%08ld: ", t - tzero_);
 
 			// show line number
 			if (lcEnable_)
-				n += swprintf(&buf[n], (sizeof(buf) / sizeof(wchar_t)) - n, L"%05ld: ", lineNo_++);
+				n += snprintf(&buf[n], (sizeof(buf) / sizeof(char)) - n, "%05ld: ", lineNo_++);
 
 			// show level
 			switch (level)
 			{
 			case Error: 
-				n += swprintf(&buf[n], (sizeof(buf) / sizeof(wchar_t)) - n, L"%ls: ", L"Error  ");
+				n += snprintf(&buf[n], (sizeof(buf) / sizeof(char)) - n, "%s: ", "Error  ");
 				break;
 			case Warning:
-				n += swprintf(&buf[n], (sizeof(buf) / sizeof(wchar_t)) - n, L"%ls: ", L"Warning");
+				n += snprintf(&buf[n], (sizeof(buf) / sizeof(char)) - n, "%s: ", "Warning");
 				break;
 			case Info:
-				n += swprintf(&buf[n], (sizeof(buf) / sizeof(wchar_t)) - n, L"%ls: ", L"Info   ");
+				n += snprintf(&buf[n], (sizeof(buf) / sizeof(char)) - n, "%s: ", "Info   ");
 				break;
 			}
 
 			// show message
-			swprintf(&buf[n], (sizeof(buf) / sizeof(wchar_t)) - n, L"%ls", temp.c_str());
+			snprintf(&buf[n], (sizeof(buf) / sizeof(char)) - n, "%s", temp.c_str());
 
 			// add to list box
 			lbox_->Append(buf);
@@ -173,14 +173,14 @@ void Logger::append(const LevelT level, const wchar_t* text)
 	}
 }
 
-void Logger::log(const LevelT level, const wchar_t* format, va_list vl)
+void Logger::log(const LevelT level, const char* format, va_list vl)
 {
-	wchar_t buff[kBufferMax];
-	vswprintf(buff, sizeof(buff) / sizeof(wchar_t), format, vl);
+	char buff[kBufferMax];
+	vsnprintf(buff, sizeof(buff) / sizeof(char), format, vl);
 	append(level, buff);
 }
 
-void Logger::log(const LevelT level, const wchar_t* format, ...)
+void Logger::log(const LevelT level, const char* format, ...)
 {
 	if (level >= level_)
 	{
@@ -190,10 +190,10 @@ void Logger::log(const LevelT level, const wchar_t* format, ...)
 	}
 }
 
-void Logger::systemError(const int err, const wchar_t* format, ...)
+void Logger::systemError(const int err, const char* format, ...)
 {
 #ifdef WINDOWS_BUILD
-	wchar_t* errStr;
+	char* errStr;
 	if (!FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
 		NULL,
 		err,
@@ -201,27 +201,27 @@ void Logger::systemError(const int err, const wchar_t* format, ...)
 		reinterpret_cast<LPWSTR>(&errStr),
 		0,
 		NULL)) return;
-	std::wstring ws(errStr);
+	std::string ws(errStr);
 	LocalFree(errStr);
-	wchar_t buff[kBufferMax];
-	swprintf(buff, sizeof(buff) / sizeof(wchar_t), L" [%ls: %d]", ws.substr(0, ws.size() - 2).c_str(), err);
+	char buff[kBufferMax];
+	sprintf(buff, sizeof(buff) / sizeof(char), " [%s: %d]", ws.substr(0, ws.size() - 2).c_str(), err);
 #elif LINUX_BUILD
-	wchar_t buff[kBufferMax];
-	swprintf(buff, sizeof(buff), L" [%ls: %d]", SU::strToWStr(strerror(err)).c_str(), err);
+	char buff[kBufferMax];
+	snprintf(buff, sizeof(buff), " [%s: %d]", strerror(err), err);
 #endif
 	va_list vl;
 	va_start(vl, format);
-	log(Error, (std::wstring(format) + std::wstring(buff)).c_str(), vl);
+	log(Error, (std::string(format) + std::string(buff)).c_str(), vl);
 }
 
-void Logger::error(const wchar_t* format, ...)
+void Logger::error(const char* format, ...)
 {
 	va_list vl;
 	va_start(vl, format);
 	log(Error, format, vl);
 }
 
-void Logger::warning(const wchar_t* format, ...)
+void Logger::warning(const char* format, ...)
 {
 	if (level_ <= Warning)
 	{
@@ -231,7 +231,7 @@ void Logger::warning(const wchar_t* format, ...)
 	}
 }
 
-void Logger::info(const wchar_t* format, ...)
+void Logger::info(const char* format, ...)
 {
 	if (level_ <= Info)
 	{
@@ -241,7 +241,7 @@ void Logger::info(const wchar_t* format, ...)
 	}
 }
 
-void Logger::error(const StringCollT &strings, const wchar_t* format, ...)
+void Logger::error(const StringCollT &strings, const char* format, ...)
 {
 	va_list vl;
 	va_start(vl, format);
@@ -249,7 +249,7 @@ void Logger::error(const StringCollT &strings, const wchar_t* format, ...)
 	for (auto s : strings) append(Error, s.c_str());
 }
 
-void Logger::warning(const StringCollT &strings, const wchar_t* format, ...)
+void Logger::warning(const StringCollT &strings, const char* format, ...)
 {
 	if (level_ <= Warning)
 	{
@@ -260,7 +260,7 @@ void Logger::warning(const StringCollT &strings, const wchar_t* format, ...)
 	}
 }
 
-void Logger::info(const StringCollT &strings, const wchar_t* format, ...)
+void Logger::info(const StringCollT &strings, const char* format, ...)
 {
 	if (level_ <= Info)
 	{
@@ -271,7 +271,7 @@ void Logger::info(const StringCollT &strings, const wchar_t* format, ...)
 	}
 }
 
-bool Logger::test(const bool result, const wchar_t* format, ...)
+bool Logger::test(const bool result, const char* format, ...)
 {
 	if (!result)
 	{

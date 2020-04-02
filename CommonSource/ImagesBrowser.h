@@ -18,8 +18,8 @@ public:
 	virtual int browserGetNoOfImages() = 0;
 	virtual int browserGetSelected() = 0;
 	virtual void browserSetSelected(const int selected) = 0;
-	virtual std::wstring browserGetImage(const int n) = 0;
-	virtual std::wstring browserGetVideo(const int n) = 0;
+	virtual std::string browserGetImage(const int n) = 0;
+	virtual std::string browserGetVideo(const int n) = 0;
 	virtual wxMenu *browserGetPopupMenu(const int item) = 0;
 };
 

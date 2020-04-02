@@ -19,7 +19,7 @@ FileSet::FileSet() : volume_(nullptr)
 {
 }
 
-FileSet::FileSet(const Volume *volume, const std::wstring file)
+FileSet::FileSet(const Volume *volume, const std::string file)
 {
 	volume_ = volume;
 	set(file);
@@ -29,30 +29,30 @@ FileSet::~FileSet()
 {
 }
 
-std::wstring FileSet::filenameToId(const std::wstring filename)
+std::string FileSet::filenameToId(const std::string filename)
 {
 	return FU::getFileStem(filename);
 }
 
-FileSet::TypeT FileSet::filenameToType(const std::wstring filename)
+FileSet::TypeT FileSet::filenameToType(const std::string filename)
 {
-	std::wstring ext = FU::getExt(filename);
-	if (ext.compare(L"jpg") == 0 || ext.compare(L"jpeg") == 0)
+	std::string ext = FU::getExt(filename);
+	if (ext.compare("jpg") == 0 || ext.compare("jpeg") == 0)
 		return ImageFile;
-	else if (ext.compare(L"mp4") == 0 || ext.compare(L"avi") == 0)
+	else if (ext.compare("mp4") == 0 || ext.compare("avi") == 0)
 		return VideoFile;
-	else if (ext.compare(L"lnk") == 0)
+	else if (ext.compare("lnk") == 0)
 		return LinkFile;
 	else
 		return InvalidFile;
 }
 
-bool FileSet::isValidType(const std::wstring filename)
+bool FileSet::isValidType(const std::string filename)
 {
 	return filenameToType(filename) != InvalidFile;
 }
 
-void FileSet::set(const std::wstring filename)
+void FileSet::set(const std::string filename)
 {
 	switch (filenameToType(filename))
 	{
@@ -60,19 +60,19 @@ void FileSet::set(const std::wstring filename)
 	case VideoFile: setVideo(filename); return;
 	case LinkFile:  setLink(filename);  return;
 	default:
-		Logger::error(L"FileSet::setFilename, unhandled file type");
+		Logger::error("FileSet::setFilename, unhandled file type");
 		break;
 	}
 }
 
-std::wstring FileSet::getId() const
+std::string FileSet::getId() const
 {
 	return id_;
 }
 
-bool FileSet::setId(const std::wstring filename)
+bool FileSet::setId(const std::string filename)
 {
-	std::wstring s = filenameToId(filename);
+	std::string s = filenameToId(filename);
 	if (id_.size() == 0)
 	{
 		// first time a file is set, capture the id and short name
@@ -88,7 +88,7 @@ bool FileSet::setId(const std::wstring filename)
 	}
 	else
 	{
-		Logger::error(L"FileSet::setId mismatch, id = %ls, fn = %ls", id_.c_str(), filename.c_str());
+		Logger::error("FileSet::setId mismatch, id = %s, fn = %s", id_.c_str(), filename.c_str());
 		return false;
 	}
 }
@@ -98,32 +98,32 @@ const Volume* FileSet::getVolume() const
 	return volume_;
 }
 
-std::wstring FileSet::getImage() const
+std::string FileSet::getImage() const
 {
 	return image_;
 }
 
-void FileSet::setImage(const std::wstring filename)
+void FileSet::setImage(const std::string filename)
 {
 	if (setId(filename)) image_ = filename;
 }
 
-std::wstring FileSet::getVideo() const
+std::string FileSet::getVideo() const
 {
 	return video_;
 }
 
-void FileSet::setVideo(const std::wstring filename)
+void FileSet::setVideo(const std::string filename)
 {
 	if (setId(filename)) video_ = filename;
 }
 
-std::wstring FileSet::getLink() const
+std::string FileSet::getLink() const
 {
 	return link_;
 }
 
-void FileSet::setLink(const std::wstring filename)
+void FileSet::setLink(const std::string filename)
 {
 	if (setId(filename)) link_ = filename;
 }
@@ -143,23 +143,23 @@ bool FileSet::hasLink() const
 	return link_.size() > 0;
 }
 
-std::wstring FileSet::typesToString() const
+std::string FileSet::typesToString() const
 {
-	std::wstring s;
-	if (hasVideo()) s += L"V";
-	if (hasImage()) s += L"I";
-	if (hasLink())  s += L"L";
+	std::string s;
+	if (hasVideo()) s += "V";
+	if (hasImage()) s += "I";
+	if (hasLink())  s += "";
 	return s;
 }
 
-std::wstring FileSet::getShortName() const
+std::string FileSet::getShortName() const
 {
 	return short_;
 }
 
-std::wstring FileSet::toString() const
+std::string FileSet::toString() const
 {
-	return std::wstring(L"ID = ") + id_ + std::wstring(L", ") + typesToString();
+	return std::string("ID = ") + id_ + std::string(", ") + typesToString();
 }
 
 bool FileSet::sort(const ColT col, FileSetT &other, const bool ascending)
@@ -190,51 +190,51 @@ bool FileSet::sort(const ColT col, FileSetT &other, const bool ascending)
 
 //
 //	// helper to format a volume float to sortable string
-//	auto volToString = [](FileProperties &ps, const std::wstring field)
+//	auto volToString = [](FileProperties &ps, const std::string field)
 //	{
-//		std::wstring s;
-//		wchar_t buf[1000];
+//		std::string s;
+//		char buf[1000];
 //		if (ps.getString(field).size() > 0)
 //		{
 //			float f = ps.getFloat(field);
-//			swprintf(buf, sizeof(buf) / sizeof(wchar_t), L"%3.2f", std::abs(f));
-//			s = std::wstring(buf);
+//			snprintf(buf, sizeof(buf) / sizeof(char), "%3.2f", std::abs(f));
+//			s = std::string(buf);
 //			if (f >= 0)
-//				s = std::wstring(1, L'>') + s;
+//				s = std::string(1, '>') + s;
 //			else
-//				s = std::wstring(1, L'<') + s;
+//				s = std::string(1, '<') + s;
 //		}
 //		return s;
 //	};
 //
 //	// time field to a sortable string
-//	auto timeToString = [](const std::wstring &t) -> std::wstring
+//	auto timeToString = [](const std::string &t) -> std::string
 //	{
 //		// 0123456789012345678
 //		// 15:13:54 30/03/2020
-//		std::wstringstream s;
+//		std::stringstream s;
 //		if (t.size() == 19)
 //			s << t.substr(15, 4) << t.substr(12, 2) << t.substr(9, 2) << t.substr(0, 8);
 //		else if (t.size() == 10)
-//			s << t.substr(15, 4) << t.substr(12, 2) << t.substr(9, 2) << L"00:00:00";
+//			s << t.substr(15, 4) << t.substr(12, 2) << t.substr(9, 2) << "00:00:00";
 //		return s.str();
 //	};
 //
-//	auto timesToString = [](const int ts) -> std::wstring
+//	auto timesToString = [](const int ts) -> std::string
 //	{
-//		std::wstring s;
+//		std::string s;
 //		if (ts > 0)
 //		{
-//			wchar_t buf[1000];
-//			swprintf(buf, sizeof(buf) / sizeof(wchar_t), L"%05d", ts);
-//			s = std::wstring(buf);
+//			char buf[1000];
+//			snprintf(buf, sizeof(buf) / sizeof(char), "%05d", ts);
+//			s = std::string(buf);
 //		}
 //		return s;
 //   };
 
 	// the sort fields
-	std::wstring s1;
-	std::wstring s2;
+	std::string s1;
+	std::string s2;
 	s1 = id_;
 	s2 = other->getId();
 	int n = s1.compare(s2);
@@ -270,16 +270,16 @@ bool FileSet::sort(const ColT col, FileSetT &other, const bool ascending)
 //		s2 = other->getLastTime();
 //		break;
 ////	case ColT::Times:
-////		s1 = timesToString(properties_.getInt(L"times"));
-////		s2 = timesToString(other->properties().getInt(L"times"));
+////		s1 = timesToString(properties_.getInt("times"));
+////		s2 = timesToString(other->properties().getInt("times"));
 ////		break;
 ////	case ColT::MaxVol:
-////		s1 = volToString(properties_, L"maxvol");
-////		s2 = volToString(other->properties(), L"maxvol");
+////		s1 = volToString(properties_, "maxvol");
+////		s2 = volToString(other->properties(), "maxvol");
 ////		break;
 ////	case ColT::AverageVol:
-////		s1 = volToString(properties_, L"averagevol");
-////		s2 = volToString(other->properties(), L"averagevol");
+////		s1 = volToString(properties_, "averagevol");
+////		s2 = volToString(other->properties(), "averagevol");
 ////		break;
 //	default:
 //		break;
@@ -308,13 +308,13 @@ bool FileSet::sort(const ColT col, FileSetT &other, const bool ascending)
 
 void FileSet::toLogger()
 {
-	Logger::info(L"File Set");
+	Logger::info("File Set");
 
-	Logger::info(L"\tID %ls",         id_.c_str());
-	Logger::info(L"\tShortname %ls",  short_.c_str());
-	Logger::info(L"\tImage file %ls", image_.c_str());
-	Logger::info(L"\tVideo file %ls", video_.c_str());
-	Logger::info(L"\tLink file %ls",  link_.c_str());
+	Logger::info("\tID %s",         id_.c_str());
+	Logger::info("\tShortname %s",  short_.c_str());
+	Logger::info("\tImage file %s", image_.c_str());
+	Logger::info("\tVideo file %s", video_.c_str());
+	Logger::info("\tLink file %s",  link_.c_str());
 	properties_.toLogger();
 }
 
@@ -332,31 +332,31 @@ void FileSet::setDurationMs(const long ms)
 {
 	Duration d;
 	d.setMs(ms);
-	properties_.setString(L"duration", d.toString());
+	properties_.setString("duration", d.toString());
 }
 
 long FileSet::getDurationMs() const
 {
 	Duration d;
-	d.parse(properties_.getString(L"duration"));
+	d.parse(properties_.getString("duration"));
 	return d.getMs();
 }
 
 // (hh:)mm:ss(.nnn)
-void FileSet::setDurationStr(const std::wstring duration)
+void FileSet::setDurationStr(const std::string duration)
 {
-	std::wstring s;
+	std::string s;
 	if (duration.size() > 0)
 	{
 		Duration d;
 		if (d.parse(duration)) s = d.toString();
 	}
-	properties_.setString(L"duration", s);
+	properties_.setString("duration", s);
 }
 
-std::wstring FileSet::getDurationStr() const
+std::string FileSet::getDurationStr() const
 {
-	std::wstring p = properties_.getString(L"duration");
+	std::string p = properties_.getString("duration");
 	if (p.size() > 0)
 	{
 		Duration d;
@@ -365,58 +365,58 @@ std::wstring FileSet::getDurationStr() const
 	return p;
 }
 
-std::wstring FileSet::getLastTime() const
+std::string FileSet::getLastTime() const
 {
-	return properties_.getString(L"lasttime");
+	return properties_.getString("lasttime");
 }
 
-std::wstring FileSet::getTimes() const
+std::string FileSet::getTimes() const
 {
-	return properties_.getString(L"times");
+	return properties_.getString("times");
 }
 
 float FileSet::getMaxVol() const
 {
-	return properties_.getFloat(L"maxvol");
+	return properties_.getFloat("maxvol");
 }
 
-std::wstring FileSet::getMaxVolStr() const
+std::string FileSet::getMaxVolStr() const
 {
-	return properties_.getString(L"maxvol");
+	return properties_.getString("maxvol");
 }
 
 void FileSet::setMaxVol(const float maxvol)
 {
-	wchar_t buf[100];
-	swprintf(buf, sizeof(buf) / sizeof(wchar_t), L"%.2f", maxvol);
-	properties_.setString(L"maxvol", std::wstring(buf));
+	char buf[100];
+	snprintf(buf, sizeof(buf) / sizeof(char), "%.2f", maxvol);
+	properties_.setString("maxvol", std::string(buf));
 }
 
 float FileSet::getAverageVol() const
 {
-	return properties_.getFloat(L"averagevol");
+	return properties_.getFloat("averagevol");
 }
 
-std::wstring FileSet::getAverageVolStr() const
+std::string FileSet::getAverageVolStr() const
 {
-	return properties_.getString(L"averagevol");
+	return properties_.getString("averagevol");
 }
 
 void FileSet::setAverageVol(const float averagevol)
 {
-	wchar_t buf[100];
-	swprintf(buf, sizeof(buf) / sizeof(wchar_t), L"%.2f", averagevol);
-	properties_.setString(L"averagevol", std::wstring(buf));
+	char buf[100];
+	snprintf(buf, sizeof(buf) / sizeof(char), "%.2f", averagevol);
+	properties_.setString("averagevol", std::string(buf));
 }
 
 void FileSet::setIsSelected(const bool selected)
 {
-	properties_.setString(L"selected", selected ? L"X" : L"");
+	properties_.setString("selected", selected ? "X" : "");
 }
 
-std::wstring FileSet::getIsSelected() const
+std::string FileSet::getIsSelected() const
 {
-	return properties_.getString(L"selected");
+	return properties_.getString("selected");
 }
 
 

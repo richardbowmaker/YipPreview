@@ -72,7 +72,7 @@ void ImagePanel::setBorderColour(const wxColour &colour)
 	paneli_->SetBackgroundColour(Constants::white);
 }
 
-void ImagePanel::setImage(const std::wstring file, const wxBitmapType format)
+void ImagePanel::setImage(const std::string file, const wxBitmapType format)
 {
 	unbindEvents();
 
@@ -318,7 +318,7 @@ void ImagePanel::zoomImage(wxPoint pt, float scalex)
 	render(dc);
 }
 
-void ImagePanel::startPreview(const std::wstring file)
+void ImagePanel::startPreview(const std::string file)
 {
 	if (preview_ != nullptr) return;
 	if (!FU::fileExists(file)) return;

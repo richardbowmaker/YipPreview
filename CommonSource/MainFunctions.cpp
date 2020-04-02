@@ -87,11 +87,11 @@ void Main::setupMenus()
 
 	// file, delete
 	menus_[ID_MenuFileSelect] =
-		menuFile->Append(ID_MenuFileSelect, L"Select...\tCtrl-S", L"Select volumes");
+		menuFile->Append(ID_MenuFileSelect, "Select...\tCtrl-S", "Select volumes");
 	
 	// file, delete
 	menus_[ID_MenuFileDelete] =
-		menuFile->Append(ID_MenuFileDelete, L"Delete...\tCtrl-D", L"Delete file");
+		menuFile->Append(ID_MenuFileDelete, "Delete...\tCtrl-D", "Delete file");
 
 	menuFile->AppendSeparator();
 
@@ -104,17 +104,17 @@ void Main::setupMenus()
 
 	// view, play
 	menus_[ID_MenuViewPlay] =
-		menuView->Append(ID_MenuViewPlay, L"Play\tF1", L"Play file");
+		menuView->Append(ID_MenuViewPlay, "Play\tF1", "Play file");
 
 	// view, toggle preview
 	menus_[ID_MenuViewTogglePreview] =
-		menuView->Append(ID_MenuViewTogglePreview, L"Preview mode on/off", L"Toggles preview mode", wxITEM_CHECK);
+		menuView->Append(ID_MenuViewTogglePreview, "Preview mode on/off", "Toggles preview mode", wxITEM_CHECK);
 
 	// view, more/less images
 	menus_[ID_MenuViewMoreImages] =
-		menuView->Append(ID_MenuViewMoreImages, L"Show more images", L"Shows more images in the image browser");
+		menuView->Append(ID_MenuViewMoreImages, "Show more images", "Shows more images in the image browser");
 	menus_[ID_MenuViewLessImages] =
-		menuView->Append(ID_MenuViewLessImages, L"Show less images", L"Shows less images in the image browser");
+		menuView->Append(ID_MenuViewLessImages, "Show less images", "Shows less images in the image browser");
 
 	// tools menu
 	wxMenu* menuTools = new wxMenu;
@@ -122,7 +122,7 @@ void Main::setupMenus()
 
 	// tools, video updater
 	menus_[ID_MenuToolsVideoUpdater] =
-		menuTools->Append(ID_MenuToolsVideoUpdater, L"&Update video...\tCtrl-V", L"Video update tools");
+		menuTools->Append(ID_MenuToolsVideoUpdater, "&Update video...\tCtrl-V", "Video update tools");
 
 	// tools menu
 	wxMenu* menuTest = new wxMenu;
@@ -130,15 +130,15 @@ void Main::setupMenus()
 
 	// test, test dialog
 	menus_[ID_MenuTestTest] =
-		menuTest->Append(ID_MenuTestTest, L"Test\tCtrl-V", L"Runs unit tests");
+		menuTest->Append(ID_MenuTestTest, "Test\tCtrl-V", "Runs unit tests");
 
 	// test, tryout
 	menus_[ID_MenuTestTryout] =
-		menuTest->Append(ID_MenuTestTryout, L"TryOut...\tCtrl-T", L"Hook for experimental code");
+		menuTest->Append(ID_MenuTestTryout, "TryOut...\tCtrl-T", "Hook for experimental code");
 
 	// test, to logger
 	menus_[ID_MenuTestToLogger] =
-		menuTest->Append(ID_MenuTestToLogger, L"To Logger\tCtrl-L", L"Hook for experimental code");
+		menuTest->Append(ID_MenuTestToLogger, "To Logger\tCtrl-", "Hook for experimental code");
 
 	// help menu
 	wxMenu* menuHelp = new wxMenu;
@@ -148,11 +148,11 @@ void Main::setupMenus()
 
 	// setup menu bar
 	wxMenuBar* menuBar = new wxMenuBar;
-	menuBar->Append(menuFile, L"File");
-	menuBar->Append(menuView, L"View");
-	menuBar->Append(menuTools, L"Tools");
-	menuBar->Append(menuTest, L"Test");
-	menuBar->Append(menuHelp, L"Help");
+	menuBar->Append(menuFile, "File");
+	menuBar->Append(menuView, "View");
+	menuBar->Append(menuTools, "Tools");
+	menuBar->Append(menuTest, "Test");
+	menuBar->Append(menuHelp, "Help");
 	SetMenuBar(menuBar);
 
 	// bind the menu selected event to the dispatch function
@@ -202,9 +202,9 @@ void Main::menuConfigure(wxMenuEvent& event, int menuId)
 		menus_[ID_MenuViewPlay]->Enable(isSelected);
 		menus_[ID_MenuViewTogglePreview]->Check(Constants::previewMode);
 		if (Constants::previewMode)
-			menus_[ID_MenuViewTogglePreview]->SetItemLabel(L"Preview mode off");
+			menus_[ID_MenuViewTogglePreview]->SetItemLabel("Preview mode off");
 		else
-			menus_[ID_MenuViewTogglePreview]->SetItemLabel(L"Preview mode on");
+			menus_[ID_MenuViewTogglePreview]->SetItemLabel("Preview mode on");
 		menus_[ID_MenuViewMoreImages]->Enable(Constants::imageBrowserSize < Constants::imageBrowserSizeMax);
 		menus_[ID_MenuViewLessImages]->Enable(Constants::imageBrowserSize > Constants::imageBrowserSizeMin);
 		break;
@@ -293,21 +293,21 @@ wxMenu *Main::getPopupMenu(const int item)
 
 	wxMenu *menu = new wxMenu();
 	wxMenuItem *menuItem;
-	menuItem = menu->Append(ID_MenuFileDelete, L"Delete ...");
+	menuItem = menu->Append(ID_MenuFileDelete, "Delete ...");
 	menuItem->Enable(fs.get() != nullptr);
 
-	menuItem = menu->Append(ID_MenuViewPlay, L"Play");
+	menuItem = menu->Append(ID_MenuViewPlay, "Play");
 	menuItem->Enable(fs.get() != nullptr);
 
-	menuItem = menu->Append(ID_MenuToolsVideoUpdater, L"Update video ...");
+	menuItem = menu->Append(ID_MenuToolsVideoUpdater, "Update video ...");
 	menuItem->Enable(fs.get() != nullptr && fs->hasVideo());
 
-	menuItem = menu->Append(ID_MenuViewTogglePreview, L"Preview mode", wxEmptyString, wxITEM_CHECK);
+	menuItem = menu->Append(ID_MenuViewTogglePreview, "Preview mode", wxEmptyString, wxITEM_CHECK);
 	menuItem->Check(Constants::previewMode);
 	if (Constants::previewMode)
-		menuItem->SetItemLabel(L"Preview mode off");
+		menuItem->SetItemLabel("Preview mode off");
 	else
-		menuItem->SetItemLabel(L"Preview mode on");
+		menuItem->SetItemLabel("Preview mode on");
 
 	menu->Bind(wxEVT_MENU, &Main::menuSelectedDispatch, this, wxID_ANY);
 	return menu;
@@ -319,15 +319,15 @@ wxMenu *Main::getPopupMenu(const int item)
 
 void Main::deleteFile(wxCommandEvent& event, const int row, FileSet& fileset)
 {
-	Logger::info(L"Delete file %ls, %d", fileset.getId().c_str(), row);
+	Logger::info("Delete file %s, %d", fileset.getId().c_str(), row);
 }
 
 void Main::play(wxCommandEvent& event, const int row, FileSet &fileset)
 {
-	Logger::info(L"Play %ls, %d", fileset.getId().c_str(), row);
+	Logger::info("Play %s, %d", fileset.getId().c_str(), row);
 
-	fileset.properties().setDateTimeNow(L"lasttime");
-	fileset.properties().incCount(L"times");
+	fileset.properties().setDateTimeNow("lasttime");
+	fileset.properties().incCount("times");
 	refresh(fileset);
 }
 
@@ -428,7 +428,7 @@ void Main::unitTests()
 	result &= Duration::test();
 	result &= FileProperties::test();
 
-	if (result) Logger::info(L"All unit tests passed");
+	if (result) Logger::info("All unit tests passed");
 }
 
 void Main::updateNoOfImages(const int delta)

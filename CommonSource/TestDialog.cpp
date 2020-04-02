@@ -26,14 +26,14 @@ TestDialog::TestDialog(wxWindow *parent, FileSetT &fileset) :
 	sizer_(nullptr),
 	button_(nullptr)
 {
-	setTitle(L"Test dialog", fileset_);
+	setTitle("Test dialog", fileset_);
 
 	sizer_ = new wxBoxSizer(wxVERTICAL);
 	panel_ = new wxPanel(getPanel());
 	panel_->SetBackgroundColour(Constants::lightBlue);
 	sizer_->Add(panel_, 10, wxEXPAND);
 
-	button_ = new wxButton(getPanel(), wxID_ANY, L"Toggle", wxPoint(0, 0), wxSize(30, 30));
+	button_ = new wxButton(getPanel(), wxID_ANY, "Toggle", wxPoint(0, 0), wxSize(30, 30));
 	button_->Bind(wxEVT_BUTTON, &TestDialog::onButton, this);
 	sizer_->Add(button_, 1, wxEXPAND);
 

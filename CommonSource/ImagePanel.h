@@ -40,8 +40,8 @@ public:
 
 	void uninitialise();
 	void setBorderColour(const wxColour &colour);
-	void setImage(const std::wstring file, const wxBitmapType format);
-	void startPreview(const std::wstring file);
+	void setImage(const std::string file, const wxBitmapType format);
+	void startPreview(const std::string file);
 	void stopPreview();
 	bool inPreview() const;
 

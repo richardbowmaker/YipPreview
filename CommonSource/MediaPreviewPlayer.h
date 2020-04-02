@@ -30,7 +30,7 @@ public:
 			const wxString &name = wxPanelNameStr);
 	virtual ~MediaPreviewPlayer();
 
-	MediaPreviewPlayer &setFile(const std::wstring &file);
+	MediaPreviewPlayer &setFile(const std::string &file);
 	void startPreview();
 	void stopPreview();
 
@@ -43,7 +43,7 @@ private:
 	long duration();
 
 	// the video file
-	std::wstring file_;
+	std::string file_;
 	int duration_;	// seconds
 
 	// controls

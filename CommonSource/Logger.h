@@ -37,16 +37,16 @@ public:
 	static void enableLineCount(const bool enable);
 
 	static void clear();
-	static void log(const LevelT level, const wchar_t* format, ...);
-	static void systemError(const int err, const wchar_t* format, ...); // err = errno
-	static void error(const wchar_t* format, ...);
-	static void warning(const wchar_t* format, ...);
-	static void info(const wchar_t* format, ...);
-	static void error(const StringCollT &strings, const wchar_t* format, ...);
-	static void warning(const StringCollT &strings, const wchar_t* format, ...);
-	static void info(const StringCollT &strings, const wchar_t* format, ...);
+	static void log(const LevelT level, const char* format, ...);
+	static void systemError(const int err, const char* format, ...); // err = errno
+	static void error(const char* format, ...);
+	static void warning(const char* format, ...);
+	static void info(const char* format, ...);
+	static void error(const StringCollT &strings, const char* format, ...);
+	static void warning(const StringCollT &strings, const char* format, ...);
+	static void info(const StringCollT &strings, const char* format, ...);
 
-	static bool test(const bool result, const wchar_t* format, ...);
+	static bool test(const bool result, const char* format, ...);
 
 	//static void logSourceSystemError(const char* file, const int line, const int err, const char* format, ...); // err = errno
 	//static void logSourceError(const char* file, const int line, const char* format, ...);
@@ -61,8 +61,8 @@ private:
 
 	void onLogger(wxLoggerEvent& event);
 
-	static void log(const LevelT level, const wchar_t* format, va_list vl);
-	static void append(const LevelT level, const wchar_t* text);
+	static void log(const LevelT level, const char* format, va_list vl);
+	static void append(const LevelT level, const char* text);
 
 	static LevelT level_;
 	static Logger* lbox_;

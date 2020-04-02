@@ -24,34 +24,34 @@ class Volume
 {
 public:
 
-	Volume(const std::wstring file, const bool isMountable);
+	Volume(const std::string file, const bool isMountable);
 	virtual ~Volume();
 
-	std::wstring getFile() const;
-	std::wstring getMount() const;
-	std::wstring getShortName() const;
+	std::string getFile() const;
+	std::string getMount() const;
+	std::string getShortName() const;
 	bool getIsMountable() const;
 	bool getIsMounted() const;
 	bool getIsSelected() const;
 	void setIsSelected(const bool isSelected);
-	std::wstring getPropertiesFile() const;
-	std::wstring getFilesDirectory() const;
+	std::string getPropertiesFile() const;
+	std::string getFilesDirectory() const;
 	FileSetCollT getFileSets() const;
 	bool hasFileSets() const;
 	void readProperties();
 	void writeProperties();
-	bool mount(const std::wstring &m, const std::wstring &password);
+	bool mount(const std::string &m, const std::string &password);
 	bool unmount();
 	void loadFiles();
 	void clearFiles();
-	std::wstring toString() const;
+	std::string toString() const;
 	void toLogger() const;
 
 private:
 
-	std::wstring file_;
-	std::wstring mount_;
-	std::wstring short_;
+	std::string file_;
+	std::string mount_;
+	std::string short_;
 	bool isMountable_;
 	bool isMounted_;
 	bool isDirty_;

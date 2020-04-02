@@ -96,17 +96,17 @@ DialogEx::DialogEx(
 	sizer->Add(buttonSizer, h, wxTOP | wxBOTTOM, 5);
 }
 
-void DialogEx::setTitle(const std::wstring title)
+void DialogEx::setTitle(const std::string title)
 {
-	SetLabel(Constants::title + wxString(L" - ") + title);
+	SetLabel(Constants::title + wxString(" - ") + title);
 }
 
-void DialogEx::setTitle(const std::wstring title, FileSetT fileset)
+void DialogEx::setTitle(const std::string title, FileSetT fileset)
 {
 	SetLabel(Constants::title +
-			 wxString(L" - ") +
+			 wxString(" - ") +
 			 title +
-			 wxString(L" - ") +
+			 wxString(" - ") +
 			 fileset->getId());
 }
 

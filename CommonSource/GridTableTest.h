@@ -32,14 +32,14 @@ public:
 	void deleteAt(const int row);
 	void append();
 
-	std::wstring toString();
+	std::string toString();
 
 private:
 
-	std::wstring nextVal() const;
+	std::string nextVal() const;
 
 	static int no_;
-	std::vector<std::wstring> vals_;
+	std::vector<std::string> vals_;
 
 };
 

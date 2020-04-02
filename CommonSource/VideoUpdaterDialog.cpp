@@ -37,15 +37,15 @@ VideoUpdaterDialog::VideoUpdaterDialog(wxWindow *parent, FileSetT &fileset) :
 	fileset_(fileset),
 	duration_(0)
 {
-	setTitle(L"Update Video", fileset_);
+	setTitle("Update Video", fileset_);
 	// add controls to panel
-	txtDuration_ = new wxStaticText(getPanel(), wxID_ANY, L"Duration: ", wxPoint(10, 10), wxDefaultSize, wxALIGN_LEFT);
+	txtDuration_ = new wxStaticText(getPanel(), wxID_ANY, "Duration: ", wxPoint(10, 10), wxDefaultSize, wxALIGN_LEFT);
 
 	// add check boxes
-	chkAdjustVolume_ = new wxCheckBox(getPanel(), wxID_ANY, L"Adjust volume", wxPoint(10, 35));
-	chkRemoveAudio_  = new wxCheckBox(getPanel(), wxID_ANY, L"Remove audio",  wxPoint(10, 60));
-	chkCompress_     = new wxCheckBox(getPanel(), wxID_ANY, L"Compress",      wxPoint(10, 85));
-	chkNewImage_     = new wxCheckBox(getPanel(), wxID_ANY, L"New image",     wxPoint(10, 110));
+	chkAdjustVolume_ = new wxCheckBox(getPanel(), wxID_ANY, "Adjust volume", wxPoint(10, 35));
+	chkRemoveAudio_  = new wxCheckBox(getPanel(), wxID_ANY, "Remove audio",  wxPoint(10, 60));
+	chkCompress_     = new wxCheckBox(getPanel(), wxID_ANY, "Compress",      wxPoint(10, 85));
+	chkNewImage_     = new wxCheckBox(getPanel(), wxID_ANY, "New image",     wxPoint(10, 110));
 
 	Bind(wxEVT_CHECKBOX, [this](wxCommandEvent &) { updateGui(); });
 
@@ -54,7 +54,7 @@ VideoUpdaterDialog::VideoUpdaterDialog(wxWindow *parent, FileSetT &fileset) :
 	duration_ = fileset_->getDurationMs() / 1000;
 	if (duration_ > 0)
 		txtDuration_->SetLabelText(
-				std::wstring(txtDuration_->GetLabelText().wc_str()) + 
+				std::string(txtDuration_->GetLabelText().c_str()) +
 			fileset_->getDurationStr());	
 	else
 		setDuration();
@@ -66,7 +66,7 @@ void VideoUpdaterDialog::setDuration()
 {
 	// ffmpeg -i <filename>
 	ShellExecuteResult result;
-	std::wstringstream cmd;
+	std::stringstream cmd;
 
 	cmd << Constants::ffmpeg
 		<< " -y -ss 0:10 -to 0:11 -i "
@@ -82,16 +82,16 @@ void VideoUpdaterDialog::onShellExecute(wxShellExecuteEvent& event)
 {
 	Unbind(wxEVT_SHELL_EXECUTE_RESULT, &VideoUpdaterDialog::onShellExecute, this);
 	ShellExecuteResult result = event.getResult();
-	std::wstring str = result.getStderr();
+	std::string str = result.getStderr();
 
-	size_t p = str.find(L"Duration");
+	size_t p = str.find("Duration");
 
-	if (p != std::wstring::npos)
+	if (p != std::string::npos)
 	{
 		fileset_->setDurationStr(str.substr(p + 10, 12));
 		duration_ = fileset_->getDurationMs() / 1000;
 		txtDuration_->SetLabelText(
-				std::wstring(txtDuration_->GetLabelText().wc_str()) +
+				std::string(txtDuration_->GetLabelText().c_str()) +
 				fileset_->getDurationStr());
 		Layout();
 		updateGui();
@@ -116,15 +116,14 @@ void VideoUpdaterDialog::onOk(wxCommandEvent &event)
 	{
 		// ffmpeg -y -ss 0:10 -to 0:11 -i <filename> -frames 1 <filename no ext>-%d.jpg &2>1
 		ShellExecuteResult result;
-		std::wstringstream cmd;
 
 		// random point in video to grab an image
 		int r = Utilities::getRand(1, duration_);
 
 		// ffmpeg command
-		wchar_t buf[500];
-		swprintf(buf, sizeof(buf) / sizeof(wchar_t),
-			L"%ls -y -ss %d:%02d -to %d:%02d -i %ls -frames 1 %ls-%%d.jpg %ls",
+		char buf[500];
+		snprintf(buf, sizeof(buf) / sizeof(wchar_t),
+			"%s -y -ss %d:%02d -to %d:%02d -i %s -frames 1 %s-%%d.jpg %s",
 			Constants::ffmpeg.c_str(),
 			r / 60, r % 60,
 			(r + 1) / 60, (r + 1) % 60,
@@ -136,16 +135,16 @@ void VideoUpdaterDialog::onOk(wxCommandEvent &event)
 
 		if (result.getSuccess())
 		{
-			std::wstring imf = fileset_->getId() + std::wstring(L".jpg");
+			std::string imf = fileset_->getId() + std::string(".jpg");
 			if (FU::moveFile(
-					fileset_->getId() + std::wstring(L"-1.jpg"),
+					fileset_->getId() + std::string("-1.jpg"),
 					imf))
 			{
 				fileset_->set(imf);
 			}
 		}
 		else
-			Logger::error(L"Failed to create new image for %ls", fileset_->getId().c_str());
+			Logger::error("Failed to create new image for %s", fileset_->getId().c_str());
 	}
 
 	DialogEx::onOk(event);

@@ -33,8 +33,8 @@ public:
 	static int pageUp(const int total, const int top, const int visible);
 	static int getRand(const int min, const int max);
 	static int messageBox(
-			const wchar_t *format, // the message, supports printf formatting
-			const wchar_t *caption,
+			const char *format, // the message, supports printf formatting
+			const char *caption,
 			const int style = wxOK | wxCENTRE, // see wxMessageDialog for style options
 			wxWindow * parent = NULL,
 			...);
@@ -118,8 +118,8 @@ public:
 	static std::string  wStrToStr(const wchar_t* str, int len = 0);	    // wide string to string
 	static std::wstring strToWStr(const std::string str);
 	static std::string  wStrToStr(const std::wstring str);
-	static bool startsWith(const wchar_t *str, const wchar_t* prefix);
-	static bool startsWith(const std::wstring str, const std::wstring prefix);
+	static bool startsWith(const char *str, const char* prefix);
+	static bool startsWith(const std::string str, const std::string prefix);
 
 private:
 
@@ -134,55 +134,55 @@ public:
 
 	virtual ~FU();
 
-	static bool deleteFile(const std::wstring file);
-	static bool fileExists(const std::wstring file);
-	static bool copyFile(const std::wstring src, const std::wstring dest, const bool overwrite = true);
-	static bool moveFile(const std::wstring src, const std::wstring dest, const bool overwrite = true);
-	static std::wstring getFileStem(const std::wstring path);
-	static std::wstring getPathNoExt(const std::wstring path);
-	static std::wstring getExt(const std::wstring path);
-	static std::wstring getPathSeparator();
+	static bool deleteFile(const std::string file);
+	static bool fileExists(const std::string file);
+	static bool copyFile(const std::string src, const std::string dest, const bool overwrite = true);
+	static bool moveFile(const std::string src, const std::string dest, const bool overwrite = true);
+	static std::string getFileStem(const std::string path);
+	static std::string getPathNoExt(const std::string path);
+	static std::string getExt(const std::string path);
+	static std::string getPathSeparator();
 	static bool findFiles(
-			const std::wstring directory,
+			const std::string directory,
 			StringCollT &files,
 			const bool subdirs = false,
 			const bool sort = false);
 	static bool findMatchingFiles(
-			const std::wstring directory,
+			const std::string directory,
 			StringCollT &files,
-			const std::wstring filter,
+			const std::string filter,
 			const bool subdirs = false,
 			const bool sort = false);
 	static bool findFilesDirs(
-			const std::wstring directory,
+			const std::string directory,
 			StringCollT &files,
 			StringCollT &dirs,
 			const bool subdirs = false,
 			const bool sort = false);
 	static bool findMatchingFilesDirs(
-			const std::wstring directory,
+			const std::string directory,
 			StringCollT &files,
-			const std::wstring filter,
+			const std::string filter,
 			StringCollT &dirs,
 			const bool subdirs = false,
 			const bool sort = false);
 	static bool findMatchingFilesRex(
-			const std::wstring directory,
+			const std::string directory,
 			StringCollT &files,
-			const std::wstring regex,
+			const std::string regex,
 			const bool subdirs = false,
 			const bool sort = false);
 	static bool findMatchingFilesDirsRex(
-			const std::wstring directory,
+			const std::string directory,
 			StringCollT &files,
-			const std::wstring regex,
+			const std::string regex,
 			StringCollT &dirs,
 			const bool subdirs = false,
 			const bool sort = false);
-	static std::wstring pathToLocal(const wchar_t *path);
-	static std::wstring abbreviateFilename(const std::wstring &file, const int max);
-	static bool mkDir(const std::wstring dir);
-	static bool rmDir(const std::wstring dir);
+	static std::string pathToLocal(const char *path);
+	static std::string abbreviateFilename(const std::string &file, const int max);
+	static bool mkDir(const std::string dir);
+	static bool rmDir(const std::string dir);
 
 private:
 
@@ -191,10 +191,10 @@ private:
 	FU(FU&&);
 
 	static bool findFiles(
-			const std::wstring directory,
+			const std::string directory,
 			StringCollT *files,
-			const std::wstring *filter,
-			const std::wstring *regex,
+			const std::string *filter,
+			const std::string *regex,
 			StringCollT *dirs,
 			const bool subdirs,
 			const bool sort);
@@ -210,9 +210,8 @@ public:
 
 	void setMs(const long ms);
 	long getMs() const;
-	bool parse(const std::wstring &str);
 	bool parse(const std::string &str);
-	std::wstring toString() const;
+	std::string toString() const;
 
 	int hh_;
 	int mm_;

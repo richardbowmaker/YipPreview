@@ -64,7 +64,7 @@ MediaPreviewPlayer::~MediaPreviewPlayer()
 	player_->Stop();
 }
 
-MediaPreviewPlayer &MediaPreviewPlayer::setFile(const std::wstring &file)
+MediaPreviewPlayer &MediaPreviewPlayer::setFile(const std::string &file)
 {
 	file_ = file;
 	return *this;
@@ -92,7 +92,7 @@ void MediaPreviewPlayer::startPreview()
 		player_->Load(file_.c_str());
 	}
 	else
-		Logger::error(L"MediaPreviewPlayer play file before file has been set");
+		Logger::error("MediaPreviewPlayer play file before file has been set");
 }
 
 void MediaPreviewPlayer::stopPreview()
@@ -136,15 +136,15 @@ long MediaPreviewPlayer::duration()
 #elif LINUX_BUILD
 	// get duration
 	ShellExecuteResult res;
-	std::wstring cmd = Constants::ffmpeg + std::wstring(L" -i ") + file_ + Constants::ffmpegEnd;
+	std::string cmd = Constants::ffmpeg + std::string(" -i ") + file_ + Constants::ffmpegEnd;
 	if (!ShellExecute::shellSync(cmd, res, 10000)) return -1;
 
 	// get duration from ffmpeg output
-	std::wstring serr = res.getStderr();
-	size_t pos = serr.find(L"Duration:");
+	std::string serr = res.getStderr();
+	size_t pos = serr.find("Duration:");
 	Duration d;
 
-	if (pos != std::wstring::npos)
+	if (pos != std::string::npos)
 		d.parse(serr.substr(pos + 10, 12));
 
 	return d.getMs();

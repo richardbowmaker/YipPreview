@@ -116,8 +116,8 @@ int Utilities::getRand(const int min, const int max)
 }
 
 int Utilities::messageBox(
-		const wchar_t *format,
-		const wchar_t *caption,
+		const char *format,
+		const char *caption,
 		const int style 	   /*= wxOK | wxCENTRE*/,
 		wxWindow * parent 	   /*= NULL*/,
 		...)
@@ -129,10 +129,10 @@ int Utilities::messageBox(
 #pragma GCC diagnostic ignored "-Wvarargs"
 	va_start(vl, format);
 #pragma GCC diagnostic pop
-	wchar_t buf[4000];
-	vswprintf(buf, sizeof(buf) / sizeof(wchar_t), format, vl);
+	char buf[4000];
+	vsnprintf(buf, sizeof(buf) / sizeof(char), format, vl);
 
-	std::wstring c = Constants::title + std::wstring(L" - ") + std::wstring(caption);
+	std::string c = Constants::title + std::string(" - ") + std::string(caption);
 	return wxMessageBox(buf, c.c_str(), style,  parent);
 
 }
@@ -178,18 +178,18 @@ void SudoMode::raise()
 		int r = seteuid(0);
 		if (r == 0)
 		{
-			Logger::info(L"Sudo mode entered OK");
+			Logger::info("Sudo mode entered OK");
 			refs_++;
 			got_ = true;
 		}
 		else
-			Logger::systemError(errno, L"Sudo mode enter error");
+			Logger::systemError(errno, "Sudo mode enter error");
 	}
 	else
 	{
 		refs_++;
 		got_ = true;
-		Logger::info(L"Sudo mode raise, refs %d", refs_);
+		Logger::info("Sudo mode raise, refs %d", refs_);
 	}
 #endif
 }
@@ -206,17 +206,17 @@ void SudoMode::lower()
 		int r = seteuid(uid_);
 		if (r == 0)
 		{
-			Logger::info(L"Sudo mode exited OK");
+			Logger::info("Sudo mode exited OK");
 			refs_ = 0;
 			got_ = false;
 		}
 		else
-			Logger::systemError(errno, L"Sudo mode lower error");
+			Logger::systemError(errno, "Sudo mode lower error");
 	}
 	else if (refs_ > 1)
 	{
 		refs_--;
-		Logger::info(L"Sudo mode lower, refs %d", refs_);
+		Logger::info("Sudo mode lower, refs %d", refs_);
 	}
 #endif
 }
@@ -233,7 +233,7 @@ void SudoMode::initialise(const int uid)
 		uid_ = uid;
 		seteuid(uid);
 
-		Logger::info(L"euid %d", geteuid());
+		Logger::info("euid %d", geteuid());
 
 	}
 #endif
@@ -278,14 +278,14 @@ std::string SU::wStrToStr(const std::wstring str)
 	return wStrToStr(str.c_str());
 }
 
-bool SU::startsWith(const wchar_t* str, const wchar_t* prefix)
+bool SU::startsWith(const char* str, const char* prefix)
 {
 	while (*str != 0 && *prefix != 0)
 		if (*str++ != *prefix++) return false;
 	return *prefix == 0;
 }
 
-bool SU::startsWith(const std::wstring str, const std::wstring prefix)
+bool SU::startsWith(const std::string str, const std::string prefix)
 {
 	return startsWith(str.c_str(), prefix.c_str());
 }
@@ -294,34 +294,34 @@ bool SU::startsWith(const std::wstring str, const std::wstring prefix)
 // File utilities
 //--------------------------------------------------
 
-bool FU::deleteFile(const std::wstring file)
+bool FU::deleteFile(const std::string file)
 {
 #ifdef WINDOWS_BUILD
 	if (DeleteFile(file.c_str()))
 	{
-		Logger::info(L"file deleted: %ls", file.c_str());
+		Logger::info("file deleted: %s", file.c_str());
 		return true;
 	}
 	else
 	{
-		Logger::systemError(GetLastError(), L"delete file error : %ls", file.c_str());
+		Logger::systemError(GetLastError(), "delete file error : %s", file.c_str());
 		return false;
 	}
 #elif LINUX_BUILD
-	if (remove(SU::wStrToStr(file).c_str()) == 0)
+	if (remove(file.c_str()) == 0)
 	{
-		Logger::info(L"file deleted: %ls", file.c_str());
+		Logger::info("file deleted: %s", file.c_str());
 		return true;
 	}
 	else
 	{
-		Logger::systemError(errno, L"delete file error : %ls", file.c_str());
+		Logger::systemError(errno, "delete file error : %s", file.c_str());
 		return false;
 	}
 #endif
 }
 
-bool FU::fileExists(const std::wstring file)
+bool FU::fileExists(const std::string file)
 {
 #ifdef WINDOWS_BUILD
 	DWORD res = GetFileAttributes(file.c_str());
@@ -331,57 +331,57 @@ bool FU::fileExists(const std::wstring file)
 		return true;
 #elif LINUX_BUILD
 	struct stat buffer;
-	return stat(SU::wStrToStr(file).c_str(), &buffer) == 0;
+	return stat(file.c_str(), &buffer) == 0;
 #endif
 }
 
-bool FU::copyFile(const std::wstring src, const std::wstring dest, const bool overwrite /*= true*/)
+bool FU::copyFile(const std::string src, const std::string dest, const bool overwrite /*= true*/)
 {
 #ifdef WINDOWS_BUILD
 	if (CopyFile(src.c_str(), dest.c_str(), overwrite ? FALSE : TRUE))
 	{
-		Logger::info(L"file copied: %ls to % ls", src.c_str(), dest.c_str());
+		Logger::info("file copied: %s to % s", src.c_str(), dest.c_str());
 		return true;
 	}
 	else
 	{
-		Logger::systemError(GetLastError(), L"copy file error: %ls to % ls", src.c_str(), dest.c_str());
+		Logger::systemError(GetLastError(), "copy file error: %s to %s", src.c_str(), dest.c_str());
 		return false;
 	}
 #elif LINUX_BUILD
 	if (!fileExists(src))
 	{
-		Logger::error(L"copy file, no source file: %ls to % ls", src.c_str(), dest.c_str());
+		Logger::error("copy file, no source file: %s to % s", src.c_str(), dest.c_str());
 		return false;
 	}
 	if (!overwrite && FU::fileExists(dest))
 	{
-		Logger::error(L"copy file already exists error, no overwrite: %ls to % ls", src.c_str(), dest.c_str());
+		Logger::error("copy file already exists error, no overwrite: %s to %s", src.c_str(), dest.c_str());
 		return false;
 	}
 	std::ifstream srcf;
 	std::ofstream dstf;
-	srcf.open(SU::wStrToStr(src).c_str(), std::ios::in | std::ios::binary);
-	dstf.open(SU::wStrToStr(dest).c_str(), std::ios::out | std::ios::binary);
+	srcf.open(src.c_str(), std::ios::in | std::ios::binary);
+	dstf.open(dest.c_str(), std::ios::out | std::ios::binary);
 	dstf << srcf.rdbuf();
 	bool res = srcf && dstf;
 	srcf.close();
 	dstf.close();
 	if (res)
-		Logger::info(L"file copied: %ls to % ls", src.c_str(), dest.c_str());
+		Logger::info("file copied: %s to %s", src.c_str(), dest.c_str());
 	else
-		Logger::systemError(errno, L"copy file error: %ls to % ls", src.c_str(), dest.c_str());
+		Logger::systemError(errno, "copy file error: %s to %s", src.c_str(), dest.c_str());
 	return res;
 #endif
 }
 
-bool FU::moveFile(const std::wstring src, const std::wstring dest, const bool overwrite /*= true*/)
+bool FU::moveFile(const std::string src, const std::string dest, const bool overwrite /*= true*/)
 {
 	bool exists = FU::fileExists(dest);
 
 	if (!overwrite && exists)
 	{
-		Logger::error(L"move file, already exists error, no overwrite: %ls to % ls", src.c_str(), dest.c_str());
+		Logger::error("move file, already exists error, no overwrite: %s to %s", src.c_str(), dest.c_str());
 		return false;
 	}
 	if (overwrite && exists)
@@ -391,44 +391,44 @@ bool FU::moveFile(const std::wstring src, const std::wstring dest, const bool ov
 #ifdef WINDOWS_BUILD
 	if (MoveFile(src.c_str(), dest.c_str()))
 	{
-		Logger::info(L"file moved: %ls to % ls", src.c_str(), dest.c_str());
+		Logger::info("file moved: %s to % ls", src.c_str(), dest.c_str());
 		return true;
 	}
 	else
 	{
-		Logger::systemError(GetLastError(), L"move file error: %ls to % ls", src.c_str(), dest.c_str());
+		Logger::systemError(GetLastError(), "move file error: %s to %s", src.c_str(), dest.c_str());
 		return false;
 	}
 #elif LINUX_BUILD
-	if (rename(SU::wStrToStr(src).c_str(), SU::wStrToStr(dest).c_str()) == 0)
+	if (rename(src.c_str(), dest.c_str()) == 0)
 	{
-		Logger::info(L"file moved: %ls to % ls", src.c_str(), dest.c_str());
+		Logger::info("file moved: %s to %s", src.c_str(), dest.c_str());
 		return true;
 	}
 	else
 	{
-		Logger::systemError(errno, L"move file error: %ls to % ls", src.c_str(), dest.c_str());
+		Logger::systemError(errno, "move file error: %s to %s", src.c_str(), dest.c_str());
 		return false;
 	}
 #endif
 }
 
 bool FU::findFiles(
-	const std::wstring directory,
+	const std::string directory,
 	StringCollT *files,
-	const std::wstring *filter,
-	const std::wstring *regex,
+	const std::string *filter,
+	const std::string *regex,
 	StringCollT *dirs,
 	const bool subdirs,
 	const bool sort)
 {
 #ifdef WINDOWS_BUILD
 
-	std::wstring dir;
+	std::string dir;
 	if (filter == nullptr)
-		dir = directory + std::wstring(L"\\*");
+		dir = directory + std::string("\\*");
 	else
-		dir = directory + std::wstring(L"\\") + *filter;
+		dir = directory + std::string("\\") + *filter;
 
 	WIN32_FIND_DATA data;
 	HANDLE hFind = FindFirstFile(dir.c_str(), &data);
@@ -453,18 +453,18 @@ bool FU::findFiles(
 					match = std::regex_match(SU::wStrToStr(data.cFileName), rex);
 				}
 				if (match)
-					files->emplace_back(directory + std::wstring(L"\\") + std::wstring(data.cFileName));
+					files->emplace_back(directory + std::string("\\") + std::string(data.cFileName));
 			}
 		}
 		else if (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 		{
 			if (dirs != nullptr || subdirs)
 			{
-				std::wstring d{data.cFileName};
+				std::string d{data.cFileName};
 					if (dirs != nullptr) dirs->emplace_back(d);
 					if (subdirs)
 					{
-						if (!FU::findFiles(directory + std::wstring(LR"(/)") + d,
+						if (!FU::findFiles(directory + std::string(R"(/)") + d,
 								files, filter, regex, dirs, subdirs, false))
 							return false;
 					}
@@ -479,19 +479,19 @@ bool FU::findFiles(
 	DIR *dir;
 	struct dirent *ent;
 
-	if ((dir = opendir(SU::wStrToStr(directory).c_str())) == NULL)
+	if ((dir = opendir(directory.c_str())) == NULL)
 	{
-		Logger::systemError(errno, L"FU::findFiles opendir");
+		Logger::systemError(errno, "FU::findFiles opendir");
 		return false;
 	}
 
 	std::regex rex;
 	if (regex != nullptr)
-		rex = std::regex(SU::wStrToStr(*regex).c_str());
+		rex = std::regex((*regex).c_str());
 
 	std::string fstr;
 	if (filter != nullptr)
-		fstr = SU::wStrToStr(*filter);
+		fstr = *filter;
 
 	while ((ent = readdir(dir)) != NULL)
 	{
@@ -515,7 +515,7 @@ bool FU::findFiles(
 
 				if (match)
 				{
-					files->push_back(directory + std::wstring(L"/") + SU::strToWStr(ent->d_name));
+					files->push_back(directory + std::string("/") + std::string(ent->d_name));
 				}
 			}
 			break;
@@ -526,13 +526,13 @@ bool FU::findFiles(
 		{
 			if (dirs != nullptr || subdirs)
 			{
-				std::wstring d{SU::strToWStr(ent->d_name)};
-				if (d.compare(L".") != 0 && d.compare(L"..") != 0)
+				std::string d{ent->d_name};
+				if (d.compare(".") != 0 && d.compare("..") != 0)
 				{
 					if (dirs != nullptr) dirs->emplace_back(d);
 					if (subdirs)
 					{
-						if (!FU::findFiles(directory + std::wstring(LR"(/)") + d,
+						if (!FU::findFiles(directory + std::string(R"(/)") + d,
 								files, filter, regex, dirs, subdirs, false))
 							return false;
 					}
@@ -552,14 +552,14 @@ bool FU::findFiles(
 		if (files != nullptr)
 		{
 			std::sort(files->begin(), files->end(),
-					[](std::wstring &f1, std::wstring &f2)
+					[](std::string &f1, std::string &f2)
 					{ return f1.compare(f2) < 0; });
 		}
 
 		if (dirs != nullptr)
 		{
 			std::sort(dirs->begin(), dirs->end(),
-					[](std::wstring &d1, std::wstring &d2)
+					[](std::string &d1, std::string &d2)
 					{ return d1.compare(d2) < 0; });
 		}
 	}
@@ -567,7 +567,7 @@ bool FU::findFiles(
 }
 
 bool FU::findFiles(
-	const std::wstring directory,
+	const std::string directory,
 	StringCollT &files,
 	const bool subdirs,
 	const bool sort)
@@ -576,9 +576,9 @@ bool FU::findFiles(
 }
 
 bool FU::findMatchingFiles(
-		const std::wstring directory,
+		const std::string directory,
 		StringCollT &files,
-		const std::wstring filter,
+		const std::string filter,
 		const bool subdirs,
 		const bool sort)
 {
@@ -586,7 +586,7 @@ bool FU::findMatchingFiles(
 }
 
 bool FU::findFilesDirs(
-		const std::wstring directory,
+		const std::string directory,
 		StringCollT &files,
 		StringCollT &dirs,
 		const bool subdirs,
@@ -596,9 +596,9 @@ bool FU::findFilesDirs(
 }
 
 bool FU::findMatchingFilesDirs(
-		const std::wstring directory,
+		const std::string directory,
 		StringCollT &files,
-		const std::wstring filter,
+		const std::string filter,
 		StringCollT &dirs,
 		const bool subdirs,
 		const bool sort)
@@ -607,9 +607,9 @@ bool FU::findMatchingFilesDirs(
 }
 
 bool FU::findMatchingFilesRex(
-		const std::wstring directory,
+		const std::string directory,
 		StringCollT &files,
-		const std::wstring regex,
+		const std::string regex,
 		const bool subdirs,
 		const bool sort)
 {
@@ -617,9 +617,9 @@ bool FU::findMatchingFilesRex(
 }
 
 bool FU::findMatchingFilesDirsRex(
-		const std::wstring directory,
+		const std::string directory,
 		StringCollT &files,
-		const std::wstring regex,
+		const std::string regex,
 		StringCollT &dirs,
 		const bool subdirs,
 		const bool sort)
@@ -627,10 +627,10 @@ bool FU::findMatchingFilesDirsRex(
 	return FU::findFiles(directory, &files, nullptr, &regex, &dirs, subdirs, sort);
 }
 
-std::wstring FU::getFileStem(const std::wstring path)
+std::string FU::getFileStem(const std::string path)
 {
 	std::size_t m = path.find_last_of(FU::getPathSeparator());
-	std::size_t n = path.find_last_of(L".");
+	std::size_t n = path.find_last_of(".");
 
 	if (m == std::string::npos) m = 0; else ++m; // m points after separator
 	if (n == std::string::npos || n < m) n = path.size();
@@ -638,10 +638,10 @@ std::wstring FU::getFileStem(const std::wstring path)
 	return path.substr(m, n - m);
 }
 
-std::wstring FU::getPathNoExt(const std::wstring path)
+std::string FU::getPathNoExt(const std::string path)
 {
 	std::size_t m = path.find_last_of(FU::getPathSeparator());
-	std::size_t n = path.find_last_of(L".");
+	std::size_t n = path.find_last_of(".");
 
 	if (m == std::string::npos) m = 0;
 	if (n == std::string::npos || n < m)
@@ -650,43 +650,43 @@ std::wstring FU::getPathNoExt(const std::wstring path)
 		return path.substr(0, n);
 }
 
-std::wstring FU::getExt(const std::wstring path)
+std::string FU::getExt(const std::string path)
 {
 	std::size_t m = path.find_last_of(FU::getPathSeparator());
-	std::size_t n = path.find_last_of(L".");
+	std::size_t n = path.find_last_of(".");
 
 	if (m == std::string::npos) m = 0;
 	if (n == std::string::npos || n < m)
-		return L"";
+		return "";
 	else
 		return path.substr(n + 1, path.size() - n - 1);
 }
 
-std::wstring FU::getPathSeparator()
+std::string FU::getPathSeparator()
 {
 #ifdef WINDOWS_BUILD
-	return L"\\";
+	return "\\";
 #elif LINUX_BUILD
-	return L"/";
+	return "/";
 #endif
 
 }
 
 // convert file path to window or linux build version
-std::wstring FU::pathToLocal(const wchar_t* path)
+std::string FU::pathToLocal(const char* path)
 {
-	constexpr const wchar_t* sW = LR"(D:\)";
-	constexpr const wchar_t* sL = LR"(/media/nas_share/Top/Data/)";
-	std::wstring p(path);
+	constexpr const char* sW = R"(D:\)";
+	constexpr const char* sL = R"(/media/nas_share/Top/Data/)";
+	std::string p(path);
 
 #ifdef WINDOWS_BUILD
 	// substitute linux absolute path with windows
 	if (SU::startsWith(p.c_str(), sL))
-		p = std::wstring(sW) + p.substr(wcslen(sL));
+		p = std::string(sW) + p.substr(wcslen(sL));
 #elif LINUX_BUILD
 	// substitute windows absolute path with linux
 	if (SU::startsWith(p.c_str(), sW))
-		p = std::wstring(sL) + p.substr(wcslen(sW));
+		p = std::string(sL) + p.substr(strlen(sW));
 #endif
 
 	// convert path separator
@@ -701,18 +701,18 @@ std::wstring FU::pathToLocal(const wchar_t* path)
 
 #ifdef WINDOWS_BUILD
 	// convert relative path to absolute
-	if (SU::startsWith(p.c_str(), LR"(\YipPreview)"))
-		p = std::wstring(LR"(D:\Projects\WxWidgets)") + p;
+	if (SU::startsWith(p.c_str(), R"(\YipPreview)"))
+		p = std::string(R"(D:\Projects\WxWidgets)") + p;
 #elif LINUX_BUILD
-	if (SU::startsWith(p.c_str(), L"/YipPreview"))
-		p = std::wstring(LR"(/media/nas_share/Top/Data/Projects/WxWidgets)") + p;
+	if (SU::startsWith(p.c_str(), "/YipPreview"))
+		p = std::string(R"(/media/nas_share/Top/Data/Projects/WxWidgets)") + p;
 #endif
 
 	return p;
 }
 
 // abbreviate filename to /abc/de ... xyz/filename
-std::wstring FU::abbreviateFilename(const std::wstring &file, const int max)
+std::string FU::abbreviateFilename(const std::string &file, const int max)
 {
 	// return whole thing if less than max characters
 	int len = file.size();
@@ -733,66 +733,66 @@ std::wstring FU::abbreviateFilename(const std::wstring &file, const int max)
 
 	// chars less file name and elipsis part
 	int n = max - l - 3;
-	return file.substr(0, (n/2) + (n%2)) + std::wstring(L"...") + file.substr(m - (n/2));
+	return file.substr(0, (n/2) + (n%2)) + std::string("...") + file.substr(m - (n/2));
 }
 
 // requires sudo mode
-bool FU::mkDir(const std::wstring dir)
+bool FU::mkDir(const std::string dir)
 {
 #ifdef WINDOWS_BUILD
 	if (CreateDirectory(dir.c_str(), NULL))
 	{
-		Logger::info(L"FU::mkDir() created directory %ls", dir.c_str());
+		Logger::info("FU::mkDir() created directory %s", dir.c_str());
 		return true;
 	}
 	else
 	{
 		DWORD err = GetLastError();
-		Logger::systemError(err, L"FU::mkDir() error creating directory %ls", dir.c_str());
+		Logger::systemError(err, "FU::mkDir() error creating directory %s", dir.c_str());
 		return false;
 	}
 #elif LINUX_BUILD
-	int status = mkdir(SU::wStrToStr(dir).c_str(), S_IRWXU | S_IRWXG | S_IRWXO);
+	int status = mkdir(dir.c_str(), S_IRWXU | S_IRWXG | S_IRWXO);
 	if (status == 0)
 	{
-		Logger::info(L"FU::mkDir() created directory %ls", dir.c_str());
+		Logger::info("FU::mkDir() created directory %s", dir.c_str());
 		return true;
 	}
 	else
 	{
-		Logger::systemError(errno, L"FU::mkDir() error creating directory %ls", dir.c_str());
+		Logger::systemError(errno, "FU::mkDir() error creating directory %s", dir.c_str());
 		return false;
 	}
 #endif
 }
 
 // requires sudo mode
-bool FU::rmDir(const std::wstring dir)
+bool FU::rmDir(const std::string dir)
 {
 #ifdef WINDOWS_BUILD
 	if (RemoveDirectory(dir.c_str()))
 	{
-		Logger::info(L"FU::mkDir() removed directory %ls", dir.c_str());
+		Logger::info("FU::mkDir() removed directory %s", dir.c_str());
 		return true;
 	}
 	else
 	{
 		DWORD err = GetLastError();
-		Logger::systemError(err, L"FU::mkDir() error removing directory %ls", dir.c_str());
+		Logger::systemError(err, "FU::mkDir() error removing directory %s", dir.c_str());
 		return false;
 	}
 #elif LINUX_BUILD
 
-	int status = rmdir(SU::wStrToStr(dir).c_str());
+	int status = rmdir(dir.c_str());
 
 	if (status == 0)
 	{
-		Logger::info(L"FU::rmDir() removed directory %ls", dir.c_str());
+		Logger::info("FU::rmDir() removed directory %s", dir.c_str());
 		return true;
 	}
 	else
 	{
-		Logger::systemError(errno, L"FU::rmDir() error removing directory %ls", dir.c_str());
+		Logger::systemError(errno, "FU::rmDir() error removing directory %s", dir.c_str());
 		return false;
 	}
 #endif
@@ -824,11 +824,6 @@ long Duration::getMs() const
 	return ((((hh_ * 60) + mm_) * 60) + ss_) * 1000 + ms_;
 }
 
-bool Duration::parse(const std::wstring &str)
-{
-	return parse(SU::wStrToStr(str));
-}
-
 bool Duration::parse(const std::string &str)
 {
     setMs(0);
@@ -845,124 +840,76 @@ bool Duration::parse(const std::string &str)
     }
     else
     {
-    	Logger::error(L"Duration::parse() invalid duration string: %ls",
+    	Logger::error("Duration::parse() invalid duration string: %s",
     			SU::strToWStr(str).c_str());
     	return false;
     }
 }
 
-std::wstring Duration::toString() const
+std::string Duration::toString() const
 {
-	wchar_t buf[100];
-	swprintf(buf, sizeof(buf) / sizeof(wchar_t),
-			L"%02d:%02d:%02d.%03d", hh_, mm_, ss_, ms_);
-	return std::wstring(buf);
+	char buf[100];
+	snprintf(buf, sizeof(buf) / sizeof(char),
+			"%02d:%02d:%02d.%03d", hh_, mm_, ss_, ms_);
+	return std::string(buf);
 }
 
 bool Duration::test()
 {
 	Duration d;
-	std::wstring s;
+	std::string s;
 	bool b;
 	bool result = true;
 
 	s = d.toString();
-	result &= Logger::test(s.compare(L"00:00:00.000") == 0, L"Duration::test() t1 failed");
+	result &= Logger::test(s.compare("00:00:00.000") == 0, "Duration::test() t1 failed");
 
 	d.setMs( ((((12 * 60) + 34) * 60) + 56) * 1000 + 789 );
 	s = d.toString();
-	result &= Logger::test(s.compare(L"12:34:56.789") == 0, L"Duration::test() t2 failed");
+	result &= Logger::test(s.compare("12:34:56.789") == 0, "Duration::test() t2 failed");
 
-	b = d.parse(L"12:34");
-	result &= Logger::test(b, L"Duration::test() t3 failed");
-	result &= Logger::test((d.hh_ == 0 ), L"Duration::test() t4 failed");
-	result &= Logger::test((d.mm_ == 12), L"Duration::test() t5 failed");
-	result &= Logger::test((d.ss_ == 34), L"Duration::test() t6 failed");
-	result &= Logger::test((d.ms_ == 0 ), L"Duration::test() t7 failed");
+	b = d.parse("12:34");
+	result &= Logger::test(b, "Duration::test() t3 failed");
+	result &= Logger::test((d.hh_ == 0 ), "Duration::test() t4 failed");
+	result &= Logger::test((d.mm_ == 12), "Duration::test() t5 failed");
+	result &= Logger::test((d.ss_ == 34), "Duration::test() t6 failed");
+	result &= Logger::test((d.ms_ == 0 ), "Duration::test() t7 failed");
 
-	b = d.parse(L"12:34:56");
-	result &= Logger::test(b, L"Duration::test() t8 failed");
-	result &= Logger::test((d.hh_ == 12), L"Duration::test() t9 failed");
-	result &= Logger::test((d.mm_ == 34), L"Duration::test() t10 failed");
-	result &= Logger::test((d.ss_ == 56), L"Duration::test() t11 failed");
-	result &= Logger::test((d.ms_ == 0 ), L"Duration::test() t12 failed");
+	b = d.parse("12:34:56");
+	result &= Logger::test(b, "Duration::test() t8 failed");
+	result &= Logger::test((d.hh_ == 12), "Duration::test() t9 failed");
+	result &= Logger::test((d.mm_ == 34), "Duration::test() t10 failed");
+	result &= Logger::test((d.ss_ == 56), "Duration::test() t11 failed");
+	result &= Logger::test((d.ms_ == 0 ), "Duration::test() t12 failed");
 
-	b = d.parse(L"12:34:56.789");
-	result &= Logger::test(b, L"Duration::test() t13 failed");
-	result &= Logger::test((d.hh_ == 12 ), L"Duration::test() t14 failed");
-	result &= Logger::test((d.mm_ == 34 ), L"Duration::test() t15 failed");
-	result &= Logger::test((d.ss_ == 56 ), L"Duration::test() t16 failed");
-	result &= Logger::test((d.ms_ == 789), L"Duration::test() t17 failed");
+	b = d.parse("12:34:56.789");
+	result &= Logger::test(b, "Duration::test() t13 failed");
+	result &= Logger::test((d.hh_ == 12 ), "Duration::test() t14 failed");
+	result &= Logger::test((d.mm_ == 34 ), "Duration::test() t15 failed");
+	result &= Logger::test((d.ss_ == 56 ), "Duration::test() t16 failed");
+	result &= Logger::test((d.ms_ == 789), "Duration::test() t17 failed");
 
-	b = d.parse(L"1:2:3.4");
-	result &= Logger::test(b, L"Duration::test() t18 failed");
-	result &= Logger::test((d.hh_ == 1), L"Duration::test() t19 failed");
-	result &= Logger::test((d.mm_ == 2), L"Duration::test() t20 failed");
-	result &= Logger::test((d.ss_ == 3), L"Duration::test() t21 failed");
-	result &= Logger::test((d.ms_ == 4), L"Duration::test() t22 failed");
+	b = d.parse("1:2:3.4");
+	result &= Logger::test(b, "Duration::test() t18 failed");
+	result &= Logger::test((d.hh_ == 1), "Duration::test() t19 failed");
+	result &= Logger::test((d.mm_ == 2), "Duration::test() t20 failed");
+	result &= Logger::test((d.ss_ == 3), "Duration::test() t21 failed");
+	result &= Logger::test((d.ms_ == 4), "Duration::test() t22 failed");
 
-	b = d.parse(L"12:34:56.78 ");
-	result &= Logger::test(b, L"Duration::test() t23 failed");
-	result &= Logger::test((d.hh_ == 12), L"Duration::test() t24 failed");
-	result &= Logger::test((d.mm_ == 34), L"Duration::test() t25 failed");
-	result &= Logger::test((d.ss_ == 56), L"Duration::test() t26 failed");
-	result &= Logger::test((d.ms_ == 78), L"Duration::test() t27 failed");
+	b = d.parse("12:34:56.78 ");
+	result &= Logger::test(b, "Duration::test() t23 failed");
+	result &= Logger::test((d.hh_ == 12), "Duration::test() t24 failed");
+	result &= Logger::test((d.mm_ == 34), "Duration::test() t25 failed");
+	result &= Logger::test((d.ss_ == 56), "Duration::test() t26 failed");
+	result &= Logger::test((d.ms_ == 78), "Duration::test() t27 failed");
 
-	b = d.parse(L"x:y:z");
-	result &= Logger::test(!b, L"Duration::test() t28 failed");
+	b = d.parse("x:y:z");
+	result &= Logger::test(!b, "Duration::test() t28 failed");
 
-	if (result) Logger::info(L"Duration::test() all tests passed");
+	if (result) Logger::info("Duration::test() all tests passed");
 
 	return result;
 }
-
-
-
-//bool SU::parseDuration(const std::wstring &str, DurationT &duration)
-//{
-//	return parseDuration(SU::wStrToStr(str), duration);
-//}
-//
-//bool SU::parseDuration(const std::string &str, DurationT &duration)
-//{
-//    memset(reinterpret_cast<void *>(&duration), 0, sizeof(duration));
-//    const std::regex rex(R"(((\d{1,2}):)?(\d{1,2}):(\d{1,2})(\.(\d{1,3}))?)");
-//    std::smatch m;
-//    if (std::regex_search(str, m, rex))
-//    {
-//    	duration.hh = atoi(m[1].str().c_str());
-//    	duration.mm = atoi(m[3].str().c_str());
-//    	duration.ss = atoi(m[4].str().c_str());
-//    	duration.ms = atoi(m[6].str().c_str());
-//    	return true;
-//    }
-//    else
-//    	return false;
-//}
-//
-//std::wstring SU::durationToString(const DurationT &duration)
-//{
-//	wchar_t buf[100];
-//	swprintf(buf, sizeof(buf) / sizeof(wchar_t),
-//			L"%02d:%02d:%02d.%03d",
-//			duration.hh,
-//			duration.mm,
-//			duration.ss,
-//			duration.ms);
-//	return std::wstring(buf);
-//}
-//
-//std::wstring SU::durationToString(const long &durationMs)
-//{
-//	DurationT d;
-//	long ld = durationMs;
-//	d.ms = ld % 1000; ld /= 1000;
-//	d.ss = ld % 60; ld /= 60;
-//	d.mm = ld % 60; ld /= 60;
-//	d.hh = ld % 60; ld /= 60;
-//	return durationToString(d);
-//}
-//
 
 
 

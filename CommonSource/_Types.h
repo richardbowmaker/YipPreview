@@ -24,16 +24,16 @@ using VolumeT = std::shared_ptr<Volume>;
 using VolumeCT = std::shared_ptr<const Volume>;
 using VolumeCollT = std::vector<VolumeT>;
 
-using StringStringT = std::pair<std::wstring, std::wstring>;
-using MapStringStringT = std::map<std::wstring, std::wstring>;
+using StringStringT = std::pair<std::string, std::string>;
+using MapStringStringT = std::map<std::string, std::string>;
 
 class FileProperties;
 using FilePropertiesT = std::shared_ptr<FileProperties>;
 
-using PropertyT = std::pair<std::wstring, std::wstring>;
-using PropertiesT = std::map<std::wstring, std::wstring>;
+using PropertyT = std::pair<std::string, std::string>;
+using PropertiesT = std::map<std::string, std::string>;
 
-using StringCollT = std::vector<std::wstring>;
+using StringCollT = std::vector<std::string>;
 
 enum class ColT
 {

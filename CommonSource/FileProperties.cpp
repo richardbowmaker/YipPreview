@@ -18,8 +18,8 @@
 
 #include "Logger.h"
 
-void FileProperties::setString(const std::wstring& property,
-		const std::wstring& value)
+void FileProperties::setString(const std::string& property,
+		const std::string& value)
 {
 	if (value.size() == 0)
 		// if property value not set then it need not be cached
@@ -28,39 +28,39 @@ void FileProperties::setString(const std::wstring& property,
 		properties_[property] = value;
 }
 
-void FileProperties::setInt(const std::wstring& property, const int value)
+void FileProperties::setInt(const std::string& property, const int value)
 {
-	wchar_t buf[100];
-	swprintf(buf, sizeof(buf) / sizeof(wchar_t), L"%d", value);
+	char buf[100];
+	snprintf(buf, sizeof(buf) / sizeof(char), "%d", value);
 	setString(property, buf);
 }
 
-void FileProperties::setFloat(const std::wstring& property, const float value)
+void FileProperties::setFloat(const std::string& property, const float value)
 {
-	wchar_t buf[100];
-	swprintf(buf, sizeof(buf) / sizeof(wchar_t), L"%f", value);
+	char buf[100];
+	snprintf(buf, sizeof(buf) / sizeof(char), "%f", value);
 	setString(property, buf);
 }
 
-void FileProperties::incCount(const std::wstring& property)
+void FileProperties::incCount(const std::string& property)
 {
 	int c = getInt(property);
 	setInt(property, ++c);
 }
 
-void FileProperties::setDateTimeNow(const std::wstring& property)
+void FileProperties::setDateTimeNow(const std::string& property)
 {
 	time_t rawtime;
 	struct tm *timeinfo;
 	time (&rawtime);
 	timeinfo = localtime(&rawtime);
 
-	wchar_t buf[100];
-	wcsftime(buf, sizeof(buf) / sizeof(wchar_t), L"%H:%M:%S %d/%m/%Y", timeinfo);
+	char buf[100];
+	strftime(buf, sizeof(buf) / sizeof(char), "%H:%M:%S %d/%m/%Y", timeinfo);
 	setString(property, buf);
 }
 
-std::wstring FileProperties::getString(const std::wstring& property) const
+std::string FileProperties::getString(const std::string& property) const
 {
 	auto n = properties_.find(property);
 	if (n != properties_.end())
@@ -68,71 +68,65 @@ std::wstring FileProperties::getString(const std::wstring& property) const
 		return (*n).second;
 	}
 	else
-		return L"";
+		return "";
 }
 
-int FileProperties::getInt(const std::wstring& property) const
+int FileProperties::getInt(const std::string& property) const
 {
-	std::wstring s = getString(property);
+	std::string s = getString(property);
 	if (s.size() > 0)
-	{
-		wchar_t* p;
-		return wcstol(s.c_str(), &p, 10);
-	}
+		return atoi(s.c_str());
 	else return 0;
 }
 
-float FileProperties::getFloat(const std::wstring& property) const
+float FileProperties::getFloat(const std::string& property) const
 {
-	std::wstring s = getString(property);
+	std::string s = getString(property);
 	if (s.size() > 0)
-	{
-		wchar_t* p;
-		return wcstod(s.c_str(), &p);
-	}
+		return atof(s.c_str());
 	else return 0.0f;
 }
 
-int FileProperties::getCount(const std::wstring& property) const
+int FileProperties::getCount(const std::string& property) const
 {
 	return getInt(property);
 }
 
-std::wstring FileProperties::toString() const
+std::string FileProperties::toString() const
 {
 // old - \Files\All\file20110102030031;times;2;lasttime;28/12/2019;maxvol;-2.5;duration;9:28
 // new - a01;averagevol;2.20;duration;03:25:45.678;lasttime;15:52:59 28/03/2020;maxvol;1.10;selected;X;times;2
 
-	if (properties_.size() == 0) return L"";
+	if (properties_.size() == 0) return "";
 
-	std::wstring s;
-	std::wstring d(L";");
+	std::string s;
+	std::string d(";");
 	for (auto v : properties_)
 		s += d + v.first + d + v.second;
 	return s.substr(1);
 
 
-//	std::wstring d(L";");
-//	auto tocsv = [&d](const std::wstring &s, const PropertyT &p)
+//	std::string d(";");
+//	auto tocsv = [&d](const std::string &s, const PropertyT &p)
 //		{ return s + d + p.first + d + p.second; };
 //
 //	// remove leading comma
 //	return std::accumulate(properties_.begin(), properties_.end(),
-//		std::wstring(L""),
+//		std::string(""),
 //		tocsv).substr(1);
 }
 
-void FileProperties::fromString(const std::wstring& s)
+void FileProperties::fromString(const std::string& s)
 {
 	clear();
-	wchar_t d(L';');
+	char d(';');
 	std::size_t n1 = -1, n2 = 0, n3 = 0;
-	std::wstring p, v;
+	std::string p, v;
 
 
-	auto fixdate = [](std::wstring &p, std::wstring &v)
+	auto fixdate = [](std::string &p, std::string &v)
 		{
-			if (p.compare(L"lasttime") == 0)
+			if (p.compare("lasttime") == 0)
 			{
 				if (v.size() == 20)
 					v =  v.substr(0,19);
@@ -143,10 +137,10 @@ void FileProperties::fromString(const std::wstring& s)
 	while (true)
 	{
 		n2 = s.find(d, n1 + 1);
-		if (n2 != std::wstring::npos)
+		if (n2 != std::string::npos)
 		{
 			n3 = s.find(d, n2 + 1);
-			if (n3 == std::wstring::npos)
+			if (n3 == std::string::npos)
 			{
 				p = s.substr(n1 + 1, n2 - n1 - 1);
 				v = s.substr(n2 + 1, s.size() - n2 - 1);
@@ -177,7 +171,7 @@ int FileProperties::getSize() const
 	return properties_.size();
 }
 
-void FileProperties::remove(const std::wstring property)
+void FileProperties::remove(const std::string property)
 {
 	auto n = properties_.find(property);
 	if (n != properties_.end()) properties_.erase(n);
@@ -185,82 +179,82 @@ void FileProperties::remove(const std::wstring property)
 
 void FileProperties::toLogger() const
 {
-	Logger::info(L"File Properties");
+	Logger::info("File Properties");
 	for (auto p : properties_)
-		Logger::info(L"\t%ls %ls", p.first.c_str(), p.second.c_str());
+		Logger::info("\t%s %s", p.first.c_str(), p.second.c_str());
 }
 
 bool FileProperties::test()
 {
 	FileProperties fp;
-	std::wstring s;
+	std::string s;
 	bool result = true;
 
-	fp.setString(L"p1", L"v1");
-	fp.setInt(L"p2", 2);
-	fp.incCount(L"p3");
-	fp.incCount(L"p3");
-	fp.incCount(L"p3");
-//	fp.setDateTimeNow(L"p4");
+	fp.setString("p1", "v1");
+	fp.setInt("p2", 2);
+	fp.incCount("p3");
+	fp.incCount("p3");
+	fp.incCount("p3");
+//	fp.setDateTimeNow("p4");
 	s = fp.toString();
-	result &= Logger::test(s.compare(L"p1;v1;p2;2;p3;3") == 0, L"FileProperties::test() t1 failed");
+	result &= Logger::test(s.compare("p1;v1;p2;2;p3;3") == 0, "FileProperties::test() t1 failed");
 
 	fp.clear();
 	s = fp.toString();
-	result &= Logger::test(s.compare(L"") == 0, L"FileProperties::test() t2 failed");
+	result &= Logger::test(s.compare("") == 0, "FileProperties::test() t2 failed");
 
-	fp.fromString(L"p1;v1;p2;10");
+	fp.fromString("p1;v1;p2;10");
 	s = fp.toString();
-	result &= Logger::test(s.compare(L"p1;v1;p2;10") == 0, L"FileProperties::test() t3 failed");
+	result &= Logger::test(s.compare("p1;v1;p2;10") == 0, "FileProperties::test() t3 failed");
 
 	int c = fp.getSize();
-	result &= Logger::test(c == 2, L"FileProperties::test() t4 failed");
+	result &= Logger::test(c == 2, "FileProperties::test() t4 failed");
 
-	s = fp.getString(L"p1");
-	result &= Logger::test(s.compare(L"v1") == 0, L"FileProperties::test() t5 failed");
+	s = fp.getString("p1");
+	result &= Logger::test(s.compare("v1") == 0, "FileProperties::test() t5 failed");
 
-	c = fp.getInt(L"p2");
-	result &= Logger::test(c == 10, L"FileProperties::test() t6 failed");
+	c = fp.getInt("p2");
+	result &= Logger::test(c == 10, "FileProperties::test() t6 failed");
 
-	c = fp.getCount(L"p2");
-	result &= Logger::test(c == 10, L"FileProperties::test() t7 failed");
+	c = fp.getCount("p2");
+	result &= Logger::test(c == 10, "FileProperties::test() t7 failed");
 
-	fp.remove(L"p1");
+	fp.remove("p1");
 	c = fp.getSize();
-	result &= Logger::test(c == 1, L"FileProperties::test() t8 failed");
+	result &= Logger::test(c == 1, "FileProperties::test() t8 failed");
 
 	s = fp.toString();
-	result &= Logger::test(s.compare(L"p2;10") == 0, L"FileProperties::test() t9 failed");
+	result &= Logger::test(s.compare("p2;10") == 0, "FileProperties::test() t9 failed");
 
-	fp.setString(L"p2", L"");
+	fp.setString("p2", "");
 	c = fp.getSize();
-	result &= Logger::test(c == 0, L"FileProperties::test() t10 failed");
+	result &= Logger::test(c == 0, "FileProperties::test() t10 failed");
 
 	s = fp.toString();
-	result &= Logger::test(s.compare(L"") == 0, L"FileProperties::test() t11 failed");
+	result &= Logger::test(s.compare("") == 0, "FileProperties::test() t11 failed");
 
-	fp.fromString(L"");
+	fp.fromString("");
 	s = fp.toString();
-	result &= Logger::test(s.compare(L"") == 0, L"FileProperties::test() t12 failed");
+	result &= Logger::test(s.compare("") == 0, "FileProperties::test() t12 failed");
 
-	fp.fromString(L"p1;v1;p2");
+	fp.fromString("p1;v1;p2");
 	s = fp.toString();
-	result &= Logger::test(s.compare(L"p1;v1") == 0, L"FileProperties::test() t13 failed");
+	result &= Logger::test(s.compare("p1;v1") == 0, "FileProperties::test() t13 failed");
 
-	fp.fromString(L"p1;v1;p2;2;");
+	fp.fromString("p1;v1;p2;2;");
 	s = fp.toString();
-	Logger::test(s.compare(L"p1;v1;p2;2") == 0, L"FileProperties::test() t14 failed");
+	Logger::test(s.compare("p1;v1;p2;2") == 0, "FileProperties::test() t14 failed");
 
-	fp.fromString(L"p1;v1;p2;;");
+	fp.fromString("p1;v1;p2;;");
 	s = fp.toString();
-	result &= Logger::test(s.compare(L"p1;v1") == 0, L"FileProperties::test() t15 failed");
+	result &= Logger::test(s.compare("p1;v1") == 0, "FileProperties::test() t15 failed");
 
-	fp.fromString(L"p1;v1;p2;");
+	fp.fromString("p1;v1;p2;");
 	s = fp.toString();
-	result &= Logger::test(s.compare(L"p1;v1") == 0, L"FileProperties::test() t16 failed");
+	result &= Logger::test(s.compare("p1;v1") == 0, "FileProperties::test() t16 failed");
 
 	if (result)
-		Logger::info(L"FileProperties::test() passed");
+		Logger::info("FileProperties::test() passed");
 
 	return result;
 }

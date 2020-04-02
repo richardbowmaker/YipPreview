@@ -24,18 +24,18 @@ public:
 
     static void initialise();
 
-    static std::wstring ffmpeg;
-    static std::wstring ffmpegEnd;
-    static std::wstring title;
-    static std::wstring workingDir;
-    static std::wstring filesDir;
-    static std::wstring propertiesCache;
+    static std::string ffmpeg;
+    static std::string ffmpegEnd;
+    static std::string title;
+    static std::string workingDir;
+    static std::string filesDir;
+    static std::string propertiesCache;
     static bool previewMode;	// image browser preview mode on
 	static int imageBrowserSize;  // no. of images in browser, vertically or horizontally (always the same)
 	static int imageBrowserSizeMin;  
 	static int imageBrowserSizeMax;
-    static std::wstring veracrypt;
-    static std::wstring pathSeparator;
+    static std::string veracrypt;
+    static std::string pathSeparator;
 
     // colours
     static wxColour blue;

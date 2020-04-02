@@ -27,7 +27,7 @@ public:
 	virtual ~FileSetManager();
 
 //	static bool addFiles(VolumeT volume);
-	static std::wstring toString();
+	static std::string toString();
 	static int getNoOfFileSets();
 	static FileSetT getFileSet(const int n);
 	static void setFileSets(const FileSetCollT &fileSets);
@@ -43,7 +43,7 @@ private:
 
 	void initialiseImpl();
 	void uninitialiseImpl();
-	std::wstring toStringImpl();
+	std::string toStringImpl();
 //	bool addFilesImpl(VolumeT volume);
 	int getNoOfFileSetsImpl() const;
 	FileSetT getFileSetImpl(const int n) const;

@@ -111,7 +111,7 @@ void ImagesBrowser::displayAt(int top)
 			}
 		}
 		else
-			imgPnl->setImage(L"", wxBITMAP_TYPE_JPEG);
+			imgPnl->setImage("", wxBITMAP_TYPE_JPEG);
 	}
 	top_ = top;
 }

@@ -37,8 +37,8 @@ public:
 
 protected:
 
-	void setTitle(const std::wstring title);
-	void setTitle(const std::wstring title, FileSetT fileset);
+	void setTitle(const std::string title);
+	void setTitle(const std::string title, FileSetT fileset);
 	wxPanel  *getPanel();
 	wxButton *getOk();
 	wxButton *getCancel();

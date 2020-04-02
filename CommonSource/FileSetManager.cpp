@@ -53,7 +53,7 @@ FileSetT FileSetManager::getFileSet(const int n)
 	return get().getFileSetImpl(n);
 }
 
-std::wstring FileSetManager::toString()
+std::string FileSetManager::toString()
 {
 	return get().toStringImpl();
 }
@@ -91,11 +91,11 @@ void FileSetManager::uninitialiseImpl()
 	fileSets_.clear();
 }
 
-std::wstring FileSetManager::toStringImpl()
+std::string FileSetManager::toStringImpl()
 {
-	std::wstring s;
+	std::string s;
 	for (auto fs : fileSets_)
-		s += fs->toString() + L"\n";
+		s += fs->toString() + "\n";
 	return s;
 }
 
@@ -151,7 +151,7 @@ void FileSetManager::sortImpl(const ColT col)
 		sortAscend_ = true;
 	}
 
-	Logger::info(L"FileSetManager::sortImpl() %d %ls", col, (sortAscend_ ? L"ascending" : L"descending"));
+	Logger::info("FileSetManager::sortImpl() %d %s", col, (sortAscend_ ? "ascending" : "descending"));
 
 
 	checkImpl();
@@ -180,7 +180,7 @@ void FileSetManager::sortImpl(const ColT col)
 
 void FileSetManager::toLoggerImpl() const
 {
-	Logger::info(L"File Set Manager, %d", fileSets_.size());
+	Logger::info("File Set Manager, %d", fileSets_.size());
 
 	for (auto fs : fileSets_)
 		fs->toLogger();

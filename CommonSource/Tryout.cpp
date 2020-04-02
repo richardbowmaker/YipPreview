@@ -155,7 +155,7 @@ void TryOut::AsyncShell(wxEvtHandler *handler)
 	//	ShellExecute::shellAsync(LR"(D:\_Ricks\c#\ZiPreview\Executable\ffmpeg.exe)", ShelExecuteHandler, 2);
 
 //	ShellExecute::shellSync(LR"(cmd /c dir D:\_Ricks\c#\ZiPreview\Executable)", result);
-//	Logger::info(L"Shell result %ls", result.toString().c_str());
+//	Logger::info(L"Shell result %s", result.toString().c_str());
 //
 //	ShellExecute::shellAsync(LR"(cmd /c dir D:\_Ricks\c#\ZiPreview\Executable)", ShelExecuteHandler, 3);
 //	ShellExecute::shellAsync(LR"(D:\Projects\WxWidgets\YipPreview\StdErrOutWin\Debug\StdErrOutWin.exe)", ShelExecuteHandler, 4);
@@ -170,10 +170,10 @@ void TryOut::AsyncShell(wxEvtHandler *handler)
 //	ShellExecute::shell(L"/usr/bin/firefox");
 //	ShellExecute::shell(L"/bin/notepadqq");
 
-	Logger::info(L"----------------------------------");
-	Logger::info(L"Shell launched: StdOutErr");
-	ShellExecute::shellSync(L"/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/StdOutErr/Debug/StdOutErr", result);
-	Logger::info(result.toString().c_str());
+//	Logger::info(L"----------------------------------");
+//	Logger::info(L"Shell launched: StdOutErr");
+//	ShellExecute::shellSync(L"/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/StdOutErr/Debug/StdOutErr", result);
+//	Logger::info(result.toString().c_str());
 
 
 // /bin/ffmpeg -i /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Tryout/f3.mp4 -af "volumedetect" -vn -sn -dn -f null NUL &2>1

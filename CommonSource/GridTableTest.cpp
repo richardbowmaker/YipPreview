@@ -65,17 +65,17 @@ void GridTableTest::append()
 	vals_.push_back(nextVal());
 }
 
-std::wstring GridTableTest::GridTableTest::nextVal() const
+std::string GridTableTest::GridTableTest::nextVal() const
 {
-	wchar_t buf[20];
-	swprintf(buf, sizeof(buf) / sizeof(wchar_t), L"Val %d", no_++);
-	return std::wstring(buf);
+	char buf[20];
+	snprintf(buf, sizeof(buf) / sizeof(char), "Val %d", no_++);
+	return std::string(buf);
 }
 
-std::wstring GridTableTest::toString()
+std::string GridTableTest::toString()
 {
-	std::wstring s;
-	for (auto v : vals_) s += v + std::wstring(L" ");
+	std::string s;
+	for (auto v : vals_) s += v + std::string(" ");
 	return s;
 }
 

@@ -57,7 +57,7 @@
  *
  */
 
-Volume::Volume(std::wstring file, const bool isMountable) :
+Volume::Volume(std::string file, const bool isMountable) :
 	file_(file),
 	isMountable_(isMountable),
 	isMounted_(false),
@@ -77,17 +77,17 @@ Volume::~Volume()
 {
 }
 
-std::wstring Volume::getFile() const
+std::string Volume::getFile() const
 {
 	return file_;
 }
 
-std::wstring Volume::getMount() const
+std::string Volume::getMount() const
 {
 	return mount_;
 }
 
-std::wstring Volume::getShortName() const
+std::string Volume::getShortName() const
 {
 	return short_;
 }
@@ -112,12 +112,12 @@ void Volume::setIsSelected(const bool isSelected)
 	isSelected_ = isSelected;
 }
 
-std::wstring Volume::getPropertiesFile() const
+std::string Volume::getPropertiesFile() const
 {
 	return mount_ + Constants::propertiesCache;
 }
 
-std::wstring Volume::getFilesDirectory() const
+std::string Volume::getFilesDirectory() const
 {
 	return mount_ + Constants::filesDir;
 }
@@ -125,19 +125,17 @@ std::wstring Volume::getFilesDirectory() const
 void Volume::readProperties()
 {
 	// read the properties cache into a map of file id v properties list string
-	std::string pf = SU::wStrToStr(getPropertiesFile());
-	std::ifstream pcache(pf);
+	std::ifstream pcache(getPropertiesFile());
 	std::string sl;
 	while (std::getline(pcache, sl))
 	{
-		std::wstring wl = SU::strToWStr(sl);
-		size_t n = wl.find(L";");
+		size_t n = sl.find(";");
 
-		if (n != std::wstring::npos)
+		if (n != std::string::npos)
 		{
-			std::wstring fn = wl.substr(0, n);
-			std::wstring id = FileSet::filenameToId(fn);
-			std::wstring ps = wl.substr(n + 1);
+			std::string fn = sl.substr(0, n);
+			std::string id = FileSet::filenameToId(fn);
+			std::string ps = sl.substr(n + 1);
 
 			FileSetCollT::const_iterator it =
 				std::find_if(fileSets_.begin(), fileSets_.end(),
@@ -159,47 +157,46 @@ void Volume::writeProperties()
 		int nn = 0;
 	}
 
-	std::string pf = SU::wStrToStr(getPropertiesFile());
-	std::ofstream pcache(pf);
+	std::ofstream pcache(getPropertiesFile());
 	for (auto fs : fileSets_)
 	{
 		if (fs->properties().getSize() > 0)
 		{
-			pcache  << SU::wStrToStr(fs->getId())
+			pcache  << fs->getId()
 					<< ";"
-					<< SU::wStrToStr(fs->properties().toString())
+					<< fs->properties().toString()
 					<< std::endl;
 		}
 	}
 	pcache.close();
 }
 
-bool Volume::mount(const std::wstring &m, const std::wstring &password)
+bool Volume::mount(const std::string &m, const std::string &password)
 {
 	if (isMounted_)
 	{
-		Logger::error(L"Volume::mount(), volume already mounted %ls as %ls, %ls !!",
+		Logger::error("Volume::mount(), volume already mounted %s as %s, %s !!",
 				file_.c_str(), m.c_str(), m.c_str());
 		return false;
 	}
-	std::wstringstream cmd;
+	std::stringstream cmd;
 
 #ifdef WINDOWS_BUILD
 //  "C:\Program Files\VeraCrypt\VeraCrypt.exe" /q /a /nowaitdlg y /hash sha512 /v VolAccounts.hc /l x /p password
 	cmd << Constants::veracrypt
-		<< LR"( /q /a /nowaitdlg y /hash sha512)"
-		<< LR"( /v ")" << file_ << LR"(")"
-		<< LR"( /l )" << m[0]
-		<< LR"( /p )" << password;
+		<< R"( /q /a /nowaitdlg y /hash sha512)"
+		<< R"( /v ")" << file_ << R"(")"
+		<< R"( /l )" << m[0]
+		<< R"( /p )" << password;
 #elif LINUX_BUILD
 // /usr/bin/veracrypt --password=... --slot=n --hash=sha512 file.hc /media/...
 // /usr/bin/veracrypt --password=dummypassword --slot=3 --hash=sha512 /media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/Encrypted/TestVol1.hc /media/veracrypt1
 	cmd 	<< Constants::veracrypt
-			<< L" --password=" << password
-			<< L" --slot=" << m.substr(m.size() - 2, 2) << " --hash=sha512 "
-			<< L'\"' << file_ << L"\" "
+			<< " --password=" << password
+			<< " --slot=" << m.substr(m.size() - 2, 2) << " --hash=sha512 "
+			<< L'\"' << file_ << "\" "
 			<< m;
-	Logger::error(L"Volume::mount() TODO, sort out slot number");
+	Logger::error("Volume::mount() TODO, sort out slot number");
 #endif
 	// mount must be in sudo mode
 	SudoMode sudo;
@@ -211,11 +208,11 @@ bool Volume::mount(const std::wstring &m, const std::wstring &password)
 	ShellExecute::shellSync(cmd.str(), result, tout);
 	sudo.lower();
 
-	Logger::info(L"%ls", result.toString().c_str());
+	Logger::info("%s", result.toString().c_str());
 
 	if (result.getSuccess())
 	{
-		Logger::info(L"Volume %ls mounted ok as %ls", file_.c_str(), m.c_str());
+		Logger::info("Volume %s mounted ok as %s", file_.c_str(), m.c_str());
 		mount_ = m;
 		isMounted_ = true;
 		isDirty_ = false;
@@ -224,7 +221,7 @@ bool Volume::mount(const std::wstring &m, const std::wstring &password)
 	}
 	else
 	{
-		Logger::error(L"Volume %ls failed to mount as %ls", file_.c_str(), m.c_str());
+		Logger::error("Volume %s failed to mount as %s", file_.c_str(), m.c_str());
 		return false;
 	}
 }
@@ -233,29 +230,29 @@ bool Volume::unmount()
 {
 	if (!isMounted_)
 	{
-		Logger::error(L"Volume::unmount(), volume not mounted %ls", file_.c_str());
+		Logger::error("Volume::unmount(), volume not mounted %s", file_.c_str());
 		return false;
 	}
 
-	std::wstringstream cmd;
+	std::stringstream cmd;
 #ifdef WINDOWS_BUILD
 //  "C:\Program Files\VeraCrypt\VeraCrypt.exe" /q /nowaitdlg y /force /d x
-	cmd << Constants::veracrypt << LR"( /q /nowaitdlg y /force /d )" << mount_[0];
+	cmd << Constants::veracrypt << R"( /q /nowaitdlg y /force /d )" << mount_[0];
 #elif LINUX_BUILD
-	cmd << Constants::veracrypt << L" -d " << " " << mount_;
+	cmd << Constants::veracrypt << " -d " << " " << mount_;
 #endif
 	SudoMode sudo;
 	ShellExecuteResult result;
 	ShellExecute::shellSync(cmd.str(), result, 5000);
 	sudo.lower();
 
-	Logger::info(L"%ls", result.toString().c_str());
+	Logger::info("%s", result.toString().c_str());
 
 	if (result.getSuccess())
 	{
-		Logger::info(L"Volume::unmount(), Volume %ls unmounted ok, %ls", file_.c_str(), mount_.c_str());
+		Logger::info("Volume::unmount(), Volume %s unmounted ok, %s", file_.c_str(), mount_.c_str());
 		if (isDirty_)
-			Logger::warning(L"Volume::unmount(), Dirty volume %ls unmounted, %ls", file_.c_str(), mount_.c_str());
+			Logger::warning("Volume::unmount(), Dirty volume %s unmounted, %s", file_.c_str(), mount_.c_str());
 		mount_.clear();
 		isMounted_ = false;
 		isDirty_ = false;
@@ -263,7 +260,7 @@ bool Volume::unmount()
 	}
 	else
 	{
-		Logger::error(L"Volume::unmount(), Volume %ls failed to unmount, %ls", file_.c_str(), mount_.c_str());
+		Logger::error("Volume::unmount(), Volume %s failed to unmount, %s", file_.c_str(), mount_.c_str());
 		return false;
 	}
 }
@@ -273,14 +270,14 @@ void Volume::loadFiles()
 	fileSets_.clear();
 
 	StringCollT files;
-	if (FU::findMatchingFiles(getFilesDirectory(), files, L"*"))
+	if (FU::findMatchingFiles(getFilesDirectory(), files, "*"))
 	{
 		for (auto f : files)
 		{
 			if (FileSet::isValidType(f))
 			{
 				// search for existing file set entry
-				std::wstring id = FileSet::filenameToId(f);
+				std::string id = FileSet::filenameToId(f);
 
 				FileSetCollT::const_iterator it =
 					std::find_if(fileSets_.begin(), fileSets_.end(),
@@ -301,7 +298,7 @@ void Volume::loadFiles()
 	}
 	else
 		Logger::warning(
-				L"Volume::loadFiles() empty directory %ls",
+				"Volume::loadFiles() empty directory %s",
 				getFilesDirectory().c_str());
 
 	int n = 0;
@@ -322,26 +319,26 @@ bool Volume::hasFileSets() const
 	return fileSets_.size() > 0;
 }
 
-std::wstring Volume::toString() const
+std::string Volume::toString() const
 {
-	std::wstringstream s;
+	std::stringstream s;
 	s << file_;
-	if (isMountable_ && isMounted_) s << L", mount=" << mount_;
-	if (isDirty_) s << L" *";
-	if (isSelected_) s << L" X";
+	if (isMountable_ && isMounted_) s << ", mount=" << mount_;
+	if (isDirty_) s << " *";
+	if (isSelected_) s << " X";
 	return s.str();
 }
 
 void Volume::toLogger() const
 {
-	Logger::info(L"Volume");
+	Logger::info("Volume");
 	if (isMounted_)
 	{
-		Logger::info(L"\tmounted");
-		Logger::info(L"\tmount %ls", mount_.c_str());
+		Logger::info("\tmounted");
+		Logger::info("\tmount %s", mount_.c_str());
 	}
 	else
-		Logger::info(L"\tnot mounted");
+		Logger::info("\tnot mounted");
 
 	for (auto fs : fileSets_)
 		fs->toLogger();

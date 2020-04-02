@@ -18,38 +18,38 @@ public:
 	int check_{123456};
 
 	FileSet();
-	FileSet(const Volume *volume, const std::wstring file);
+	FileSet(const Volume *volume, const std::string file);
 	virtual ~FileSet();
 
-	void set(const std::wstring file);
-	std::wstring getId() const;
-	std::wstring getImage() const;
-	void setImage(const std::wstring filename);
-	std::wstring getVideo() const;
-	void setVideo(const std::wstring filename);
-	std::wstring getLink() const;
-	void setLink(const std::wstring filename);
-	std::wstring toString() const;
+	void set(const std::string file);
+	std::string getId() const;
+	std::string getImage() const;
+	void setImage(const std::string filename);
+	std::string getVideo() const;
+	void setVideo(const std::string filename);
+	std::string getLink() const;
+	void setLink(const std::string filename);
+	std::string toString() const;
 	bool hasImage() const;
 	bool hasVideo() const;
 	bool hasLink() const;
-	std::wstring typesToString() const;
-	std::wstring getShortName() const;
+	std::string typesToString() const;
+	std::string getShortName() const;
 	const Volume* getVolume() const;
 	void setDurationMs(const long ms);
 	long getDurationMs() const;
-	void setDurationStr(const std::wstring duration);
-	std::wstring getDurationStr() const;
-	std::wstring getLastTime() const;
-	std::wstring getTimes() const;
+	void setDurationStr(const std::string duration);
+	std::string getDurationStr() const;
+	std::string getLastTime() const;
+	std::string getTimes() const;
 	float getMaxVol() const;
-	std::wstring getMaxVolStr() const;
+	std::string getMaxVolStr() const;
 	void setMaxVol(const float maxvol);
 	float getAverageVol() const;
-	std::wstring getAverageVolStr() const;
+	std::string getAverageVolStr() const;
 	void setAverageVol(const float averagevol);
 	void setIsSelected(const bool selected);
-	std::wstring getIsSelected() const;
+	std::string getIsSelected() const;
 	bool sort(const ColT col, FileSetT &other, const bool ascending);
 	void toLogger();
 
@@ -57,21 +57,21 @@ public:
 	// properties
 	FileProperties& properties();
 
-	static bool isValidType(const std::wstring filename);
-	static std::wstring filenameToId(const std::wstring filename);
+	static bool isValidType(const std::string filename);
+	static std::string filenameToId(const std::string filename);
 
 private:
 
 	enum TypeT { InvalidFile, ImageFile, LinkFile, VideoFile };
-	static TypeT filenameToType(const std::wstring filename);
+	static TypeT filenameToType(const std::string filename);
 
-	bool setId(const std::wstring filename);
+	bool setId(const std::string filename);
 
-	std::wstring id_;
-	std::wstring short_;
-	std::wstring image_;
-	std::wstring video_;
-	std::wstring link_;
+	std::string id_;
+	std::string short_;
+	std::string image_;
+	std::string video_;
+	std::string link_;
 
 	FileProperties properties_;
 	const Volume* volume_;

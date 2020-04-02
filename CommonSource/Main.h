@@ -61,8 +61,8 @@ private:
 	virtual int browserGetNoOfImages();
 	virtual int browserGetSelected();
 	virtual void browserSetSelected(const int selected);
-	virtual std::wstring browserGetImage(const int n);
-	virtual std::wstring browserGetVideo(const int n);
+	virtual std::string browserGetImage(const int n);
+	virtual std::string browserGetVideo(const int n);
 	virtual wxMenu *browserGetPopupMenu(const int item);
 
 	// ImagesGridServer interface

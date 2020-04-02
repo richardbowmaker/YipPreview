@@ -45,9 +45,9 @@ private:
 	wxCheckListBox *volumeList_;
 	wxButton *butFind_;
 
-	static std::wstring password_;
-	static std::wstring filter_;
-	static std::wstring dir_;
+	static std::string password_;
+	static std::string filter_;
+	static std::string dir_;
 
 };
 

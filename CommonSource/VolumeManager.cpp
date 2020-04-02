@@ -47,7 +47,7 @@ void VolumeManager::add(VolumeT& volume)
 	get().addImpl(volume);
 }
 
-void VolumeManager::add(const std::wstring &file, const bool isMountable)
+void VolumeManager::add(const std::string &file, const bool isMountable)
 {
 	get().addImpl(file, isMountable);
 }
@@ -67,17 +67,17 @@ void VolumeManager::writeProperties()
 	get().writePropertiesImpl();
 }
 
-bool VolumeManager::isMountInUse(const std::wstring &mount)
+bool VolumeManager::isMountInUse(const std::string &mount)
 {
 	return get().isMountInUseImpl(mount);
 }
 
-std::wstring VolumeManager::nextFreeMount()
+std::string VolumeManager::nextFreeMount()
 {
 	return get().nextFreeMountImpl();
 }
 
-bool VolumeManager::mountVolumes(const std::wstring &password)
+bool VolumeManager::mountVolumes(const std::string &password)
 {
 	return get().mountVolumesImpl(password);
 }
@@ -108,15 +108,15 @@ void VolumeManager::initialiseImpl()
 {
 #ifdef WINDOWS_BUILD
 	// built a list of candidate mount points
-	wchar_t l{'H'};
+	char l{'H'};
 	for (int i = 0; i < 10; ++i)
-		mounts_.push_back(std::wstring(1, l++) + std::wstring(LR"(:)"));
+		mounts_.push_back(std::string(1, l++) + std::string(R"(:)"));
 #elif LINUX_BUILD
 	for (int i = 0; i < 10; ++i)
 	{
-		wchar_t buf[200];
-		swprintf(buf, sizeof(buf) / sizeof(wchar_t), LR"(/media/volume%02d)", i + 1);
-		mounts_.push_back(std::wstring(buf));
+		char buf[200];
+		snprintf(buf, sizeof(buf) / sizeof(char), R"(/media/volume%02d)", i + 1);
+		mounts_.push_back(std::string(buf));
 	}
 #endif
 }
@@ -142,7 +142,7 @@ void VolumeManager::addImpl(VolumeT& volume)
 		volumes_.push_back(volume);
 }
 
-void VolumeManager::addImpl(const std::wstring &file, const bool isMountable)
+void VolumeManager::addImpl(const std::string &file, const bool isMountable)
 {
 	// add volume to collection if not already in it
 	auto n = std::find_if(volumes_.cbegin(), volumes_.cend(),
@@ -163,7 +163,7 @@ VolumeT VolumeManager::getVolumeImpl(const int n)
 		return volumes_[n];
 	else
 	{
-		Logger::error(L"VolumeManager::getVolumeImpl() no such volume %d", n);
+		Logger::error("VolumeManager::getVolumeImpl() no such volume %d", n);
 		return nullptr;
 	}
 }
@@ -179,7 +179,7 @@ void VolumeManager::writePropertiesImpl() const
 	}
 }
 
-bool VolumeManager::isMountInUseImpl(const std::wstring &mount) const
+bool VolumeManager::isMountInUseImpl(const std::string &mount) const
 {
 	StringCollT files;
 	StringCollT dirs;
@@ -187,16 +187,16 @@ bool VolumeManager::isMountInUseImpl(const std::wstring &mount) const
 	return (files.size() + dirs.size()) > 0;
 }
 
-std::wstring VolumeManager::nextFreeMountImpl() const
+std::string VolumeManager::nextFreeMountImpl() const
 {
 	for (auto m : mounts_)
 	{
 		if (!isMountInUseImpl(m)) return m;
 	}
-	return L"";
+	return "";
 }
 
-bool VolumeManager::mountVolumesImpl(const std::wstring &password)
+bool VolumeManager::mountVolumesImpl(const std::string &password)
 {
 	bool result = true;
 
@@ -206,7 +206,7 @@ bool VolumeManager::mountVolumesImpl(const std::wstring &password)
 		{
 			if (v->getIsSelected() && !v->getIsMounted())
 			{
-				std::wstring m = nextFreeMountImpl();
+				std::string m = nextFreeMountImpl();
 				if (m.size()> 0)
 				{
 #ifdef LINUX_BUILD
@@ -216,7 +216,7 @@ bool VolumeManager::mountVolumesImpl(const std::wstring &password)
 					if (FU::fileExists(m))
 					{
 						int r = Utilities::messageBox(
-								L"Mount folder \'%ls\' already exists, do you want to use it ?", L"Mount volume",
+								"Mount folder \'%s\' already exists, do you want to use it ?", "Mount volume",
 								wxYES_NO | wxCANCEL, &Main::get(), m.c_str());
 						if (r == wxCANCEL) return false;
 						if (r == wxNO) continue;
@@ -247,7 +247,7 @@ bool VolumeManager::mountVolumesImpl(const std::wstring &password)
 			if (!v->getIsSelected() && v->getIsMounted())
 			{
 				// unmount volume
-				std::wstring m = v->getMount();
+				std::string m = v->getMount();
 				v->writeProperties();
 				v->clearFiles();
 				result &= v->unmount();
@@ -278,7 +278,7 @@ bool VolumeManager::mountVolumesImpl(const std::wstring &password)
 	}
 
 	if (result)
-		Logger::info(L"All volumes mounted OK");
+		Logger::info("All volumes mounted OK");
 	return result;
 }
 
@@ -291,7 +291,7 @@ bool VolumeManager::unmountVolumesImpl()
 		{
 			// unmount volume
 			v->writeProperties();
-			std::wstring m = v->getMount();
+			std::string m = v->getMount();
 			result &= v->unmount();
 #ifdef LINUX_BUILD
 			// in linux remove the mount directory
@@ -304,7 +304,7 @@ bool VolumeManager::unmountVolumesImpl()
 			v->writeProperties();
 	}
 	if (result)
-		Logger::info(L"All volumes unmounted OK");
+		Logger::info("All volumes unmounted OK");
 	return result;
 }
 
@@ -327,15 +327,15 @@ FileSetCollT VolumeManager::getFileSetsImpl() const
 
 void VolumeManager::toLoggerImpl() const
 {
-	Logger::info(L"Volume Manager");
-	Logger::info(L"mounts:");
+	Logger::info("Volume Manager");
+	Logger::info("mounts:");
 	for (auto m : mounts_)
 	{
 		Logger::info(m.c_str());
 		if (isMountInUseImpl(m))
-			Logger::info(L"mount in use");
+			Logger::info("mount in use");
 	}
-	Logger::info(L"volumes:");
+	Logger::info("volumes:");
 	for (auto v : volumes_)
 		v->toLogger();
 }

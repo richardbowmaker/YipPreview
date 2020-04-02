@@ -32,16 +32,16 @@ public:
 	ShellExecuteResult& operator=(const ShellExecuteResult &other);
 	ShellExecuteResult& operator=(ShellExecuteResult &&other);
 
-	std::wstring getCmd() const;
+	std::string getCmd() const;
 	int  getPid() const;
 	int  getExitCode() const;
 	bool getSuccess() const;
-	std::wstring getStdout() const;
-	std::wstring getStderr() const;
+	std::string getStdout() const;
+	std::string getStderr() const;
 	bool getTimedOut() const;
 	int  getUserId() const;
 	void *getUserData() const;
-	std::wstring toString() const;
+	std::string toString() const;
 
 	void killChildProcess();	// after a timeout this can be used to kill
 								// the hanging process
@@ -51,13 +51,13 @@ public:
 
 private:
 
-	std::wstring 	cmd_;		// command executed
+	std::string 	cmd_;		// command executed
 	int 			pid_;		// process id of the shell process, the shell itself has a child process
 								// which is the command being run. 0 if exited
 	int 			exitCode_;	// exit code from command
 	bool 			success_;	// executed successfully
-	std::wstring 	stderr_;
-	std::wstring 	stdout_;	// stdout capture
+	std::string 	stderr_;
+	std::string 	stdout_;	// stdout capture
 	bool 			timedOut_;	// true if command timedout
 
 	// async calls only
@@ -82,24 +82,24 @@ public:
 
 	// simple synchronous, no result object returned
 	// returns true if command executed ok
-	static bool shell(const std::wstring &cmd);
+	static bool shell(const std::string &cmd);
 
 	// simple synchronous, no result object returned
 	// returns true if command executed ok
 	static bool shellSync(
-			const std::wstring &cmd,
+			const std::string &cmd,
 			const int timeoutms = -1);
 
 	// synchronous with user supplied result object filled out with the
 	// result of the command
 	static bool shellSync(
-			const std::wstring &cmd,
+			const std::string &cmd,
 			ShellExecuteResult &result,
 			const int timeoutms = -1);
 
 	// asynchronous, event handler function optional
 	static bool shellAsync(
-			const std::wstring &cmd,
+			const std::string &cmd,
 			ShellExecuteEventHandlerT handler = nullptr,
 			const int userId = 0,
 			void* userData = nullptr,
@@ -107,7 +107,7 @@ public:
 
 	// asynchronous, wxEventHandler optional
 	static bool shellAsyncGui(
-			const std::wstring &cmd,
+			const std::string &cmd,
 			wxEvtHandler *wxHandler = nullptr,
 			const int wxid = wxID_ANY,
 			const int userId = 0,
