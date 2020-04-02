@@ -64,6 +64,8 @@
                                     <listOptionValue builtIn="false" value="/usr/local/wxwidgets/debug/shared/lib/wx/include/gtk3-unicode-3.1"/>
                                     									
                                     <listOptionValue builtIn="false" value="/usr/local/wxwidgets/debug/shared/include/wx-3.1"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="/media/nas_share/Top/Data/Projects/fmtlib/fmt-6.1.2/include"/>
                                     								
                                 </option>
                                 								
@@ -114,6 +116,8 @@
                                     <listOptionValue builtIn="false" value="wx_gtk3u_media-3.1"/>
                                     									
                                     <listOptionValue builtIn="false" value="X11"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="fmt"/>
                                     								
                                 </option>
                                 								

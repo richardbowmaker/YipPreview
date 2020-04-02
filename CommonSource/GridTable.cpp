@@ -39,29 +39,30 @@ int GridTable::GetNumberRows()
 
 int GridTable::GetNumberCols()
 {
-	return 8;
+	return 9;
 }
 
 wxString GridTable::GetValue(int row, int col)
 {
-	if (row >= FileSetManager::getNoOfFileSets() || row < 0 || col < 0 || col > 7)
-	{
-		Logger::error(L"GridTable::GetValue invalid row %d, col %d", row, col);
-		return L"";
-	}
+//	if (row >= FileSetManager::getNoOfFileSets() || row < 0 || col < 0 || col > 7)
+//	{
+//		Logger::error(L"GridTable::GetValue invalid row %d, col %d", row, col);
+//		return L"";
+//	}
 
 	FileSetT fs = FileSetManager::getFileSet(row);
 	
-	switch (col)
+	switch (static_cast<ColT>(col))
 	{
-	case 0: return fs->getShortName();
-	case 1: return fs->typesToString();
-	case 2: return fs->getIsSelected();
-	case 3: return fs->getDurationStr();
-	case 4: return fs->getLastTime();
-	case 5: return fs->getTimes();
-	case 6: return fs->getMaxVolStr();
-	case 7: return fs->getAverageVolStr();
+	case ColT::Volume:     return fs->getVolume()->getShortName();
+	case ColT::File:       return fs->getId();
+	case ColT::Type:       return fs->typesToString();
+	case ColT::Selected:   return fs->getIsSelected();
+	case ColT::Duration:   return fs->getDurationStr();
+	case ColT::LastTime:   return fs->getLastTime();
+	case ColT::Times:      return fs->getTimes();
+	case ColT::MaxVol:     return fs->getMaxVolStr();
+	case ColT::AverageVol: return fs->getAverageVolStr();
 	}
 	return L"";
 }
@@ -72,16 +73,17 @@ void GridTable::SetValue(int row, int col, const wxString& value)
 
 wxString GridTable::GetColLabelValue(int col)
 {
-	switch (col)
+	switch (static_cast<ColT>(col))
 	{
-	case 0: return L"File";
-	case 1: return L"Type";
-	case 2: return L"Sel.";
-	case 3: return L"Duration";
-	case 4: return L"Last";
-	case 5: return L"Times";
-	case 6: return L"Max. Vol";
-	case 7: return L"Av. Vol";
+	case ColT::Volume: 		return L"Volume";
+	case ColT::File: 		return L"File";
+	case ColT::Type: 		return L"Type";
+	case ColT::Selected: 	return L"Sel.";
+	case ColT::Duration: 	return L"Duration";
+	case ColT::LastTime: 	return L"Last";
+	case ColT::Times: 		return L"Times";
+	case ColT::MaxVol: 		return L"Max. Vol";
+	case ColT::AverageVol: 	return L"Av. Vol";
 	default: return L"";
 	}
 }

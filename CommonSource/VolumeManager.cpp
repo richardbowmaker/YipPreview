@@ -171,7 +171,12 @@ VolumeT VolumeManager::getVolumeImpl(const int n)
 void VolumeManager::writePropertiesImpl() const
 {
 	for (auto v : volumes_)
-		v->writeProperties();
+	{
+		if (v->getIsMountable() && v->getIsMounted())
+			v->writeProperties();
+		if (!v->getIsMountable() && v->getIsSelected())
+			v->writeProperties();
+	}
 }
 
 bool VolumeManager::isMountInUseImpl(const std::wstring &mount) const
@@ -197,71 +202,81 @@ bool VolumeManager::mountVolumesImpl(const std::wstring &password)
 
 	for (auto v : volumes_)
 	{
-		if (v->getIsSelected() && !v->getIsMountable())
+		if (v->getIsMountable())
 		{
-			// non-mounting directories, just load the files
-			v->loadFiles();
-			v->readProperties();
-		}
-		else if (!v->getIsSelected() && !v->getIsMountable())
-		{
-			// non-mounting directories, just clear the files
-			v->writeProperties();
-			v->clearFiles();
-		}
-		else if (v->getIsSelected() && v->getIsMountable() && !v->getIsMounted())
-		{
-			std::wstring m = nextFreeMountImpl();
-			if (m.size()> 0)
+			if (v->getIsSelected() && !v->getIsMounted())
 			{
+				std::wstring m = nextFreeMountImpl();
+				if (m.size()> 0)
+				{
 #ifdef LINUX_BUILD
-				// in linux have to create a mount folder
-				// if the mount already exists then this is unexpected,
-				// use has to decide whether to use it or not
-				if (FU::fileExists(m))
-				{
-					int r = Utilities::messageBox(
-							L"Mount folder \'%ls\' already exists, do you want to use it ?", L"Mount volume",
-							wxYES_NO | wxCANCEL, &Main::get(), m.c_str());
-					if (r == wxCANCEL) return false;
-					if (r == wxNO) continue;
-				}
-				else
-				{
-					// create the mount directory, if fails to create move
-					SudoMode sudo;
-					if (!FU::mkDir(m))
+					// in linux have to create a mount folder
+					// if the mount already exists then this is unexpected,
+					// use has to decide whether to use it or not
+					if (FU::fileExists(m))
 					{
-						result = false;
-						continue;
+						int r = Utilities::messageBox(
+								L"Mount folder \'%ls\' already exists, do you want to use it ?", L"Mount volume",
+								wxYES_NO | wxCANCEL, &Main::get(), m.c_str());
+						if (r == wxCANCEL) return false;
+						if (r == wxNO) continue;
 					}
-				}
+					else
+					{
+						// create the mount directory, if fails to create move
+						SudoMode sudo;
+						if (!FU::mkDir(m))
+						{
+							result = false;
+							continue;
+						}
+					}
 #endif
-				if (v->mount(m, password))
-				{
-					v->loadFiles();
-					v->readProperties();
-					result &= true;
+					if (v->mount(m, password))
+					{
+						v->loadFiles();
+						v->readProperties();
+						result &= true;
+					}
+					else
+						result &= false;
 				}
 				else
 					result &= false;
 			}
-		}
-		else if (!v->getIsSelected() && v->getIsMountable() && v->getIsMounted())
-		{
-			// unmount volume
-			std::wstring m = v->getMount();
-			v->writeProperties();
-			v->clearFiles();
-			result &= v->unmount();
+			if (!v->getIsSelected() && v->getIsMounted())
+			{
+				// unmount volume
+				std::wstring m = v->getMount();
+				v->writeProperties();
+				v->clearFiles();
+				result &= v->unmount();
 #ifdef LINUX_BUILD
-			// in linux remove the mount directory
-			SudoMode sudo;
-			if (!FU::rmDir(m)) result = false;
-			sudo.lower();
+				// in linux remove the mount directory
+				SudoMode sudo;
+				if (!FU::rmDir(m)) result = false;
+				sudo.lower();
 #endif
+			}
+		}
+		else
+		{
+			// non-mounting volumes
+			if (v->getIsSelected() && !v->hasFileSets())
+			{
+				v->loadFiles();
+				v->readProperties();
+				result &= true;
+			}
+			if (!v->getIsSelected() && v->hasFileSets())
+			{
+				v->writeProperties();
+				v->clearFiles();
+				result &= true;
+			}
 		}
 	}
+
 	if (result)
 		Logger::info(L"All volumes mounted OK");
 	return result;
@@ -285,7 +300,7 @@ bool VolumeManager::unmountVolumesImpl()
 			sudo.lower();
 #endif
 		}
-		if (!v->getIsMountable())
+		if (!v->getIsMountable() && v->getIsSelected())
 			v->writeProperties();
 	}
 	if (result)

@@ -107,7 +107,7 @@ void DialogEx::setTitle(const std::wstring title, FileSetT fileset)
 			 wxString(L" - ") +
 			 title +
 			 wxString(L" - ") +
-			 fileset->getFileStem());
+			 fileset->getId());
 }
 
 wxPanel *DialogEx::getPanel()

@@ -66,7 +66,11 @@ Volume::Volume(std::wstring file, const bool isMountable) :
 {
 	// if file is not a mountable volume then take the
 	// file to be a directory containing files that a mounted volume would
-	if (!isMountable_) mount_ = file_;
+	if (!isMountable_)
+	{
+		mount_ = file;
+		short_ = FU::abbreviateFilename(file, 30);
+	}
 }
 
 Volume::~Volume()
@@ -81,6 +85,11 @@ std::wstring Volume::getFile() const
 std::wstring Volume::getMount() const
 {
 	return mount_;
+}
+
+std::wstring Volume::getShortName() const
+{
+	return short_;
 }
 
 bool Volume::getIsMountable() const
@@ -111,11 +120,6 @@ std::wstring Volume::getPropertiesFile() const
 std::wstring Volume::getFilesDirectory() const
 {
 	return mount_ + Constants::filesDir;
-}
-
-void Volume::addFileSet(FileSetT &fileset)
-{
-	fileSets_.push_back(fileset);
 }
 
 void Volume::readProperties()
@@ -149,6 +153,11 @@ void Volume::readProperties()
 void Volume::writeProperties()
 {
 	if (isMountable_ && !isMounted_) return;
+
+	if (fileSets_.size() == 0)
+	{
+		int nn = 0;
+	}
 
 	std::string pf = SU::wStrToStr(getPropertiesFile());
 	std::ofstream pcache(pf);
@@ -210,6 +219,7 @@ bool Volume::mount(const std::wstring &m, const std::wstring &password)
 		mount_ = m;
 		isMounted_ = true;
 		isDirty_ = false;
+		short_ = FU::abbreviateFilename(m, 30);
 		return true;
 	}
 	else
@@ -293,6 +303,8 @@ void Volume::loadFiles()
 		Logger::warning(
 				L"Volume::loadFiles() empty directory %ls",
 				getFilesDirectory().c_str());
+
+	int n = 0;
 }
 
 void Volume::clearFiles()
@@ -303,6 +315,11 @@ void Volume::clearFiles()
 FileSetCollT Volume::getFileSets() const
 {
 	return fileSets_;
+}
+
+bool Volume::hasFileSets() const
+{
+	return fileSets_.size() > 0;
 }
 
 std::wstring Volume::toString() const

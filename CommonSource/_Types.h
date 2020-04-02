@@ -15,10 +15,13 @@
 
 class FileSet;
 using FileSetT = std::shared_ptr<FileSet>;
+using FileSetCT = const std::shared_ptr<const FileSet>;
 using FileSetCollT = std::vector<FileSetT>;
+using FileSetCollCT = const std::vector<const FileSetCT>;
 
 class Volume;
 using VolumeT = std::shared_ptr<Volume>;
+using VolumeCT = std::shared_ptr<const Volume>;
 using VolumeCollT = std::vector<VolumeT>;
 
 using StringStringT = std::pair<std::wstring, std::wstring>;
@@ -32,17 +35,17 @@ using PropertiesT = std::map<std::wstring, std::wstring>;
 
 using StringCollT = std::vector<std::wstring>;
 
-enum ColT
+enum class ColT
 {
-	FileCol = 0,
-	TypeCol,
-	SelectedCol,
-	DurationCol,
-	LastTimeCol,
-	TimesCol,
-	MaxVolCol,
-	AverageVolCol
-
+	Volume = 0,
+	File,
+	Type,
+	Selected,
+	Duration,
+	LastTime,
+	Times,
+	MaxVol,
+	AverageVol
 };
 
 

@@ -93,9 +93,9 @@ bool FileSet::setId(const std::wstring filename)
 	}
 }
 
-std::wstring FileSet::getFileStem() const
+const Volume* FileSet::getVolume() const
 {
-	return FU::getFileStem(id_);
+	return volume_;
 }
 
 std::wstring FileSet::getImage() const
@@ -162,7 +162,7 @@ std::wstring FileSet::toString() const
 	return std::wstring(L"ID = ") + id_ + std::wstring(L", ") + typesToString();
 }
 
-bool FileSet::sort(const int col, FileSetT &other, const bool ascending)
+bool FileSet::sort(const ColT col, FileSetT &other, const bool ascending)
 {
 /* sort() is used by the grid column sort function.
  *
@@ -188,101 +188,122 @@ bool FileSet::sort(const int col, FileSetT &other, const bool ascending)
  *
  */
 
-
-	// helper to format a volume float to sortable string
-	auto volToString = [](FileSet &fs, const std::wstring field)
-	{
-		std::wstring s;
-		wchar_t buf[100];
-		if (fs.properties().getString(field).size() > 0)
-		{
-			float f = fs.properties().getFloat(field);
-			swprintf(buf, sizeof(buf) / sizeof(wchar_t), L"%3.2f", std::abs(f));
-			s = std::wstring(buf);
-			if (f >= 0)
-				s = std::wstring(1, L'+') + s;
-			else
-				s = std::wstring(1, L'-') + s;
-		}
-		return s;
-	};
-
-	// time field to a sortable string
-	auto timeToString = [](const std::wstring &t) -> std::wstring
-	{
-		// 0123456789012345678
-		// 15:13:54 30/03/2020
-		std::wstringstream s;
-		if (t.size() == 10)
-			s << t.substr(15, 4) << t.substr(12, 2) << t.substr(9, 2) << L"12:00:00";
-		else if (t.size() == 19)
-			s << t.substr(15, 4) << t.substr(12, 2) << t.substr(9, 2) << t.substr(0, 8);
-		return s.str();
-	};
-
-	auto timesToString = [](const int ts) -> std::wstring
-	{
-		std::wstring s;
-		if (ts > 0)
-		{
-			wchar_t buf[100];
-			swprintf(buf, sizeof(buf) / sizeof(wchar_t), L"%05d", ts);
-			s = std::wstring(buf);
-		}
-		return s;
-   };
+//
+//	// helper to format a volume float to sortable string
+//	auto volToString = [](FileProperties &ps, const std::wstring field)
+//	{
+//		std::wstring s;
+//		wchar_t buf[1000];
+//		if (ps.getString(field).size() > 0)
+//		{
+//			float f = ps.getFloat(field);
+//			swprintf(buf, sizeof(buf) / sizeof(wchar_t), L"%3.2f", std::abs(f));
+//			s = std::wstring(buf);
+//			if (f >= 0)
+//				s = std::wstring(1, L'>') + s;
+//			else
+//				s = std::wstring(1, L'<') + s;
+//		}
+//		return s;
+//	};
+//
+//	// time field to a sortable string
+//	auto timeToString = [](const std::wstring &t) -> std::wstring
+//	{
+//		// 0123456789012345678
+//		// 15:13:54 30/03/2020
+//		std::wstringstream s;
+//		if (t.size() == 19)
+//			s << t.substr(15, 4) << t.substr(12, 2) << t.substr(9, 2) << t.substr(0, 8);
+//		else if (t.size() == 10)
+//			s << t.substr(15, 4) << t.substr(12, 2) << t.substr(9, 2) << L"00:00:00";
+//		return s.str();
+//	};
+//
+//	auto timesToString = [](const int ts) -> std::wstring
+//	{
+//		std::wstring s;
+//		if (ts > 0)
+//		{
+//			wchar_t buf[1000];
+//			swprintf(buf, sizeof(buf) / sizeof(wchar_t), L"%05d", ts);
+//			s = std::wstring(buf);
+//		}
+//		return s;
+//   };
 
 	// the sort fields
 	std::wstring s1;
 	std::wstring s2;
-
-	switch (col)
-	{
-	case FileCol:
-		s1 = id_;
-		s2 = other->getId();
-		break;
-	case TypeCol:
-		s1 = typesToString();
-		s2 = other->typesToString();
-		break;
-	case SelectedCol:
-		s1 = getIsSelected();
-		s2 = other->getIsSelected();
-		break;
-	case DurationCol:
-		s1 = getIsSelected();
-		s2 = other->getIsSelected();
-		break;
-	case LastTimeCol:
-		s1 = timeToString(getLastTime());
-		s2 = timeToString(other->getLastTime());
-		break;
-	case TimesCol:
-		s1 = timesToString(properties_.getInt(L"times"));
-		s2 = timesToString(other->properties().getInt(L"times"));
-
-		break;
-	case MaxVolCol:
-		s1 = volToString(*this, L"maxvol");
-		s2 = volToString(*other.get(), L"maxvol");
-		break;
-	case AverageVolCol:
-		s1 = volToString(*this, L"averagevol");
-		s2 = volToString(*other.get(), L"averagevol");
-		break;
-
-	default:
-		break;
-	}
-
-	// see header for explanation
+	s1 = id_;
+	s2 = other->getId();
 	int n = s1.compare(s2);
-	if (n == 0) return (id_.compare(other->getId()) < 0);
-	if (s1.size() == 0) return false;
-	if (s2.size() == 0) return true;
-	if (ascending) return n < 0;
-	else return n > 0;
+	return n;
+
+
+//	switch (static_cast<ColT>(col))
+//	{
+//	case ColT::Volume:
+////		s1 = volume_->getMount();
+////		s2 = other->getVolume()->getMount();
+//		break;
+//	case ColT::File:
+//		s1 = id_;
+//		s2 = other->getId();
+//		break;
+//	case ColT::Type:
+//		s1 = typesToString();
+//		s2 = other->typesToString();
+//		break;
+//	case ColT::Selected:
+//		s1 = getIsSelected();
+//		s2 = other->getIsSelected();
+//		break;
+//	case ColT::Duration:
+//		s1 = getDurationStr();
+//		s2 = other->getDurationStr();
+//		break;
+//	case ColT::LastTime:
+////		s1 = timeToString(getLastTime());
+////		s2 = timeToString(other->getLastTime());
+//		s1 = getLastTime();
+//		s2 = other->getLastTime();
+//		break;
+////	case ColT::Times:
+////		s1 = timesToString(properties_.getInt(L"times"));
+////		s2 = timesToString(other->properties().getInt(L"times"));
+////		break;
+////	case ColT::MaxVol:
+////		s1 = volToString(properties_, L"maxvol");
+////		s2 = volToString(other->properties(), L"maxvol");
+////		break;
+////	case ColT::AverageVol:
+////		s1 = volToString(properties_, L"averagevol");
+////		s2 = volToString(other->properties(), L"averagevol");
+////		break;
+//	default:
+//		break;
+//	}
+//
+//	// see header for explanation
+//	int n = s1.compare(s2);
+//	return n;
+
+//	if (n == 0)
+//	{
+//		n = id_.compare(other->getId());
+//		return n;
+////		if (n == 0)
+////		{
+////			return (volume_->getMount().compare(other->getVolume()->getMount()) < 0);
+////		}
+////		else
+////			return n;
+//	}
+//	if (s1.size() == 0) return false;
+//	if (s2.size() == 0) return true;
+//	if (ascending) return n < 0;
+//	else return n > 0;
 }
 
 void FileSet::toLogger()

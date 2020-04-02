@@ -46,13 +46,14 @@ void ImagesGrid::populate()
 	HideRowLabels();
 	EnableEditing(false);
 	SetColSize(0, 220);
-	SetColSize(1, 50);
+	SetColSize(1, 140);
 	SetColSize(2, 50);
-	SetColSize(3, 100);
-	SetColSize(4, 150);
-	SetColSize(5, 50);
-	SetColSize(6, 75);
+	SetColSize(3, 50);
+	SetColSize(4, 100);
+	SetColSize(5, 150);
+	SetColSize(6, 50);
 	SetColSize(7, 75);
+	SetColSize(8, 75);
 }
 
 void ImagesGrid::eventDispatch(wxGridEvent &event)

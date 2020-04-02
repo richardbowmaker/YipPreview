@@ -256,7 +256,7 @@ void Main::menuSelectedDispatch(wxCommandEvent& event)
 		unitTests();
 		break;
 	case ID_MenuTestTryout:
-		TryOut::tryout();
+		TryOut::tryout(fs);
 		break;
 	case ID_MenuTestToLogger:
 		toLogger();

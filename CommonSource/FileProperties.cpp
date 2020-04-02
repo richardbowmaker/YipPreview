@@ -64,7 +64,9 @@ std::wstring FileProperties::getString(const std::wstring& property) const
 {
 	auto n = properties_.find(property);
 	if (n != properties_.end())
+	{
 		return (*n).second;
+	}
 	else
 		return L"";
 }
@@ -127,6 +129,17 @@ void FileProperties::fromString(const std::wstring& s)
 	std::size_t n1 = -1, n2 = 0, n3 = 0;
 	std::wstring p, v;
 
+
+	auto fixdate = [](std::wstring &p, std::wstring &v)
+		{
+			if (p.compare(L"lasttime") == 0)
+			{
+				if (v.size() == 20)
+					v =  v.substr(0,19);
+			}
+		};
+
+
 	while (true)
 	{
 		n2 = s.find(d, n1 + 1);
@@ -137,6 +150,7 @@ void FileProperties::fromString(const std::wstring& s)
 			{
 				p = s.substr(n1 + 1, n2 - n1 - 1);
 				v = s.substr(n2 + 1, s.size() - n2 - 1);
+				fixdate(p, v);
 				setString(p, v);
 				break;
 			}
@@ -144,6 +158,7 @@ void FileProperties::fromString(const std::wstring& s)
 			{
 				p = s.substr(n1 + 1, n2 - n1 - 1);
 				v = s.substr(n2 + 1, n3 - n2 - 1);
+				fixdate(p, v);
 				setString(p, v);
 				n1 = n3;
 			}

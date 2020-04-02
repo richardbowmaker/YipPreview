@@ -34,6 +34,8 @@ public:
 	static void sort(const ColT col);
 	static void toLogger();
 
+	static void check();
+
 private:
 
 	FileSetManager();
@@ -48,6 +50,9 @@ private:
 	void setFileSetsImpl(const FileSetCollT &fileSets);
 	void sortImpl(const ColT col);
 	void toLoggerImpl() const;
+
+	void checkImpl();
+
 
 	FileSetCollT fileSets_;
 	ColT sortCol_;

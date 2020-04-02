@@ -29,6 +29,7 @@ public:
 
 	std::wstring getFile() const;
 	std::wstring getMount() const;
+	std::wstring getShortName() const;
 	bool getIsMountable() const;
 	bool getIsMounted() const;
 	bool getIsSelected() const;
@@ -36,7 +37,7 @@ public:
 	std::wstring getPropertiesFile() const;
 	std::wstring getFilesDirectory() const;
 	FileSetCollT getFileSets() const;
-	void addFileSet(FileSetT &fileset);
+	bool hasFileSets() const;
 	void readProperties();
 	void writeProperties();
 	bool mount(const std::wstring &m, const std::wstring &password);
@@ -50,6 +51,7 @@ private:
 
 	std::wstring file_;
 	std::wstring mount_;
+	std::wstring short_;
 	bool isMountable_;
 	bool isMounted_;
 	bool isDirty_;

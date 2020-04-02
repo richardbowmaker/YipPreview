@@ -15,6 +15,8 @@ class FileSet
 {
 public:
 
+	int check_{123456};
+
 	FileSet();
 	FileSet(const Volume *volume, const std::wstring file);
 	virtual ~FileSet();
@@ -33,7 +35,7 @@ public:
 	bool hasLink() const;
 	std::wstring typesToString() const;
 	std::wstring getShortName() const;
-	std::wstring getFileStem() const;
+	const Volume* getVolume() const;
 	void setDurationMs(const long ms);
 	long getDurationMs() const;
 	void setDurationStr(const std::wstring duration);
@@ -48,9 +50,8 @@ public:
 	void setAverageVol(const float averagevol);
 	void setIsSelected(const bool selected);
 	std::wstring getIsSelected() const;
-	bool sort(const int col, FileSetT &other, const bool ascending);
+	bool sort(const ColT col, FileSetT &other, const bool ascending);
 	void toLogger();
-
 
 
 	// properties

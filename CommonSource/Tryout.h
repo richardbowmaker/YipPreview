@@ -5,6 +5,8 @@
 
 wxDECLARE_EVENT(wxEVT_MY_CUSTOM_COMMAND, wxCommandEvent);
 
+#include "_Types.h"
+
 class TryOut
 {
 public:
@@ -17,7 +19,7 @@ public:
 	static void AsyncShell(wxEvtHandler *handler);
 	static void ReadAsync();
 	static void ShellAsync();
-	static void tryout();
+	static void tryout(const FileSetT fs);
 
 
 };
