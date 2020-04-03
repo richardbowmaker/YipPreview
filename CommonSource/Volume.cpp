@@ -176,7 +176,7 @@ bool Volume::mount(const std::string &m, const std::string &password)
 	if (isMounted_)
 	{
 		Logger::error("Volume::mount(), volume already mounted %s as %s, %s !!",
-				file_.c_str(), m.c_str(), m.c_str());
+				file_, m, m);
 		return false;
 	}
 	std::stringstream cmd;
@@ -212,7 +212,7 @@ bool Volume::mount(const std::string &m, const std::string &password)
 
 	if (result.getSuccess())
 	{
-		Logger::info("Volume %s mounted ok as %s", file_.c_str(), m.c_str());
+		Logger::info("Volume %s mounted ok as %s", file_, m);
 		mount_ = m;
 		isMounted_ = true;
 		isDirty_ = false;
@@ -221,7 +221,7 @@ bool Volume::mount(const std::string &m, const std::string &password)
 	}
 	else
 	{
-		Logger::error("Volume %s failed to mount as %s", file_.c_str(), m.c_str());
+		Logger::error("Volume %s failed to mount as %s", file_, m);
 		return false;
 	}
 }
@@ -230,7 +230,7 @@ bool Volume::unmount()
 {
 	if (!isMounted_)
 	{
-		Logger::error("Volume::unmount(), volume not mounted %s", file_.c_str());
+		Logger::error("Volume::unmount(), volume not mounted %s", file_);
 		return false;
 	}
 
@@ -250,9 +250,9 @@ bool Volume::unmount()
 
 	if (result.getSuccess())
 	{
-		Logger::info("Volume::unmount(), Volume %s unmounted ok, %s", file_.c_str(), mount_.c_str());
+		Logger::info("Volume::unmount(), Volume %s unmounted ok, %s", file_, mount_);
 		if (isDirty_)
-			Logger::warning("Volume::unmount(), Dirty volume %s unmounted, %s", file_.c_str(), mount_.c_str());
+			Logger::warning("Volume::unmount(), Dirty volume %s unmounted, %s", file_, mount_);
 		mount_.clear();
 		isMounted_ = false;
 		isDirty_ = false;
@@ -260,7 +260,7 @@ bool Volume::unmount()
 	}
 	else
 	{
-		Logger::error("Volume::unmount(), Volume %s failed to unmount, %s", file_.c_str(), mount_.c_str());
+		Logger::error("Volume::unmount(), Volume %s failed to unmount, %s", file_, mount_);
 		return false;
 	}
 }
@@ -299,7 +299,7 @@ void Volume::loadFiles()
 	else
 		Logger::warning(
 				"Volume::loadFiles() empty directory %s",
-				getFilesDirectory().c_str());
+				getFilesDirectory());
 
 	int n = 0;
 }
@@ -335,7 +335,7 @@ void Volume::toLogger() const
 	if (isMounted_)
 	{
 		Logger::info("\tmounted");
-		Logger::info("\tmount %s", mount_.c_str());
+		Logger::info("\tmount %s", mount_);
 	}
 	else
 		Logger::info("\tnot mounted");

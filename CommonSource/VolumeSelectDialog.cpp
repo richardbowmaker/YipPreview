@@ -115,13 +115,13 @@ void VolumeSelectDialog::onFind(wxCommandEvent &event)
 	}
 	else
 		Logger::error("VolumeSelectDialog::onFind() error search %s for matching file %s",
-				dirPicker_->GetPath().wc_str(),
-				txtFilter_->GetValue().wc_str());
+				dirPicker_->GetPath().c_str(),
+				txtFilter_->GetValue().c_str());
 }
 
 void VolumeSelectDialog::onDirPicker(wxFileDirPickerEvent& event)
 {
-	Logger::info("selected folder %s", dirPicker_->GetPath().wc_str());
+	Logger::info("selected folder %s", dirPicker_->GetPath().c_str());
 	txtFilter_->SetFocus();
 }
 

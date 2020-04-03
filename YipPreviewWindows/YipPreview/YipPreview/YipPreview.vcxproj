@@ -104,14 +104,14 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WXUSINGDLL;WINDOWS_BUILD;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\..\..\CommonSource;D:\_Ricks\c++\wxWidgets\3.1.3\wxWidgets-3.1.3\include;D:\_Ricks\c++\wxWidgets\3.1.3\wxWidgets-3.1.3\lib\vc_x64_lib\mswud;D:\_Ricks\c++\wxWidgets\3.1.3\wxWidgets-3.1.3\lib\vc_x64_dll\mswud</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\CommonSource;D:\_Ricks\c++\wxWidgets\3.1.3\wxWidgets-3.1.3\include;D:\_Ricks\c++\wxWidgets\3.1.3\wxWidgets-3.1.3\lib\vc_x64_lib\mswud;D:\_Ricks\c++\wxWidgets\3.1.3\wxWidgets-3.1.3\lib\vc_x64_dll\mswud;..\..\..\..\..\fmtlib\fmt-6.1.2\include</AdditionalIncludeDirectories>
       <AdditionalOptions>/wd4996 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>wxbase31ud.lib;wxmsw31ud_core.lib;wxpngd.lib;wxzlibd.lib;wxmsw31ud_media.lib;comctl32.lib;rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>D:\_Ricks\c++\wxWidgets\3.1.3\wxWidgets-3.1.3\lib\vc_x64_dll;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>wxbase31ud.lib;wxmsw31ud_core.lib;wxpngd.lib;wxzlibd.lib;wxmsw31ud_media.lib;comctl32.lib;rpcrt4.lib;fmtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>D:\_Ricks\c++\wxWidgets\3.1.3\wxWidgets-3.1.3\lib\vc_x64_dll;..\..\..\..\..\fmtlib\fmt-6.1.2\buildms\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -142,7 +142,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WXUSINGDLL;WINDOWS_BUILD;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\..\..\CommonSource;D:\_Ricks\c++\wxWidgets\3.1.3\wxWidgets-3.1.3\include;D:\_Ricks\c++\wxWidgets\3.1.3\wxWidgets-3.1.3\lib\vc_x64_lib\mswu;D:\_Ricks\c++\wxWidgets\3.1.3\wxWidgets-3.1.3\lib\vc_x64_dll\mswu</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\CommonSource;D:\_Ricks\c++\wxWidgets\3.1.3\wxWidgets-3.1.3\include;D:\_Ricks\c++\wxWidgets\3.1.3\wxWidgets-3.1.3\lib\vc_x64_lib\mswu;D:\_Ricks\c++\wxWidgets\3.1.3\wxWidgets-3.1.3\lib\vc_x64_dll\mswu;..\..\..\..\..\fmtlib\fmt-6.1.2\include</AdditionalIncludeDirectories>
       <AdditionalOptions>/wd4996 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
@@ -150,8 +150,8 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>D:\_Ricks\c++\wxWidgets\3.1.3\wxWidgets-3.1.3\lib\vc_x64_dll</AdditionalLibraryDirectories>
-      <AdditionalDependencies>wxbase31u.lib;wxmsw31u_core.lib;wxbase31ud.lib;wxzlib.lib;wxmsw31u_media.lib;comctl32.lib;rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>D:\_Ricks\c++\wxWidgets\3.1.3\wxWidgets-3.1.3\lib\vc_x64_dll;..\..\..\..\..\fmtlib\fmt-6.1.2\buildms\Release</AdditionalLibraryDirectories>
+      <AdditionalDependencies>wxbase31u.lib;wxmsw31u_core.lib;wxbase31ud.lib;wxzlib.lib;wxmsw31u_media.lib;comctl32.lib;rpcrt4.lib;fmt.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

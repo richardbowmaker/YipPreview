@@ -142,7 +142,6 @@ void Utilities::delay(int ms)
 	std::this_thread::sleep_for (std::chrono::milliseconds(ms));
 }
 
-
 //--------------------------------------------------
 // String utilities
 //--------------------------------------------------
@@ -837,8 +836,7 @@ bool Duration::parse(const std::string &str)
     }
     else
     {
-    	Logger::error("Duration::parse() invalid duration string: %s",
-    			SU::strToWStr(str).c_str());
+    	Logger::error("Duration::parse() invalid duration string: %s", str.c_str());
     	return false;
     }
 }

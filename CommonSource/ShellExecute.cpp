@@ -82,7 +82,7 @@ bool ShellExecute::shellSync(
 		const std::string &cmd,
 		const int timeoutms /*= -1*/)
 {
-	Logger::info("ShellExecute::shellSync %s, timeout = %d", cmd.c_str(), timeoutms);
+	Logger::info("ShellExecute::shellSync %s, timeout = %d", cmd, timeoutms);
 	ShellThreadData data;
 	data.result_.cmd_ = cmd;
 	data.timeoutms_ = timeoutms;
@@ -100,7 +100,7 @@ bool ShellExecute::shellSync(
 	ShellExecuteResult& result,
 	const int timeoutms /*= -1 */)
 {
-	Logger::info("ShellExecute::shellSync %s, timeout = %d", cmd.c_str(), timeoutms);
+	Logger::info("ShellExecute::shellSync %s, timeout = %d", cmd, timeoutms);
 	ShellThreadData data;
 	data.result_.cmd_ = cmd;
 	data.timeoutms_ = timeoutms;
@@ -123,7 +123,7 @@ bool ShellExecute::shellAsync(
 	void* userData,
 	const int timeoutms)
 {
-	Logger::info("ShellExecute::shellAsync %s, timeout = %d", cmd.c_str(), timeoutms);
+	Logger::info("ShellExecute::shellAsync %s, timeout = %d", cmd, timeoutms);
 	ShellThreadData *data = new ShellThreadData;
 	data->result_.cmd_ = cmd;
 	data->result_.userId_ = userId;
@@ -165,7 +165,7 @@ bool ShellExecute::shellAsyncGui(
 	void* userData,
 	const int timeoutms)
 {
-	Logger::info("ShellExecute::shellAsyncGui %s, timeout = %d", cmd.c_str(), timeoutms);
+	Logger::info("ShellExecute::shellAsyncGui %s, timeout = %d", cmd, timeoutms);
 	ShellThreadData* data = new ShellThreadData;
 	data->result_.cmd_ = cmd;
 	data->result_.userId_ = userId;
@@ -412,7 +412,7 @@ DWORD WINAPI ShellExecute::shellWinThread2_(void* pdata)
 		delete &data;
 	else
 		// data cannot be deleted as child process is still running
-		Logger::warning("CreateProcess timedout, memory leak %s", data.result_.cmd_.c_str());
+		Logger::warning("CreateProcess timedout, memory leak %s", data.result_.cmd_);
 
 	return data.result_.success_ ? TRUE : FALSE;
 }

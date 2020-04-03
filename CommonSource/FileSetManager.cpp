@@ -153,7 +153,7 @@ void FileSetManager::sortImpl(const ColT col)
 		sortAscend_ = true;
 	}
 
-	Logger::info("FileSetManager::sortImpl() %d %s", col, (sortAscend_ ? "ascending" : "descending"));
+	Logger::info("FileSetManager::sortImpl() %d %s", col, std::string((sortAscend_ ? "ascending" : "descending")));
 
 
 	checkImpl();
@@ -182,7 +182,7 @@ void FileSetManager::sortImpl(const ColT col)
 
 void FileSetManager::toLoggerImpl() const
 {
-	Logger::info("File Set Manager, %d", fileSets_.size());
+	Logger::info("File Set Manager, %d", static_cast<int>(fileSets_.size()));
 
 	for (auto fs : fileSets_)
 		fs->toLogger();

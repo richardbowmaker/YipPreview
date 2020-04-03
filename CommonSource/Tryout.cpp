@@ -80,7 +80,7 @@
 //}
 
 
-//#include <fmt/core.h>
+#include <fmt/core.h>
 
 
 
@@ -125,6 +125,22 @@ std::string log(const std::string &format, Args... args)
 	return ss.str();
 }
 
+class NewLogger
+{
+public:
+
+	template<typename... Args>
+	static std::string info(const char* format, Args... args);
+
+};
+
+template<typename... Args>
+std::string NewLogger::info(const char* format, Args... args)
+{
+	std::string message = fmt::format(format, args...);
+	return message;
+}
+
 
 void TryOut::tryout(const FileSetT fs)
 {
@@ -135,9 +151,11 @@ void TryOut::tryout(const FileSetT fs)
 //	fmt::format(format_str, args)
 //
 //
-//	std::string message = fmt::wformat(L"The answer is {}", 42);
+	std::string message = fmt::format("The answer is {}", 42);
 //
 //
+
+	std::string s = NewLogger::info("Hex {0:x}", 42);
 
 
 	return;
