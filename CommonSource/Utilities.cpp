@@ -297,7 +297,7 @@ bool SU::startsWith(const std::string str, const std::string prefix)
 bool FU::deleteFile(const std::string file)
 {
 #ifdef WINDOWS_BUILD
-	if (DeleteFile(file.c_str()))
+	if (DeleteFileA(file.c_str()))
 	{
 		Logger::info("file deleted: %s", file.c_str());
 		return true;
@@ -324,7 +324,7 @@ bool FU::deleteFile(const std::string file)
 bool FU::fileExists(const std::string file)
 {
 #ifdef WINDOWS_BUILD
-	DWORD res = GetFileAttributes(file.c_str());
+	DWORD res = GetFileAttributesA(file.c_str());
 	if (res == INVALID_FILE_ATTRIBUTES && GetLastError() == ERROR_FILE_NOT_FOUND)
 		return false;
 	else
@@ -338,7 +338,7 @@ bool FU::fileExists(const std::string file)
 bool FU::copyFile(const std::string src, const std::string dest, const bool overwrite /*= true*/)
 {
 #ifdef WINDOWS_BUILD
-	if (CopyFile(src.c_str(), dest.c_str(), overwrite ? FALSE : TRUE))
+	if (CopyFileA(src.c_str(), dest.c_str(), overwrite ? FALSE : TRUE))
 	{
 		Logger::info("file copied: %s to % s", src.c_str(), dest.c_str());
 		return true;
@@ -389,7 +389,7 @@ bool FU::moveFile(const std::string src, const std::string dest, const bool over
 		if (FU::fileExists(src)) FU::deleteFile(dest);
 
 #ifdef WINDOWS_BUILD
-	if (MoveFile(src.c_str(), dest.c_str()))
+	if (MoveFileA(src.c_str(), dest.c_str()))
 	{
 		Logger::info("file moved: %s to % ls", src.c_str(), dest.c_str());
 		return true;
@@ -430,15 +430,15 @@ bool FU::findFiles(
 	else
 		dir = directory + std::string("\\") + *filter;
 
-	WIN32_FIND_DATA data;
-	HANDLE hFind = FindFirstFile(dir.c_str(), &data);
+	WIN32_FIND_DATAA data;
+	HANDLE hFind = FindFirstFileA(dir.c_str(), &data);
 
 	if (hFind == INVALID_HANDLE_VALUE)
 		return false;
 
 	std::regex rex;
 	if (regex != nullptr)
-		rex = std::regex(SU::wStrToStr(*regex).c_str());
+		rex = std::regex((*regex).c_str());
 
 	do
 	{
@@ -449,9 +449,7 @@ bool FU::findFiles(
 				bool match = true;
 
 				if (regex != nullptr)
-				{
-					match = std::regex_match(SU::wStrToStr(data.cFileName), rex);
-				}
+					match = std::regex_match(data.cFileName, rex);
 				if (match)
 					files->emplace_back(directory + std::string("\\") + std::string(data.cFileName));
 			}
@@ -461,17 +459,16 @@ bool FU::findFiles(
 			if (dirs != nullptr || subdirs)
 			{
 				std::string d{data.cFileName};
-					if (dirs != nullptr) dirs->emplace_back(d);
-					if (subdirs)
-					{
-						if (!FU::findFiles(directory + std::string(R"(/)") + d,
-								files, filter, regex, dirs, subdirs, false))
-							return false;
-					}
+				if (dirs != nullptr) dirs->emplace_back(d);
+				if (subdirs)
+				{
+					if (!FU::findFiles(directory + std::string(R"(/)") + d,
+							files, filter, regex, dirs, subdirs, false))
+						return false;
 				}
 			}
 		}
-	} while (FindNextFile(hFind, &data));
+	} while (FindNextFileA(hFind, &data));
 	FindClose(hFind);
 
 #elif LINUX_BUILD
@@ -682,7 +679,7 @@ std::string FU::pathToLocal(const char* path)
 #ifdef WINDOWS_BUILD
 	// substitute linux absolute path with windows
 	if (SU::startsWith(p.c_str(), sL))
-		p = std::string(sW) + p.substr(wcslen(sL));
+		p = std::string(sW) + p.substr(strlen(sL));
 #elif LINUX_BUILD
 	// substitute windows absolute path with linux
 	if (SU::startsWith(p.c_str(), sW))
@@ -740,7 +737,7 @@ std::string FU::abbreviateFilename(const std::string &file, const int max)
 bool FU::mkDir(const std::string dir)
 {
 #ifdef WINDOWS_BUILD
-	if (CreateDirectory(dir.c_str(), NULL))
+	if (CreateDirectoryA(dir.c_str(), NULL))
 	{
 		Logger::info("FU::mkDir() created directory %s", dir.c_str());
 		return true;
@@ -770,7 +767,7 @@ bool FU::mkDir(const std::string dir)
 bool FU::rmDir(const std::string dir)
 {
 #ifdef WINDOWS_BUILD
-	if (RemoveDirectory(dir.c_str()))
+	if (RemoveDirectoryA(dir.c_str()))
 	{
 		Logger::info("FU::mkDir() removed directory %s", dir.c_str());
 		return true;

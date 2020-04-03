@@ -305,7 +305,7 @@ DWORD WINAPI ShellExecute::shellWinThread1_(void* pdata)
 	}
 
 	PROCESS_INFORMATION piProcInfo;
-	STARTUPINFO siStartInfo;
+	STARTUPINFOA siStartInfo;
 	BOOL bSuccess = FALSE;
 
 	// Set up members of the PROCESS_INFORMATION structure. 
@@ -326,7 +326,7 @@ DWORD WINAPI ShellExecute::shellWinThread1_(void* pdata)
 	data.result_.cmd_.copy(cmd_, cmdMaxLen);
 
 	// Create the child process. 
-	bSuccess = CreateProcess(
+	bSuccess = CreateProcessA(
 		NULL,
 		cmd_,		   // command line 
 		&saAttr,       // process security attributes 
@@ -366,7 +366,7 @@ DWORD WINAPI ShellExecute::shellWinThread1_(void* pdata)
 		if (ReadFile(hStdOutRd, chBuf, BUFSIZE, &dwRead, NULL))
 		{
 			if (dwRead > 0)
-				data.result_.stdout_ += SU::strToWStr(chBuf, dwRead);
+				data.result_.stdout_ += std::string(chBuf, dwRead);
 		}
 		else
 		{
@@ -377,7 +377,7 @@ DWORD WINAPI ShellExecute::shellWinThread1_(void* pdata)
 		if (ReadFile(hStdErrRd, chBuf, BUFSIZE, &dwRead, NULL))
 		{
 			if (dwRead > 0)
-				data.result_.stderr_ += SU::strToWStr(chBuf, dwRead);
+				data.result_.stderr_ += std::string(chBuf, dwRead);
 		}
 		else
 		{

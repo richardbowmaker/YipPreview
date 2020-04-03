@@ -107,7 +107,7 @@ void Logger::append(const LevelT level, const char* text)
 		// show message
 		snprintf(&buf[n], (sizeof(buf) / sizeof(char)) - n, "%s\n", text);
 #ifdef WINDOWS_BUILD
-		OutputDebugString(buf);
+		OutputDebugStringA(buf);
 #elif LINUX_BUILD
 		std::cout << buf;
 #endif
@@ -204,7 +204,7 @@ void Logger::systemError(const int err, const char* format, ...)
 	std::string ws(errStr);
 	LocalFree(errStr);
 	char buff[kBufferMax];
-	sprintf(buff, sizeof(buff) / sizeof(char), " [%s: %d]", ws.substr(0, ws.size() - 2).c_str(), err);
+	sprintf_s(buff, sizeof(buff) / sizeof(char), " [%s: %d]", ws.substr(0, ws.size() - 2).c_str(), err);
 #elif LINUX_BUILD
 	char buff[kBufferMax];
 	snprintf(buff, sizeof(buff), " [%s: %d]", strerror(err), err);

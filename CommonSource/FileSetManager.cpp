@@ -141,6 +141,8 @@ bool mysort(FileSetT &f1, FileSetT &f2)
 
 void FileSetManager::sortImpl(const ColT col)
 {
+	return;
+
 	count = 0;
 
 	if (sortCol_ == col)
