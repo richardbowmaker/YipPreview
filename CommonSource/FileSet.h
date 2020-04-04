@@ -15,8 +15,6 @@ class FileSet
 {
 public:
 
-	int check_{123456};
-
 	FileSet();
 	FileSet(const Volume *volume, const std::string file);
 	virtual ~FileSet();
@@ -52,7 +50,6 @@ public:
 	std::string getIsSelected() const;
 	bool sort(const ColT col, FileSetT &other, const bool ascending);
 	void toLogger();
-
 
 	// properties
 	FileProperties& properties();

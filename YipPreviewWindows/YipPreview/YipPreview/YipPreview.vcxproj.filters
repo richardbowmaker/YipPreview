@@ -102,6 +102,9 @@
     <ClInclude Include="..\..\..\CommonSource\VolumeSelectDialog.h">
       <Filter>Common\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\CommonSource\_Types.h">
+      <Filter>Common\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\CommonSource\Logger.cpp">

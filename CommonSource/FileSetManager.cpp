@@ -63,6 +63,11 @@ void FileSetManager::setFileSets(const FileSetCollT &fileSets)
 	get().setFileSetsImpl(fileSets);
 }
 
+const FileSetCollT FileSetManager::getFileSets()
+{
+	return get().getFileSetsImpl();
+}
+
 void FileSetManager::sort(const ColT col)
 {
 	get().sortImpl(col);
@@ -71,11 +76,6 @@ void FileSetManager::sort(const ColT col)
 void FileSetManager::toLogger()
 {
 	get().toLoggerImpl();
-}
-
-void FileSetManager::check()
-{
-	get().checkImpl();
 }
 
 //----------------------------------------------
@@ -118,33 +118,13 @@ void FileSetManager::setFileSetsImpl(const FileSetCollT &fileSets)
 	sortAscend_ = false; // so that after a refresh clicking the file column keeps ascending order
 }
 
-ColT xcol;
-bool xa;
-int count;
-
-bool mysort(FileSetT &f1, FileSetT &f2)
+const FileSetCollT FileSetManager::getFileSetsImpl() const
 {
-	count++;
-
-	if (f1->check_ != 123456 || f2->check_ != 123456)
-	{
-		FileSetManager::check();
-		int n = 0;
-	}
-	bool b = f1->sort(xcol, f2, xa);
-	if (f1->check_ != 123456 || f2->check_ != 123456)
-	{
-		int n = 0;
-	}
-	return b;
+	return fileSets_;
 }
 
 void FileSetManager::sortImpl(const ColT col)
 {
-	return;
-
-	count = 0;
-
 	if (sortCol_ == col)
 		sortAscend_ = !sortAscend_;
 	else
@@ -155,27 +135,9 @@ void FileSetManager::sortImpl(const ColT col)
 
 	Logger::info("FileSetManager::sortImpl() {} {}", col, std::string((sortAscend_ ? "ascending" : "descending")));
 
+	std::sort(fileSets_.begin(), fileSets_.end(),
+		[this, col](FileSetT& f1, FileSetT& f2) {return f1->sort(col, f2, sortAscend_); });
 
-	checkImpl();
-	xcol = col;
-	xa = sortAscend_;
-
-	std::sort(fileSets_.begin(), fileSets_.end(), mysort);
-//		[this, col](FileSetT &f1, FileSetT &f2)
-//		{
-//			if (f1->check_ != 123456 || f2->check_ != 123456)
-//			{
-//				int n = 0;
-//			}
-//			bool b = f1->sort(col, f2, sortAscend_);
-//			if (f1->check_ != 123456 || f2->check_ != 123456)
-//			{
-//				int n = 0;
-//			}
-//			return b;
-//		});
-
-	checkImpl();
 
 	Main::get().refresh();
 }
@@ -187,19 +149,6 @@ void FileSetManager::toLoggerImpl() const
 	for (auto fs : fileSets_)
 		fs->toLogger();
 }
-
-
-void FileSetManager::checkImpl()
-{
-	for (auto fs : fileSets_)
-		if (fs->check_ != 123456)
-		{
-			int nn = 0;
-		}
-
-}
-
-
 
 
 

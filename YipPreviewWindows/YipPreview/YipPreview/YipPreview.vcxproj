@@ -177,6 +177,7 @@
     <ClInclude Include="..\..\..\CommonSource\Volume.h" />
     <ClInclude Include="..\..\..\CommonSource\VolumeManager.h" />
     <ClInclude Include="..\..\..\CommonSource\VolumeSelectDialog.h" />
+    <ClInclude Include="..\..\..\CommonSource\_Types.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="targetver.h" />

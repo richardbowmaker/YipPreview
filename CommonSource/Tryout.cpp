@@ -144,21 +144,30 @@ std::string NewLogger::info(const char* format, Args... args)
 
 void TryOut::tryout(const FileSetT fs)
 {
-//	std::string s = toString(3, 2, std::string("123"), 0.4f);
+	const FileSetCollT fs1 = FileSetManager::getFileSets();
+	const FileSetCollT fs2 = FileSetManager::getFileSets();
 
-//	std::string s = log("", 3, 4, 0.4f, "34");
-//
-//	fmt::format(format_str, args)
-//
-//
-	std::string message = fmt::format("The answer is {}", 42);
-//
-//
+	for (auto f1 :  fs1)
+	{
+		for (auto f2 : fs2)
+		{
+			bool b1 = f1->sort(ColT::Times, f2, true);
+			bool b2 = f2->sort(ColT::Times, f1, true);
 
-	std::string s = NewLogger::info("Hex {0:x}", 42);
+			std::string s1 = f1->properties().getString("times");
+			std::string s2 = f2->properties().getString("times");
+
+			if (s1.compare(s2) != 0)
+			{
+				if (b1 == b2)
+				{
+					int m = 0;
+				}
+			}
+		}
+	}
 
 
-	return;
 }
 
 

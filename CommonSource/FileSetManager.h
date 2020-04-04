@@ -26,15 +26,13 @@ public:
 	static FileSetManager& get();
 	virtual ~FileSetManager();
 
-//	static bool addFiles(VolumeT volume);
 	static std::string toString();
 	static int getNoOfFileSets();
 	static FileSetT getFileSet(const int n);
 	static void setFileSets(const FileSetCollT &fileSets);
+	static const FileSetCollT getFileSets();
 	static void sort(const ColT col);
 	static void toLogger();
-
-	static void check();
 
 private:
 
@@ -44,15 +42,12 @@ private:
 	void initialiseImpl();
 	void uninitialiseImpl();
 	std::string toStringImpl();
-//	bool addFilesImpl(VolumeT volume);
 	int getNoOfFileSetsImpl() const;
 	FileSetT getFileSetImpl(const int n) const;
 	void setFileSetsImpl(const FileSetCollT &fileSets);
+	const FileSetCollT getFileSetsImpl() const;
 	void sortImpl(const ColT col);
 	void toLoggerImpl() const;
-
-	void checkImpl();
-
 
 	FileSetCollT fileSets_;
 	ColT sortCol_;
