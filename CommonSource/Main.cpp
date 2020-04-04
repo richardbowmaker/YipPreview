@@ -174,10 +174,11 @@ Main::Main(const wxString& title, const wxPoint& pos, const wxSize& size) :
 
 	SetClientSize(wxSize(1500, 1000));
 
-	Logger::info("mess {0}", 1);
-	Logger::warning("mess {0}", 2);
-	Logger::error("mess {0}", "abcde");
-//	Logger::systemError(2, "mess {0}", "abcde");
+	Logger::info("mess {},{}", 1, 2, 3);
+	Logger::warning("mess {}", 2);
+	Logger::error("mess {}", "abcde");
+	Logger::systemErrorN(2, "mess {}", "abcde");
+	Utilities::messageBox("my message box {} {}", "caption", wxOK, this, 12, "abc");
 
 #ifdef LINUX_BUILD
 	if (SudoMode::inSudoMode())

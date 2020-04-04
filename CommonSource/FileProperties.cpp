@@ -181,7 +181,7 @@ void FileProperties::toLogger() const
 {
 	Logger::info("File Properties");
 	for (auto p : properties_)
-		Logger::info("\t%s %s", p.first.c_str(), p.second.c_str());
+		Logger::info("\t{} {}", p.first, p.second);
 }
 
 bool FileProperties::test()

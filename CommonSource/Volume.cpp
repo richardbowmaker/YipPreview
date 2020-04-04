@@ -175,8 +175,7 @@ bool Volume::mount(const std::string &m, const std::string &password)
 {
 	if (isMounted_)
 	{
-		Logger::error("Volume::mount(), volume already mounted %s as %s, %s !!",
-				file_, m, m);
+		Logger::error("Volume::mount(), volume already mounted {} as {}, {} !!", file_, m, m);
 		return false;
 	}
 	std::stringstream cmd;
@@ -208,11 +207,11 @@ bool Volume::mount(const std::string &m, const std::string &password)
 	ShellExecute::shellSync(cmd.str(), result, tout);
 	sudo.lower();
 
-	Logger::info("%s", result.toString().c_str());
+	Logger::info("{}", result.toString());
 
 	if (result.getSuccess())
 	{
-		Logger::info("Volume %s mounted ok as %s", file_, m);
+		Logger::info("Volume {} mounted ok as {}", file_, m);
 		mount_ = m;
 		isMounted_ = true;
 		isDirty_ = false;
@@ -221,7 +220,7 @@ bool Volume::mount(const std::string &m, const std::string &password)
 	}
 	else
 	{
-		Logger::error("Volume %s failed to mount as %s", file_, m);
+		Logger::error("Volume {} failed to mount as {}", file_, m);
 		return false;
 	}
 }
@@ -230,7 +229,7 @@ bool Volume::unmount()
 {
 	if (!isMounted_)
 	{
-		Logger::error("Volume::unmount(), volume not mounted %s", file_);
+		Logger::error("Volume::unmount(), volume not mounted {}", file_);
 		return false;
 	}
 
@@ -246,13 +245,13 @@ bool Volume::unmount()
 	ShellExecute::shellSync(cmd.str(), result, 5000);
 	sudo.lower();
 
-	Logger::info("%s", result.toString().c_str());
+	Logger::info("{}", result.toString());
 
 	if (result.getSuccess())
 	{
-		Logger::info("Volume::unmount(), Volume %s unmounted ok, %s", file_, mount_);
+		Logger::info("Volume::unmount(), Volume {} unmounted ok, {}", file_, mount_);
 		if (isDirty_)
-			Logger::warning("Volume::unmount(), Dirty volume %s unmounted, %s", file_, mount_);
+			Logger::warning("Volume::unmount(), Dirty volume {} unmounted, {}", file_, mount_);
 		mount_.clear();
 		isMounted_ = false;
 		isDirty_ = false;
@@ -260,7 +259,7 @@ bool Volume::unmount()
 	}
 	else
 	{
-		Logger::error("Volume::unmount(), Volume %s failed to unmount, %s", file_, mount_);
+		Logger::error("Volume::unmount(), Volume {} failed to unmount, {}", file_, mount_);
 		return false;
 	}
 }
@@ -298,7 +297,7 @@ void Volume::loadFiles()
 	}
 	else
 		Logger::warning(
-				"Volume::loadFiles() empty directory %s",
+				"Volume::loadFiles() empty directory {}",
 				getFilesDirectory());
 
 	int n = 0;
@@ -335,7 +334,7 @@ void Volume::toLogger() const
 	if (isMounted_)
 	{
 		Logger::info("\tmounted");
-		Logger::info("\tmount %s", mount_);
+		Logger::info("\tmount {}", mount_);
 	}
 	else
 		Logger::info("\tnot mounted");

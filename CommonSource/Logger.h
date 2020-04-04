@@ -32,6 +32,7 @@ public:
 	static void enableIdeOutput(const bool enable);
 	static void enableTime(const bool enable);
 	static void enableLineCount(const bool enable);
+	static std::string systemErrorToString(const int err);
 
 	static void clear();
 
@@ -42,27 +43,21 @@ public:
 	};
 
 	template<typename... Args>
-	static void systemError(const int err, const char* format, Args... args)
+	static void systemError(const char* format, Args... args)
 	{
-		char* errStr;
 #ifdef WINDOWS_BUILD
-		if (!FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-			NULL,
-			err,
-			MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // default language
-			reinterpret_cast<LPWSTR>(&errStr),
-			0,
-			NULL)) return;
-		std::string ws(errStr);
-		LocalFree(errStr);
+		systemErrorN(static_cast<int>(GetLastError()), format, args...);
 #elif LINUX_BUILD
-		errStr = strerror(err);
+		systemErrorN(errNo, format, args...);
 #endif
-		std::string es = fmt::format(" [{0}:{1}]", err, errStr);
+
+	};
+
+	template<typename... Args>
+	static void systemErrorN(const int err, const char* format, Args... args)
+	{
+		std::string es = fmt::format(" [{}:{}]", err, systemErrorToString(err));
 		log(Error, (std::string(format) + es).c_str(), args...);
-#ifdef WINDOWS_BUILD
-		LocalFree(errStr);
-#endif
 	};
 
 	template<typename... Args>

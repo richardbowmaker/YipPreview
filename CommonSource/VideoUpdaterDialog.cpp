@@ -144,7 +144,7 @@ void VideoUpdaterDialog::onOk(wxCommandEvent &event)
 			}
 		}
 		else
-			Logger::error("Failed to create new image for %s", fileset_->getId().c_str());
+			Logger::error("Failed to create new image for {}", fileset_->getId());
 	}
 
 	DialogEx::onOk(event);

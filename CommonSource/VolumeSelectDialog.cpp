@@ -114,9 +114,9 @@ void VolumeSelectDialog::onFind(wxCommandEvent &event)
 		populateListBox();
 	}
 	else
-		Logger::error("VolumeSelectDialog::onFind() error search %s for matching file %s",
-				dirPicker_->GetPath().c_str(),
-				txtFilter_->GetValue().c_str());
+		Logger::error("VolumeSelectDialog::onFind() error search {} for matching file {}",
+				dirPicker_->GetPath(),
+				txtFilter_->GetValue());
 }
 
 void VolumeSelectDialog::onDirPicker(wxFileDirPickerEvent& event)

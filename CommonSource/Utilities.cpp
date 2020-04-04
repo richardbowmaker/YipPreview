@@ -115,26 +115,12 @@ int Utilities::getRand(const int min, const int max)
 	return min + (rand() % (max - min + 1));
 }
 
-int Utilities::messageBox(
-		const char *format,
-		const char *caption,
-		const int style 	   /*= wxOK | wxCENTRE*/,
-		wxWindow * parent 	   /*= NULL*/,
-		...)
+int Utilities::messageBox_(const char* message, const char* caption, const int style, wxWindow* parent)
 {
-	// format message
-	va_list vl;
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wvarargs"
-	va_start(vl, format);
-#pragma GCC diagnostic pop
-	char buf[4000];
-	vsnprintf(buf, sizeof(buf) / sizeof(char), format, vl);
-
-	std::string c = Constants::title + std::string(" - ") + std::string(caption);
-	return wxMessageBox(buf, c.c_str(), style,  parent);
-
+	std::string c;
+	if (caption != nullptr)
+		c = Constants::title + std::string(" - ") + std::string(caption);
+	return wxMessageBox(message, c.c_str(), style, parent);
 }
 
 void Utilities::delay(int ms)
@@ -182,7 +168,7 @@ void SudoMode::raise()
 			got_ = true;
 		}
 		else
-			Logger::systemError(errno, "Sudo mode enter error");
+			Logger::systemError("Sudo mode enter error");
 	}
 	else
 	{
@@ -210,7 +196,7 @@ void SudoMode::lower()
 			got_ = false;
 		}
 		else
-			Logger::systemError(errno, "Sudo mode lower error");
+			Logger::systemError("Sudo mode lower error");
 	}
 	else if (refs_ > 1)
 	{
@@ -298,23 +284,23 @@ bool FU::deleteFile(const std::string file)
 #ifdef WINDOWS_BUILD
 	if (DeleteFileA(file.c_str()))
 	{
-		Logger::info("file deleted: %s", file.c_str());
+		Logger::info("file deleted: {}", file);
 		return true;
 	}
 	else
 	{
-		Logger::systemError(GetLastError(), "delete file error : %s", file.c_str());
+		Logger::systemError("delete file error : {}", file);
 		return false;
 	}
 #elif LINUX_BUILD
 	if (remove(file.c_str()) == 0)
 	{
-		Logger::info("file deleted: %s", file.c_str());
+		Logger::info("file deleted: {}", file);
 		return true;
 	}
 	else
 	{
-		Logger::systemError(errno, "delete file error : %s", file.c_str());
+		Logger::systemError("delete file error : {}", file);
 		return false;
 	}
 #endif
@@ -339,23 +325,23 @@ bool FU::copyFile(const std::string src, const std::string dest, const bool over
 #ifdef WINDOWS_BUILD
 	if (CopyFileA(src.c_str(), dest.c_str(), overwrite ? FALSE : TRUE))
 	{
-		Logger::info("file copied: %s to % s", src.c_str(), dest.c_str());
+		Logger::info("file copied: {} to {}", src, dest);
 		return true;
 	}
 	else
 	{
-		Logger::systemError(GetLastError(), "copy file error: %s to %s", src.c_str(), dest.c_str());
+		Logger::systemError("copy file error: {} to {}", src, dest);
 		return false;
 	}
 #elif LINUX_BUILD
 	if (!fileExists(src))
 	{
-		Logger::error("copy file, no source file: %s to % s", src.c_str(), dest.c_str());
+		Logger::error("copy file, no source file: {} to {}", src, dest);
 		return false;
 	}
 	if (!overwrite && FU::fileExists(dest))
 	{
-		Logger::error("copy file already exists error, no overwrite: %s to %s", src.c_str(), dest.c_str());
+		Logger::error("copy file already exists error, no overwrite: {} to {}", src, dest);
 		return false;
 	}
 	std::ifstream srcf;
@@ -367,9 +353,9 @@ bool FU::copyFile(const std::string src, const std::string dest, const bool over
 	srcf.close();
 	dstf.close();
 	if (res)
-		Logger::info("file copied: %s to %s", src.c_str(), dest.c_str());
+		Logger::info("file copied: {} to {}", src, dest);
 	else
-		Logger::systemError(errno, "copy file error: %s to %s", src.c_str(), dest.c_str());
+		Logger::systemError("copy file error: {} to {}", src, dest);
 	return res;
 #endif
 }
@@ -380,7 +366,7 @@ bool FU::moveFile(const std::string src, const std::string dest, const bool over
 
 	if (!overwrite && exists)
 	{
-		Logger::error("move file, already exists error, no overwrite: %s to %s", src.c_str(), dest.c_str());
+		Logger::error("move file, already exists error, no overwrite: {} to {}", src, dest);
 		return false;
 	}
 	if (overwrite && exists)
@@ -390,23 +376,23 @@ bool FU::moveFile(const std::string src, const std::string dest, const bool over
 #ifdef WINDOWS_BUILD
 	if (MoveFileA(src.c_str(), dest.c_str()))
 	{
-		Logger::info("file moved: %s to % ls", src.c_str(), dest.c_str());
+		Logger::info("file moved: {} to {}", src, dest);
 		return true;
 	}
 	else
 	{
-		Logger::systemError(GetLastError(), "move file error: %s to %s", src.c_str(), dest.c_str());
+		Logger::systemError("move file error: {} to {}", src, dest);
 		return false;
 	}
 #elif LINUX_BUILD
-	if (rename(src.c_str(), dest.c_str()) == 0)
+	if (rename(src, dest) == 0)
 	{
-		Logger::info("file moved: %s to %s", src.c_str(), dest.c_str());
+		Logger::info("file moved: {} to {}", src, dest);
 		return true;
 	}
 	else
 	{
-		Logger::systemError(errno, "move file error: %s to %s", src.c_str(), dest.c_str());
+		Logger::systemError("move file error: {} to {}", src, dest);
 		return false;
 	}
 #endif
@@ -437,7 +423,7 @@ bool FU::findFiles(
 
 	std::regex rex;
 	if (regex != nullptr)
-		rex = std::regex((*regex).c_str());
+		rex = std::regex(*regex);
 
 	do
 	{
@@ -475,15 +461,15 @@ bool FU::findFiles(
 	DIR *dir;
 	struct dirent *ent;
 
-	if ((dir = opendir(directory.c_str())) == NULL)
+	if ((dir = opendir(directory)) == NULL)
 	{
-		Logger::systemError(errno, "FU::findFiles opendir");
+		Logger::systemError("FU::findFiles opendir");
 		return false;
 	}
 
 	std::regex rex;
 	if (regex != nullptr)
-		rex = std::regex((*regex).c_str());
+		rex = std::regex(*regex);
 
 	std::string fstr;
 	if (filter != nullptr)
@@ -738,25 +724,25 @@ bool FU::mkDir(const std::string dir)
 #ifdef WINDOWS_BUILD
 	if (CreateDirectoryA(dir.c_str(), NULL))
 	{
-		Logger::info("FU::mkDir() created directory %s", dir.c_str());
+		Logger::info("FU::mkDir() created directory {}", dir);
 		return true;
 	}
 	else
 	{
 		DWORD err = GetLastError();
-		Logger::systemError(err, "FU::mkDir() error creating directory %s", dir.c_str());
+		Logger::systemError("FU::mkDir() error creating directory {}", dir);
 		return false;
 	}
 #elif LINUX_BUILD
 	int status = mkdir(dir.c_str(), S_IRWXU | S_IRWXG | S_IRWXO);
 	if (status == 0)
 	{
-		Logger::info("FU::mkDir() created directory %s", dir.c_str());
+		Logger::info("FU::mkDir() created directory {}", dir);
 		return true;
 	}
 	else
 	{
-		Logger::systemError(errno, "FU::mkDir() error creating directory %s", dir.c_str());
+		Logger::systemError("FU::mkDir() error creating directory {}", dir);
 		return false;
 	}
 #endif
@@ -768,13 +754,13 @@ bool FU::rmDir(const std::string dir)
 #ifdef WINDOWS_BUILD
 	if (RemoveDirectoryA(dir.c_str()))
 	{
-		Logger::info("FU::mkDir() removed directory %s", dir.c_str());
+		Logger::info("FU::mkDir() removed directory {}", dir);
 		return true;
 	}
 	else
 	{
 		DWORD err = GetLastError();
-		Logger::systemError(err, "FU::mkDir() error removing directory %s", dir.c_str());
+		Logger::systemError("FU::mkDir() error removing directory {}", dir);
 		return false;
 	}
 #elif LINUX_BUILD
@@ -783,12 +769,12 @@ bool FU::rmDir(const std::string dir)
 
 	if (status == 0)
 	{
-		Logger::info("FU::rmDir() removed directory %s", dir.c_str());
+		Logger::info("FU::rmDir() removed directory {}", dir);
 		return true;
 	}
 	else
 	{
-		Logger::systemError(errno, "FU::rmDir() error removing directory %s", dir.c_str());
+		Logger::systemError("FU::rmDir() error removing directory {}", dir);
 		return false;
 	}
 #endif
@@ -836,7 +822,7 @@ bool Duration::parse(const std::string &str)
     }
     else
     {
-    	Logger::error("Duration::parse() invalid duration string: %s", str.c_str());
+    	Logger::error("Duration::parse() invalid duration string: {}", str);
     	return false;
     }
 }

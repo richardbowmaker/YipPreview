@@ -319,12 +319,12 @@ wxMenu *Main::getPopupMenu(const int item)
 
 void Main::deleteFile(wxCommandEvent& event, const int row, FileSet& fileset)
 {
-	Logger::info("Delete file %s, %d", fileset.getId().c_str(), row);
+	Logger::info("Delete file {}, row = {}", fileset.getId(), row);
 }
 
 void Main::play(wxCommandEvent& event, const int row, FileSet &fileset)
 {
-	Logger::info("Play %s, %d", fileset.getId().c_str(), row);
+	Logger::info("Play {}, row = {}", fileset.getId(), row);
 
 	fileset.properties().setDateTimeNow("lasttime");
 	fileset.properties().incCount("times");

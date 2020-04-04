@@ -8,20 +8,20 @@
 #include "Constants.h"
 
 #ifdef WINDOWS_BUILD
-    std::string Constants::ffmpeg{R"(D:\Projects\WxWidgets\YipPreview\ffmpeg.exe)"};
-    std::string Constants::ffmpegEnd{" 2>&1"};
-    std::string Constants::filesDir{R"(\Files\All)"};
-    std::string Constants::propertiesCache{R"(\PropertyCache.txt)"};
-    std::string Constants::veracrypt{R"("C:\Program Files\VeraCrypt\VeraCrypt.exe")"};
-    std::string pathSeparator{R"(\)"};
+    std::string Constants::ffmpeg			{R"(D:\Projects\WxWidgets\YipPreview\ffmpeg.exe)"};
+    std::string Constants::ffmpegEnd		{" 2>&1"};
+    std::string Constants::filesDir			{R"(\Files\All)"};
+    std::string Constants::propertiesCache	{R"(\PropertyCache.txt)"};
+    std::string Constants::veracrypt		{R"("C:\Program Files\VeraCrypt\VeraCrypt.exe")"};
+    std::string Constants::pathSeparator	{R"(\)"};
 
 #elif LINUX_BUILD
-	std::string Constants::ffmpeg{R"(/usr/bin/ffmpeg)"};
-    std::string Constants::ffmpegEnd{" &2>1"};
-    std::string Constants::filesDir{R"(/Files/All)"};
-    std::string Constants::propertiesCache{R"(/PropertyCache.txt)"};
-    std::string Constants::veracrypt{R"(/usr/bin/veracrypt)"};
-    std::string pathSeparator{R"(/)"};
+	std::string Constants::ffmpeg			{R"(/usr/bin/ffmpeg)"};
+    std::string Constants::ffmpegEnd		{" &2>1"};
+    std::string Constants::filesDir			{R"(/Files/All)"};
+    std::string Constants::propertiesCache	{R"(/PropertyCache.txt)"};
+    std::string Constants::veracrypt		{R"(/usr/bin/veracrypt)"};
+    std::string Constants::pathSeparator	{R"(/)"};
 #endif
 
 std::string Constants::title{"YipPreview"};

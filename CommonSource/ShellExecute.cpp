@@ -82,7 +82,7 @@ bool ShellExecute::shellSync(
 		const std::string &cmd,
 		const int timeoutms /*= -1*/)
 {
-	Logger::info("ShellExecute::shellSync %s, timeout = %d", cmd, timeoutms);
+	Logger::info("ShellExecute::shellSync {}, timeout = {}", cmd, timeoutms);
 	ShellThreadData data;
 	data.result_.cmd_ = cmd;
 	data.timeoutms_ = timeoutms;
@@ -100,7 +100,7 @@ bool ShellExecute::shellSync(
 	ShellExecuteResult& result,
 	const int timeoutms /*= -1 */)
 {
-	Logger::info("ShellExecute::shellSync %s, timeout = %d", cmd, timeoutms);
+	Logger::info("ShellExecute::shellSync {}, timeout = {}", cmd, timeoutms);
 	ShellThreadData data;
 	data.result_.cmd_ = cmd;
 	data.timeoutms_ = timeoutms;
@@ -123,7 +123,7 @@ bool ShellExecute::shellAsync(
 	void* userData,
 	const int timeoutms)
 {
-	Logger::info("ShellExecute::shellAsync %s, timeout = %d", cmd, timeoutms);
+	Logger::info("ShellExecute::shellAsync {}, timeout = {}", cmd, timeoutms);
 	ShellThreadData *data = new ShellThreadData;
 	data->result_.cmd_ = cmd;
 	data->result_.userId_ = userId;
@@ -146,7 +146,7 @@ bool ShellExecute::shellAsync(
 	pthread_t thread_;
 	if (pthread_create(&thread_, NULL, &ShellExecute::shellThreadWait, (void*)data) != 0)
 	{
-		Logger::systemError(errno, "Error creating thread");
+		Logger::systemError("Error creating thread");
 		delete data;
 		return false;
 	}
@@ -165,7 +165,7 @@ bool ShellExecute::shellAsyncGui(
 	void* userData,
 	const int timeoutms)
 {
-	Logger::info("ShellExecute::shellAsyncGui %s, timeout = %d", cmd, timeoutms);
+	Logger::info("ShellExecute::shellAsyncGui {}, timeout = {}", cmd, timeoutms);
 	ShellThreadData* data = new ShellThreadData;
 	data->result_.cmd_ = cmd;
 	data->result_.userId_ = userId;
@@ -189,7 +189,7 @@ bool ShellExecute::shellAsyncGui(
 	pthread_t thread_;
 	if (pthread_create(&thread_, NULL, &ShellExecute::shellThreadWaitGui, (void*)data) != 0)
 	{
-		Logger::systemError(errno, "Error creating thread");
+		Logger::systemError("Error creating thread");
 		delete data;
 		return false;
 	}
@@ -204,7 +204,7 @@ bool ShellExecute::shellWin_(ShellThreadData& data)
 	data.completed_ = CreateEvent(NULL, FALSE, FALSE, NULL);
 	if (data.completed_ == NULL)
 	{
-		Logger::systemError(GetLastError(), "CreateEvent");
+		Logger::systemError("CreateEvent");
 		data.result_.success_ = false;
 		return false;
 	}
@@ -236,7 +236,7 @@ bool ShellExecute::shellWin_(ShellThreadData& data)
 	}
 	else
 	{
-		Logger::systemError(GetLastError(), "WaitForSingleObject");
+		Logger::systemError("WaitForSingleObject");
 		data.result_.success_ = false;
 	}
 
@@ -272,7 +272,7 @@ DWORD WINAPI ShellExecute::shellWinThread1_(void* pdata)
 
 	if (!CreatePipe(&hStdOutRd, &hStdOutWr, &saAttr, 0))
 	{
-		Logger::systemError(GetLastError(), "Error CreatePipe");
+		Logger::systemError("Error CreatePipe");
 		data.result_.success_ = false;
 		SetEvent(data.completed_);
 		return false;
@@ -281,7 +281,7 @@ DWORD WINAPI ShellExecute::shellWinThread1_(void* pdata)
 	// Ensure the read handle to the pipe for STDOUT is not inherited.
 	if (!SetHandleInformation(hStdOutRd, HANDLE_FLAG_INHERIT, 0))
 	{
-		Logger::systemError(GetLastError(), "Error SetHandleInformation");
+		Logger::systemError("Error SetHandleInformation");
 		data.result_.success_ = false;
 		SetEvent(data.completed_);
 		return false;
@@ -289,7 +289,7 @@ DWORD WINAPI ShellExecute::shellWinThread1_(void* pdata)
 
 	if (!CreatePipe(&hStdErrRd, &hStdErrWr, &saAttr, 0))
 	{
-		Logger::systemError(GetLastError(), "Error CreatePipe");
+		Logger::systemError("Error CreatePipe");
 		data.result_.success_ = false;
 		SetEvent(data.completed_);
 		return false;
@@ -298,7 +298,7 @@ DWORD WINAPI ShellExecute::shellWinThread1_(void* pdata)
 	// Ensure the read handle to the pipe for STDOUT is not inherited.
 	if (!SetHandleInformation(hStdErrRd, HANDLE_FLAG_INHERIT, 0))
 	{
-		Logger::systemError(GetLastError(), "Error SetHandleInformation");
+		Logger::systemError("Error SetHandleInformation");
 		data.result_.success_ = false;
 		SetEvent(data.completed_);
 		return false;
@@ -341,7 +341,7 @@ DWORD WINAPI ShellExecute::shellWinThread1_(void* pdata)
 	 // If an error occurs, exit the application. 
 	if (!bSuccess)
 	{
-		Logger::systemError(GetLastError(), "Error CreateProcess");
+		Logger::systemError("Error CreateProcess");
 		CloseHandle(hStdOutRd);
 		CloseHandle(hStdOutWr);
 		CloseHandle(hStdErrRd);
@@ -412,7 +412,7 @@ DWORD WINAPI ShellExecute::shellWinThread2_(void* pdata)
 		delete &data;
 	else
 		// data cannot be deleted as child process is still running
-		Logger::warning("CreateProcess timedout, memory leak %s", data.result_.cmd_);
+		Logger::warning("CreateProcess timedout, memory leak {}", data.result_.cmd_);
 
 	return data.result_.success_ ? TRUE : FALSE;
 }
@@ -464,19 +464,19 @@ bool ShellExecute::shellStart(ShellThreadData &data)
 
 	if (pipe2(fdStdout, O_CLOEXEC) == -1)
 	{
-	    Logger::systemError(errno, "Error creating stdout pipe");
+	    Logger::systemError("Error creating stdout pipe");
 	    return false;
 	}
 
 	if (pipe2(fdStderr, O_CLOEXEC) == -1)
 	{
-	    Logger::systemError(errno, "Error creating stderr pipe");
+	    Logger::systemError("Error creating stderr pipe");
 	    return false;
 	}
 
 	if((pid = fork()) == -1)
 	{
-	    Logger::systemError(errno, "Error forking process");
+	    Logger::systemError("Error forking process");
 	    data.result_.success_ = false;
 	    return false;
 	}
@@ -541,7 +541,7 @@ bool ShellExecute::shellWait(ShellThreadData &data)
 			{
 				fclose(data.fpStdout_);
 				fclose(data.fpStderr_);
-				Logger::systemError(errno, "File stdout read error");
+				Logger::systemError("File stdout read error");
 				data.result_.success_ = false;
 				return false;
 			}
@@ -564,7 +564,7 @@ bool ShellExecute::shellWait(ShellThreadData &data)
 			{
 				fclose(data.fpStdout_);
 				fclose(data.fpStderr_);
-				Logger::systemError(errno, "File stderr read error");
+				Logger::systemError("File stderr read error");
 				data.result_.success_ = false;
 				return false;
 			}
@@ -601,7 +601,7 @@ bool ShellExecute::shellWait(ShellThreadData &data)
 	{
 		if (errno != EINTR)
 		{
-			Logger::systemError(errno, "Error closing pipe");
+			Logger::systemError("Error closing pipe");
 			data.result_.success_ = false;
 			return false;
 		}

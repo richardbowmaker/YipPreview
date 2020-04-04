@@ -143,6 +143,28 @@ void Logger::appendLb(const LevelT level, std::string text)
 	}
 }
 
+std::string Logger::systemErrorToString(const int err)
+{
+#ifdef WINDOWS_BUILD
+	std::string es;
+	char* errStr;
+	if (FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+		NULL,
+		err,
+		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // default language
+		reinterpret_cast<LPSTR>(&errStr),
+		0,
+		NULL))
+	{
+		es = errStr;
+		LocalFree(errStr);
+	}
+#elif LINUX_BUILD
+	std::string es(strerror(err));
+#endif
+	return es;
+}
+
 /*
 void CLogger::LogSourceSystemError(const char* file, const int line, const int err, const char* format, ...)
 {

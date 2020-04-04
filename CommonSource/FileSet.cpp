@@ -88,7 +88,7 @@ bool FileSet::setId(const std::string filename)
 	}
 	else
 	{
-		Logger::error("FileSet::setId mismatch, id = %s, fn = %s", id_.c_str(), filename.c_str());
+		Logger::error("FileSet::setId mismatch, id = {}, fn = {}", id_, filename);
 		return false;
 	}
 }
@@ -310,11 +310,11 @@ void FileSet::toLogger()
 {
 	Logger::info("File Set");
 
-	Logger::info("\tID %s",         id_.c_str());
-	Logger::info("\tShortname %s",  short_.c_str());
-	Logger::info("\tImage file %s", image_.c_str());
-	Logger::info("\tVideo file %s", video_.c_str());
-	Logger::info("\tLink file %s",  link_.c_str());
+	Logger::info("\tID {}",         id_);
+	Logger::info("\tShortname {}",  short_);
+	Logger::info("\tImage file {}", image_);
+	Logger::info("\tVideo file {}", video_);
+	Logger::info("\tLink file {}",  link_);
 	properties_.toLogger();
 }
 

@@ -18,6 +18,7 @@
 #include <wx/wx.h>
 
 #include "_Types.h"
+#include <fmt/core.h>
 #include "Logger.h"
 
 class Utilities
@@ -32,19 +33,26 @@ public:
 	static int pageDown(const int total, const int top, const int visible);
 	static int pageUp(const int total, const int top, const int visible);
 	static int getRand(const int min, const int max);
-	static int messageBox(
-			const char *format, // the message, supports printf formatting
-			const char *caption,
-			const int style = wxOK | wxCENTRE, // see wxMessageDialog for style options
-			wxWindow * parent = NULL,
-			...);
 	static void delay(int ms);
+
+	template<typename... Args>
+	static int messageBox(
+			const char* format, // the message, supports printf formatting
+			const char* caption,
+			const int style = wxOK | wxCENTRE, // see wxMessageDialog for style options
+			wxWindow* parent = NULL,
+			Args... args)
+	{
+		return messageBox_(fmt::format(format, args...).c_str(), caption, style, parent);
+	}
 
 private:
 
 	Utilities() = default;
 	Utilities(const Utilities&) = default;
 	Utilities(Utilities&&);
+
+	static int messageBox_(const char* message, const char* caption, const int style, wxWindow* parent);
 
 	static bool srand_;
 };
