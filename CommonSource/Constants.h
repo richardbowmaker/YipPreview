@@ -26,6 +26,7 @@ public:
 
     static std::string ffmpeg;
     static std::string ffmpegEnd;
+    static std::string videoPlayer;
     static std::string title;
     static std::string workingDir;
     static std::string filesDir;

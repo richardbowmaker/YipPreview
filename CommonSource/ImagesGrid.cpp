@@ -1,6 +1,7 @@
 
 #include "ImagesGrid.h"
 
+#include "_Types.h"
 #include "FileSetManager.h"
 #include "Logger.h"
 #include "Main.h"
@@ -13,7 +14,8 @@ ImagesGrid::ImagesGrid(wxWindow* parent,
     long style /*= wxWANTS_CHARS*/,
     const wxString& name /*= wxGridNameStr*/) :
     wxGrid(parent, id, pos, size, style, name),
-	iServer_(nullptr)
+	iServer_(nullptr),
+	prevMouse_(wxPoint(-1, -1))
 {
 }
 
@@ -21,20 +23,25 @@ void ImagesGrid::initialise(ImagesGridServer *iServer)
 {
 	iServer_ = iServer;
 
-	Bind(wxEVT_GRID_CELL_RIGHT_CLICK, &ImagesGrid::eventDispatch, this, wxID_ANY);
-	Bind(wxEVT_GRID_SELECT_CELL, &ImagesGrid::eventDispatch, this, wxID_ANY);
-	Bind(wxEVT_SET_FOCUS, &ImagesGrid::onFocus, this, wxID_ANY);
-	Bind(wxEVT_GRID_COL_SORT, &ImagesGrid::onColSort, this, wxID_ANY);
+	Bind(wxEVT_GRID_CELL_RIGHT_CLICK, &ImagesGrid::onEventDispatch, this, wxID_ANY);
+	Bind(wxEVT_GRID_SELECT_CELL, 	  &ImagesGrid::onEventDispatch, this, wxID_ANY);
+	Bind(wxEVT_SET_FOCUS, 			  &ImagesGrid::onFocus, 		this, wxID_ANY);
+	Bind(wxEVT_GRID_COL_SORT, 		  &ImagesGrid::onColSort, 		this, wxID_ANY);
+	Bind(wxEVT_MOTION, 				  &ImagesGrid::onMouseMove, 	this, wxID_ANY);
 
+	SetTable(iServer_->gridGetTable());
+	HideRowLabels();
 	SetColLabelSize(GetDefaultRowSize());
+	EnableEditing(false);
 }
 
 void ImagesGrid::uninitialise()
 {
-	Unbind(wxEVT_GRID_CELL_RIGHT_CLICK, &ImagesGrid::eventDispatch, this, wxID_ANY);
-	Unbind(wxEVT_GRID_SELECT_CELL, &ImagesGrid::eventDispatch, this, wxID_ANY);
-	Unbind(wxEVT_SET_FOCUS, &ImagesGrid::onFocus, this, wxID_ANY);
-	Unbind(wxEVT_GRID_COL_SORT, &ImagesGrid::onColSort, this, wxID_ANY);
+	Unbind(wxEVT_GRID_CELL_RIGHT_CLICK, &ImagesGrid::onEventDispatch, 	this, wxID_ANY);
+	Unbind(wxEVT_GRID_SELECT_CELL, 	  	&ImagesGrid::onEventDispatch, 	this, wxID_ANY);
+	Unbind(wxEVT_SET_FOCUS, 			&ImagesGrid::onFocus, 			this, wxID_ANY);
+	Unbind(wxEVT_GRID_COL_SORT, 		&ImagesGrid::onColSort, 		this, wxID_ANY);
+	Unbind(wxEVT_MOTION, 				&ImagesGrid::onMouseMove, 		this, wxID_ANY);
 
 	SetTable(nullptr);
 }
@@ -43,20 +50,19 @@ void ImagesGrid::populate()
 {
 	SetTable(iServer_->gridGetTable());
 	SetSelectionMode(wxGrid::wxGridSelectRows);
-	HideRowLabels();
-	EnableEditing(false);
-	SetColSize(0, 220);
-	SetColSize(1, 140);
-	SetColSize(2, 50);
-	SetColSize(3, 50);
-	SetColSize(4, 100);
-	SetColSize(5, 150);
-	SetColSize(6, 50);
-	SetColSize(7, 75);
-	SetColSize(8, 75);
+	SetColSize(static_cast<int>(ColT::Volume),    220);
+	SetColSize(static_cast<int>(ColT::Mount),     220);
+	SetColSize(static_cast<int>(ColT::File),      140);
+	SetColSize(static_cast<int>(ColT::Type),       50);
+	SetColSize(static_cast<int>(ColT::Selected),   50);
+	SetColSize(static_cast<int>(ColT::Duration),  100);
+	SetColSize(static_cast<int>(ColT::LastTime),  150);
+	SetColSize(static_cast<int>(ColT::Times),	   50);
+	SetColSize(static_cast<int>(ColT::MaxVol),     75);
+	SetColSize(static_cast<int>(ColT::AverageVol), 75);
 }
 
-void ImagesGrid::eventDispatch(wxGridEvent &event)
+void ImagesGrid::onEventDispatch(wxGridEvent &event)
 {
 	int id = event.GetEventType();
 
@@ -73,16 +79,19 @@ void ImagesGrid::eventDispatch(wxGridEvent &event)
 			PopupMenu(menu);
 			delete menu;
 		}
+		event.Skip();
 	}
 	if (id == wxEVT_GRID_SELECT_CELL)
 	{
 		iServer_->gridSetSelected(getSelectedRow());
+		event.Skip();
 	}
 }
 
 void ImagesGrid::onFocus(wxFocusEvent& event)
 {
 	iServer_->gridGotFocus();
+	event.Skip();
 }
 
 void ImagesGrid::onColSort(wxGridEvent &event)
@@ -90,6 +99,23 @@ void ImagesGrid::onColSort(wxGridEvent &event)
 	ColT col = static_cast<ColT>(event.GetCol());
 	FileSetManager::sort(col);
 	Main::get().refresh();
+	event.Skip();
+}
+
+void ImagesGrid::onMouseMove(wxMouseEvent &event)
+{
+	if (prevMouse_.x != -1 && prevMouse_ == event.GetPosition())
+	{
+		// mouse hovering
+		wxPoint p = CalcUnscrolledPosition(prevMouse_);
+		int row = YToRow(p.y);
+		FileSetT fs = FileSetManager::getFileSet(row);
+		std::string tt = fs->getToolTip();
+		Logger::info("Tooltip row {}: {}", row, tt);
+
+	}
+	prevMouse_ = event.GetPosition();
+	event.Skip();
 }
 
 void ImagesGrid::refreshRowsAppended(const int noOfRows)

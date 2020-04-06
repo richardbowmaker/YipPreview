@@ -8,7 +8,7 @@
 #include <vector>
 
 #include "_Types.h"
-#include "FileProperties.h"
+#include "Properties.h"
 #include "Volume.h"
 
 class FileSet
@@ -49,10 +49,12 @@ public:
 	void setIsSelected(const bool selected);
 	std::string getIsSelected() const;
 	bool sort(const ColT col, FileSetT &other, const bool ascending);
+	std::string getToolTip() const;
+	std::string getLinkText() const;
 	void toLogger();
 
 	// properties
-	FileProperties& properties();
+	Properties& properties();
 
 	static bool isValidType(const std::string filename);
 	static std::string filenameToId(const std::string filename);
@@ -70,7 +72,7 @@ private:
 	std::string video_;
 	std::string link_;
 
-	FileProperties properties_;
+	Properties properties_;
 	const Volume* volume_;
 };
 

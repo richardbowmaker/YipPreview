@@ -128,6 +128,8 @@ public:
 	static std::string  wStrToStr(const std::wstring str);
 	static bool startsWith(const char *str, const char* prefix);
 	static bool startsWith(const std::string str, const std::string prefix);
+	static std::string doubleQuotes(const std::string &s);
+	static std::string singleQuotes(const std::string &s);
 
 private:
 

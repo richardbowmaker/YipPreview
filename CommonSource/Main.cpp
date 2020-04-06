@@ -17,8 +17,9 @@
 
 #include <cstdlib>
 #include <wx/cmdline.h>
-#include <wx/splitter.h>
+#include <wx/listbox.h>
 #include <wx/sizer.h>
+#include <wx/splitter.h>
 #ifdef LINUX_BUILD
 	#include <X11/Xlib.h>
 #endif
@@ -144,11 +145,11 @@ Main::Main(const wxString& title, const wxPoint& pos, const wxSize& size) :
 	wxBoxSizer* sizerTop = new wxBoxSizer(wxVERTICAL);
 	pnlTop->SetSizer(sizerTop);
 
-// create grid and add it to top panel
+	// create grid and add it to top panel
 	grid_ = new ImagesGrid(pnlTop, wxID_ANY);
 	table_ = new GridTable();
 	grid_->initialise(this);
-	grid_->populate();
+//	grid_->populate();
 
 	sizerTop->Add(grid_, 1, wxEXPAND, 0);
 
@@ -158,8 +159,8 @@ Main::Main(const wxString& title, const wxPoint& pos, const wxSize& size) :
 	pnlBot->SetSizer(sizerBot);
 
 	// create logger and add it to bottom panel
-	Logger* logger = setupLogger(pnlBot);
-	sizerBot->Add(logger, 1, wxEXPAND, 0);
+	logger_ = setupLogger(pnlBot);
+	sizerBot->Add(logger_, 1, wxEXPAND, 0);
 
 	// added panels to horizontal splitter
 	splitterHorizontal->SplitHorizontally(pnlTop, pnlBot);

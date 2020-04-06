@@ -39,21 +39,16 @@ int GridTable::GetNumberRows()
 
 int GridTable::GetNumberCols()
 {
-	return 9;
+	return static_cast<int>(ColT::NoOfCols);
 }
 
 wxString GridTable::GetValue(int row, int col)
 {
-//	if (row >= FileSetManager::getNoOfFileSets() || row < 0 || col < 0 || col > 7)
-//	{
-//		Logger::error(L"GridTable::GetValue invalid row %d, col %d", row, col);
-//		return L"";
-//	}
-
 	FileSetT fs = FileSetManager::getFileSet(row);
 	
 	switch (static_cast<ColT>(col))
 	{
+	case ColT::Mount:      return fs->getVolume()->getMount();
 	case ColT::Volume:     return fs->getVolume()->getShortName();
 	case ColT::File:       return fs->getId();
 	case ColT::Type:       return fs->typesToString();
@@ -76,6 +71,7 @@ wxString GridTable::GetColLabelValue(int col)
 	switch (static_cast<ColT>(col))
 	{
 	case ColT::Volume: 		return L"Volume";
+	case ColT::Mount: 		return L"Mount";
 	case ColT::File: 		return L"File";
 	case ColT::Type: 		return L"Type";
 	case ColT::Selected: 	return L"Sel.";

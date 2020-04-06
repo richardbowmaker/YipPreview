@@ -27,17 +27,16 @@ using VolumeCollT = std::vector<VolumeT>;
 using StringStringT = std::pair<std::string, std::string>;
 using MapStringStringT = std::map<std::string, std::string>;
 
-class FileProperties;
-using FilePropertiesT = std::shared_ptr<FileProperties>;
+class Properties;
+using PropertiesT = std::shared_ptr<Properties>;
 
 using PropertyT = std::pair<std::string, std::string>;
-using PropertiesT = std::map<std::string, std::string>;
+using PropertyCollT = std::map<std::string, std::string>;
 
 using StringCollT = std::vector<std::string>;
 
 enum class ColT
 {
-	Volume = 0,
 	File,
 	Type,
 	Selected,
@@ -45,7 +44,10 @@ enum class ColT
 	LastTime,
 	Times,
 	MaxVol,
-	AverageVol
+	AverageVol,
+	Volume,
+	Mount,
+	NoOfCols
 };
 
 

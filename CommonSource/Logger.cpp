@@ -48,6 +48,7 @@ void Logger::onLogger(wxCommandEvent& event)
 		appendLb(
 			static_cast<Logger::LevelT>(event.GetInt()), 
 			std::string(event.GetString()));
+	event.Skip();
 }
 
 void Logger::setLevel(const LevelT level)
@@ -121,6 +122,7 @@ void Logger::appendLb(const LevelT level, std::string text)
 	{
 		// add to list box
 		lbox_->Append(text);
+		lbox_->Refresh();
 		lbox_->Update();
 
 		// limit the number of messages displayed
@@ -130,6 +132,7 @@ void Logger::appendLb(const LevelT level, std::string text)
 		// make last line visible
 		lbox_->SetSelection(lbox_->GetCount() - 1);
 		lbox_->Deselect(lbox_->GetCount() - 1);
+		lbox_->Refresh();
 		lbox_->Update();
 	}
 	else

@@ -10,6 +10,7 @@
 #ifdef WINDOWS_BUILD
     std::string Constants::ffmpeg			{R"(D:\Projects\WxWidgets\YipPreview\ffmpeg.exe)"};
     std::string Constants::ffmpegEnd		{" 2>&1"};
+    std::string Constants::videoPlayer		TODO{R"()"};
     std::string Constants::filesDir			{R"(\Files\All)"};
     std::string Constants::propertiesCache	{R"(\PropertyCache.txt)"};
     std::string Constants::veracrypt		{R"("C:\Program Files\VeraCrypt\VeraCrypt.exe")"};
@@ -18,6 +19,7 @@
 #elif LINUX_BUILD
 	std::string Constants::ffmpeg			{R"(/usr/bin/ffmpeg)"};
     std::string Constants::ffmpegEnd		{" &2>1"};
+	std::string Constants::videoPlayer		{R"(/usr/bin/vlc -f )"};
     std::string Constants::filesDir			{R"(/Files/All)"};
     std::string Constants::propertiesCache	{R"(/PropertyCache.txt)"};
     std::string Constants::veracrypt		{R"(/usr/bin/veracrypt)"};

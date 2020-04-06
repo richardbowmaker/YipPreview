@@ -97,6 +97,7 @@ void VideoUpdaterDialog::onShellExecute(wxShellExecuteEvent& event)
 		updateGui();
 		Main::get().refresh(*fileset_);
 	}
+	event.Skip();
 }
 
 void VideoUpdaterDialog::updateGui()

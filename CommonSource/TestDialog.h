@@ -17,7 +17,8 @@
 #include "FileSet.h"
 
 
-class MediaPreviewPlayer;
+class wxMediaCtrl;
+class wxMediaEvent;
 
 class TestDialog : public DialogEx
 {
@@ -35,15 +36,11 @@ private:
 
 	virtual void onOk(wxCommandEvent &event);
 	virtual void onCancel(wxCommandEvent &event);
-
-	virtual void onButton (wxCommandEvent &event);
+	void onMediaPlay(wxMediaEvent &event);
 
 
 	FileSetT fileset_;
-	MediaPreviewPlayer *player_;
-	wxPanel *panel_;
-	wxBoxSizer *sizer_;
-	wxButton *button_;
+	wxMediaCtrl *player_;
 
 };
 

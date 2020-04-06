@@ -16,6 +16,7 @@
 #include <string>
 
 #include "FileSet.h"
+#include "Properties.h"
 
 class DialogEx : public wxDialog
 {
@@ -49,13 +50,13 @@ protected:
 	wxButton *getHelp();
 
 	// overrideables
-	virtual void onOk    (wxCommandEvent &event) { EndModal(wxID_OK);     };
-	virtual void onCancel(wxCommandEvent &event) { EndModal(wxID_CANCEL); };
-	virtual void onYes   (wxCommandEvent &event) { EndModal(wxID_YES);    };
-	virtual void onNo    (wxCommandEvent &event) { EndModal(wxID_NO);     };
-	virtual void onApply (wxCommandEvent &event) { EndModal(wxID_APPLY);  };
-	virtual void onClose (wxCommandEvent &event) { EndModal(wxID_CLOSE);  };
-	virtual void onHelp  (wxCommandEvent &event) { EndModal(wxID_HELP);   };
+	virtual void onOk    (wxCommandEvent &event) { EndModal(wxID_OK);     event.Skip(); };
+	virtual void onCancel(wxCommandEvent &event) { EndModal(wxID_CANCEL); event.Skip(); };
+	virtual void onYes   (wxCommandEvent &event) { EndModal(wxID_YES);    event.Skip(); };
+	virtual void onNo    (wxCommandEvent &event) { EndModal(wxID_NO);     event.Skip(); };
+	virtual void onApply (wxCommandEvent &event) { EndModal(wxID_APPLY);  event.Skip(); };
+	virtual void onClose (wxCommandEvent &event) { EndModal(wxID_CLOSE);  event.Skip(); };
+	virtual void onHelp  (wxCommandEvent &event) { EndModal(wxID_HELP);   event.Skip(); };
 
 private:
 

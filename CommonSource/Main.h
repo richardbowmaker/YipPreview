@@ -31,6 +31,7 @@ class wxGridEvent;
 class wxMenuItem;
 class wxMenu;
 class wxShellExecuteEvent;
+class Logger;
 
 class MyApp: public wxApp
 {
@@ -78,9 +79,10 @@ private:
 
     // menus
     void setupMenus();
-    void menuSelectedDispatch(wxCommandEvent &event);
-    void menuConfigure(wxMenuEvent &event, int menuId);
+    void onMenuSelectedDispatch(wxCommandEvent &event);
+    void onMenuConfigure(wxMenuEvent &event, int menuId);
     wxMenu *getPopupMenu(const int item);
+    bool menuEnabled(const int menuId, const int item) const;
 
 
     void deleteFile(wxCommandEvent& event, const int row, FileSet &fileset);
@@ -104,6 +106,8 @@ private:
 
     // images browser
     ImagesBrowser *images_;
+
+    Logger* logger_;
 
 	// all the menus mapped by id
     std::map<int, wxMenuItem*> menus_;

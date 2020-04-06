@@ -98,14 +98,14 @@ void ImagePanel::setImage(const std::string file, const wxBitmapType format)
 void ImagePanel::bindEvents()
 {
 	paneli_->Bind(wxEVT_PAINT,     &ImagePanel::onPaint,       this, wxID_ANY);
-	paneli_->Bind(wxEVT_LEFT_DOWN, &ImagePanel::leftClickDown, this, wxID_ANY);
-	paneli_->Bind(wxEVT_RIGHT_UP,  &ImagePanel::rightClickUp,  this, wxID_ANY);
+	paneli_->Bind(wxEVT_LEFT_DOWN, &ImagePanel::onLeftClickDown, this, wxID_ANY);
+	paneli_->Bind(wxEVT_RIGHT_UP,  &ImagePanel::onRightClickUp,  this, wxID_ANY);
 
 	if (zoomable_)
 	{
-		paneli_->Bind(wxEVT_MOTION,		&ImagePanel::mouseMoved,	 this, wxID_ANY);
-		paneli_->Bind(wxEVT_LEFT_UP,	&ImagePanel::leftClickUp,	 this, wxID_ANY);
-		paneli_->Bind(wxEVT_RIGHT_DOWN,	&ImagePanel::rightClickDown, this, wxID_ANY);
+		paneli_->Bind(wxEVT_MOTION,		&ImagePanel::onMouseMoved,	 this, wxID_ANY);
+		paneli_->Bind(wxEVT_LEFT_UP,	&ImagePanel::onLeftClickUp,	 this, wxID_ANY);
+		paneli_->Bind(wxEVT_RIGHT_DOWN,	&ImagePanel::onRightClickDown, this, wxID_ANY);
 		paneli_->Bind(wxEVT_SIZE,		&ImagePanel::onSize,		 this, wxID_ANY);
 		paneli_->Bind(wxEVT_KEY_UP,		&ImagePanel::onKeyUp,		 this, wxID_ANY);
 	}
@@ -113,17 +113,17 @@ void ImagePanel::bindEvents()
 
 void ImagePanel::unbindEvents()
 {
-	paneli_->Unbind(wxEVT_RIGHT_UP,		&ImagePanel::rightClickUp,	 this, wxID_ANY);
-	paneli_->Unbind(wxEVT_LEFT_DOWN,	&ImagePanel::leftClickDown,  this, wxID_ANY);
+	paneli_->Unbind(wxEVT_RIGHT_UP,		&ImagePanel::onRightClickUp,	 this, wxID_ANY);
+	paneli_->Unbind(wxEVT_LEFT_DOWN,	&ImagePanel::onLeftClickDown,  this, wxID_ANY);
 	paneli_->Unbind(wxEVT_PAINT,		&ImagePanel::onPaint,		 this, wxID_ANY);
-	paneli_->Unbind(wxEVT_MOTION,		&ImagePanel::mouseMoved,	 this, wxID_ANY);
-	paneli_->Unbind(wxEVT_LEFT_UP,		&ImagePanel::leftClickUp,	 this, wxID_ANY);
-	paneli_->Unbind(wxEVT_RIGHT_DOWN,	&ImagePanel::rightClickDown, this, wxID_ANY);
+	paneli_->Unbind(wxEVT_MOTION,		&ImagePanel::onMouseMoved,	 this, wxID_ANY);
+	paneli_->Unbind(wxEVT_LEFT_UP,		&ImagePanel::onLeftClickUp,	 this, wxID_ANY);
+	paneli_->Unbind(wxEVT_RIGHT_DOWN,	&ImagePanel::onRightClickDown, this, wxID_ANY);
 	paneli_->Unbind(wxEVT_SIZE,			&ImagePanel::onSize,		 this, wxID_ANY);
 	paneli_->Unbind(wxEVT_KEY_UP,		&ImagePanel::onKeyUp,		 this, wxID_ANY);
 }
 
-void ImagePanel::mouseMoved(wxMouseEvent &event) 
+void ImagePanel::onMouseMoved(wxMouseEvent &event)
 {
 	if (leftDown_)
 	{
@@ -144,9 +144,10 @@ void ImagePanel::mouseMoved(wxMouseEvent &event)
 			start_ = pt;
 		}
 	}
+	event.Skip();
 }
 
-void ImagePanel::leftClickDown(wxMouseEvent &event)
+void ImagePanel::onLeftClickDown(wxMouseEvent &event)
 {
 	if ((event.GetModifiers() & wxMOD_SHIFT) > 0)
 	{
@@ -170,21 +171,26 @@ void ImagePanel::leftClickDown(wxMouseEvent &event)
 	{
 		notify_->imageSelected(eventId_);
 	}
+	event.Skip();
 }
 
-void ImagePanel::leftClickUp(wxMouseEvent &event) 
+void ImagePanel::onLeftClickUp(wxMouseEvent &event)
 {
-	if (!leftDown_) return;
-	if (!moved_) zoomImage(event.GetPosition(), 1.2f);
-	leftDown_ = false;
-	moved_ = false;
+	if (leftDown_)
+	{
+		if (!moved_) zoomImage(event.GetPosition(), 1.2f);
+		leftDown_ = false;
+		moved_ = false;
+	}
+	event.Skip();
 }
 
-void ImagePanel::rightClickDown(wxMouseEvent &event)
+void ImagePanel::onRightClickDown(wxMouseEvent &event)
 {
+	event.Skip();
 }
 
-void ImagePanel::rightClickUp(wxMouseEvent &event)
+void ImagePanel::onRightClickUp(wxMouseEvent &event)
 {
 	if ((event.GetModifiers() & wxMOD_SHIFT) > 0)
 	{
@@ -198,22 +204,26 @@ void ImagePanel::rightClickUp(wxMouseEvent &event)
 		PopupMenu(menu);
 		delete menu;
 	}
+	event.Skip();
 }
 
-void ImagePanel::mouseLeftWindow(wxMouseEvent &event) 
+void ImagePanel::onMouseLeftWindow(wxMouseEvent &event)
 {
 	leftDown_ = false;
 	moved_ = true;
+	event.Skip();
 }
 
-void ImagePanel::onPaint(wxPaintEvent &evt)
+void ImagePanel::onPaint(wxPaintEvent &event)
 {
 	wxPaintDC dc(paneli_);
     render(dc);
+	event.Skip();
 }
 
 void ImagePanel::onKeyUp(wxKeyEvent& event)
 {
+	event.Skip();
 }
 
 void ImagePanel::render(wxDC &dc)

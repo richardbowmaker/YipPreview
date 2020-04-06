@@ -61,7 +61,9 @@ ShellExecute::~ShellExecute()
 // shell
 bool ShellExecute::shell(const std::string &cmd)
 {
+	Logger::info("ShellExecute::shell {}", cmd);
 #ifdef WINDOWS_BUILD
+	ToDO
 	return false;
 #elif LINUX_BUILD
 	ShellThreadData data;

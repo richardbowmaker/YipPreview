@@ -52,10 +52,12 @@ public:
 private:
 
     void onFocus(wxFocusEvent& event);
-    void eventDispatch(wxGridEvent &event);
+    void onEventDispatch(wxGridEvent &event);
     void onColSort(wxGridEvent &event);
+    void onMouseMove(wxMouseEvent &event);
 
     ImagesGridServer *iServer_;
+    wxPoint prevMouse_;
 };
 
 #endif /* COMMON_IMAGESGRID_H_ */

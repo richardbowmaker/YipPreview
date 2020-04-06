@@ -35,14 +35,14 @@ DialogEx::DialogEx(
 		long style 			  /*= wxDEFAULT_DIALOG_STYLE*/,
 		const wxString &name  /*= wxDialogNameStr*/) :
 	wxDialog(parent, id, title, pos, size, style, name),
-	panel_(nullptr),
-	ok_(nullptr),
-	cancel_(nullptr),
-	yes_(nullptr),
-	no_(nullptr),
-	apply_(nullptr),
-	close_(nullptr),
-	help_(nullptr)
+	panel_	{nullptr},
+	ok_		{nullptr},
+	cancel_ {nullptr},
+	yes_	{nullptr},
+	no_		{nullptr},
+	apply_	{nullptr},
+	close_	{nullptr},
+	help_	{nullptr}
 {
 	SetTitle(title);
 

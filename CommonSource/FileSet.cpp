@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cwchar>
 #include <filesystem>
+#include <fstream>
 #include <regex>
 #include <sstream>
 #include <stdlib.h>
@@ -148,7 +149,7 @@ std::string FileSet::typesToString() const
 	std::string s;
 	if (hasVideo()) s += "V";
 	if (hasImage()) s += "I";
-	if (hasLink())  s += "";
+	if (hasLink())  s += "L";
 	return s;
 }
 
@@ -234,6 +235,11 @@ bool FileSet::sort(const ColT col, FileSetT &other, const bool ascending)
 	switch (static_cast<ColT>(col))
 	{
 	case ColT::Volume:
+		s1 = volume_->getFile();
+		s2 = other->getVolume()->getFile();
+		n = compare<std::string>(s1, s2);
+		break;
+	case ColT::Mount:
 		s1 = volume_->getMount();
 		s2 = other->getVolume()->getMount();
 		n = compare<std::string>(s1, s2);
@@ -254,8 +260,8 @@ bool FileSet::sort(const ColT col, FileSetT &other, const bool ascending)
 		n = compare<std::string>(s1, s2);
 		break;
 	case ColT::Duration:
-		s1 = getDurationStr();
-		s2 = other->getDurationStr();
+		s1 = properties_.getString("duration");
+		s2 = other->properties().getString("duration");
 		n = compare<std::string>(s1, s2);
 		break;
 	case ColT::LastTime:
@@ -298,6 +304,30 @@ bool FileSet::sort(const ColT col, FileSetT &other, const bool ascending)
 	else return n > 0;
 }
 
+std::string FileSet::getToolTip() const
+{
+	std::stringstream ss;
+	ss 		<< "ID: " 		<< id_
+			<< "\nImage: " 	<< image_
+			<< "\nVideo: " 	<< video_
+			<< "\nLink: " 	<< getLinkText();
+
+	return ss.str();
+}
+
+std::string FileSet::getLinkText() const
+{
+	std::string lnk;
+	if (hasLink())
+	{
+		std::ifstream lf(link_);
+		std::getline(lf, lnk);
+		lf.close();
+	}
+	return lnk;
+}
+
+
 void FileSet::toLogger()
 {
 	Logger::info("File Set");
@@ -315,7 +345,7 @@ void FileSet::toLogger()
 //-------------------------------------------------------
 // \Files\All\file20191106221222;times;11;lasttime;08/01/2020;volume;-8.3  -40.7;duration;5:27
 
-FileProperties& FileSet::properties()
+Properties& FileSet::properties()
 {
 	return properties_;
 }

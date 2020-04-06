@@ -83,6 +83,7 @@ void MediaPreviewPlayer::onMediaPlay(wxMediaEvent& event)
 	calculateClips();
 	doTimer();
 	timer_->Start(kTimer);
+	event.Skip();
 }
 
 void MediaPreviewPlayer::startPreview()
@@ -104,6 +105,7 @@ void MediaPreviewPlayer::stopPreview()
 void MediaPreviewPlayer::onTimer(wxTimerEvent &event)
 {
 	doTimer();
+	event.Skip();
 }
 
 void MediaPreviewPlayer::doTimer()

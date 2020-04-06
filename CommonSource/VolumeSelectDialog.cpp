@@ -117,12 +117,15 @@ void VolumeSelectDialog::onFind(wxCommandEvent &event)
 		Logger::error("VolumeSelectDialog::onFind() error search {} for matching file {}",
 				dirPicker_->GetPath(),
 				txtFilter_->GetValue());
+
+	event.Skip();
 }
 
 void VolumeSelectDialog::onDirPicker(wxFileDirPickerEvent& event)
 {
 	Logger::info("selected folder %s", dirPicker_->GetPath().c_str());
 	txtFilter_->SetFocus();
+	event.Skip();
 }
 
 void VolumeSelectDialog::onCheck(wxCommandEvent &event)
@@ -130,6 +133,7 @@ void VolumeSelectDialog::onCheck(wxCommandEvent &event)
 	int n = event.GetInt();
 	VolumeT v = VolumeManager::getVolume(n);
 	v->setIsSelected(volumeList_->IsChecked(n));
+	event.Skip();
 }
 
 

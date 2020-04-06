@@ -48,7 +48,7 @@ public:
 #ifdef WINDOWS_BUILD
 		systemErrorN(static_cast<int>(GetLastError()), format, args...);
 #elif LINUX_BUILD
-		systemErrorN(errNo, format, args...);
+		systemErrorN(errno, format, args...);
 #endif
 
 	};

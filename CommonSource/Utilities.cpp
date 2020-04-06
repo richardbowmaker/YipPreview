@@ -11,6 +11,7 @@
 	#include <algorithm>
 	#include <iostream>
 	#include <regex>
+	#include <shlwapi.h>
 	#include <stdio.h>
 	#include <stdlib.h>
 	#include <string>
@@ -125,11 +126,16 @@ int Utilities::messageBox_(const char* message, const char* caption, const int s
 
 void Utilities::delay(int ms)
 {
-	std::this_thread::sleep_for (std::chrono::milliseconds(ms));
+#ifdef WINDOWS_BUILD
+	// std::this_thread::sleep_for (std::chrono::milliseconds(ms));
+	Sleep(ms);
+#elif LINUX_BUILD
+	usleep(ms * 1000);
+#endif
 }
 
 //--------------------------------------------------
-// String utilities
+// sudo
 //--------------------------------------------------
 
 std::mutex SudoMode::lock_;
@@ -275,6 +281,16 @@ bool SU::startsWith(const std::string str, const std::string prefix)
 	return startsWith(str.c_str(), prefix.c_str());
 }
 
+std::string SU::doubleQuotes(const std::string &s)
+{
+	return std::string("\"") + s + std::string("\"");
+}
+
+std::string SU::singleQuotes(const std::string &s)
+{
+	return std::string("'") + s + std::string("'");
+}
+
 //--------------------------------------------------
 // File utilities
 //--------------------------------------------------
@@ -385,7 +401,7 @@ bool FU::moveFile(const std::string src, const std::string dest, const bool over
 		return false;
 	}
 #elif LINUX_BUILD
-	if (rename(src, dest) == 0)
+	if (rename(src.c_str(), dest.c_str()) == 0)
 	{
 		Logger::info("file moved: {} to {}", src, dest);
 		return true;
@@ -408,13 +424,7 @@ bool FU::findFiles(
 	const bool sort)
 {
 #ifdef WINDOWS_BUILD
-
-	std::string dir;
-	if (filter == nullptr)
-		dir = directory + std::string("\\*");
-	else
-		dir = directory + std::string("\\") + *filter;
-
+	std::string dir = directory + Constants::pathSeparator + std::string("*");
 	WIN32_FIND_DATAA data;
 	HANDLE hFind = FindFirstFileA(dir.c_str(), &data);
 
@@ -435,6 +445,9 @@ bool FU::findFiles(
 
 				if (regex != nullptr)
 					match = std::regex_match(data.cFileName, rex);
+				else if (filter != nullptr)
+					match = (PathMatchSpecExA(data.cFileName, filter->c_str(), PMSF_NORMAL) == 0);
+
 				if (match)
 					files->emplace_back(directory + std::string("\\") + std::string(data.cFileName));
 			}
@@ -444,12 +457,15 @@ bool FU::findFiles(
 			if (dirs != nullptr || subdirs)
 			{
 				std::string d{data.cFileName};
-				if (dirs != nullptr) dirs->emplace_back(d);
-				if (subdirs)
+				if (d.compare(".") != 0 && d.compare("..") != 0)
 				{
-					if (!FU::findFiles(directory + std::string(R"(/)") + d,
+					if (dirs != nullptr) dirs->emplace_back(d);
+					if (subdirs)
+					{
+						if (!FU::findFiles(directory + Constants::pathSeparator + d,
 							files, filter, regex, dirs, subdirs, false))
-						return false;
+							return false;
+					}
 				}
 			}
 		}
@@ -461,7 +477,7 @@ bool FU::findFiles(
 	DIR *dir;
 	struct dirent *ent;
 
-	if ((dir = opendir(directory)) == NULL)
+	if ((dir = opendir(directory.c_str())) == NULL)
 	{
 		Logger::systemError("FU::findFiles opendir");
 		return false;

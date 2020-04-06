@@ -49,14 +49,14 @@ private:
 
 	void bindEvents();
 	void unbindEvents();
-	void onPaint(wxPaintEvent &evt);
+	void onPaint(wxPaintEvent &event);
 	void render(wxDC &dc);
-	void mouseMoved(wxMouseEvent &event);
-	void leftClickDown(wxMouseEvent &event);
-	void leftClickUp(wxMouseEvent &event);
-	void rightClickDown(wxMouseEvent &event);
-	void rightClickUp(wxMouseEvent &event);
-	void mouseLeftWindow(wxMouseEvent &event);
+	void onMouseMoved(wxMouseEvent &event);
+	void onLeftClickDown(wxMouseEvent &event);
+	void onLeftClickUp(wxMouseEvent &event);
+	void onRightClickDown(wxMouseEvent &event);
+	void onRightClickUp(wxMouseEvent &event);
+	void onMouseLeftWindow(wxMouseEvent &event);
 	void onSize(wxSizeEvent &event);
 	void onKeyUp(wxKeyEvent &event);
 

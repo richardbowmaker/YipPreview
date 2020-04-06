@@ -1,11 +1,11 @@
 /*
- * FileProperties.cpp
+ * Properties.cpp
  *
  *  Created on: 19 Mar 2020
  *      Author: richard
  */
 
-#include "FileProperties.h"
+#include "Properties.h"
 
 #include <cwchar>
 #include <map>
@@ -18,7 +18,7 @@
 
 #include "Logger.h"
 
-void FileProperties::setString(const std::string& property,
+void Properties::setString(const std::string& property,
 		const std::string& value)
 {
 	if (value.size() == 0)
@@ -28,27 +28,27 @@ void FileProperties::setString(const std::string& property,
 		properties_[property] = value;
 }
 
-void FileProperties::setInt(const std::string& property, const int value)
+void Properties::setInt(const std::string& property, const int value)
 {
 	char buf[100];
 	snprintf(buf, sizeof(buf) / sizeof(char), "%d", value);
 	setString(property, buf);
 }
 
-void FileProperties::setFloat(const std::string& property, const float value)
+void Properties::setFloat(const std::string& property, const float value)
 {
 	char buf[100];
 	snprintf(buf, sizeof(buf) / sizeof(char), "%f", value);
 	setString(property, buf);
 }
 
-void FileProperties::incCount(const std::string& property)
+void Properties::incCount(const std::string& property)
 {
 	int c = getInt(property);
 	setInt(property, ++c);
 }
 
-void FileProperties::setDateTimeNow(const std::string& property)
+void Properties::setDateTimeNow(const std::string& property)
 {
 	time_t rawtime;
 	struct tm *timeinfo;
@@ -60,7 +60,7 @@ void FileProperties::setDateTimeNow(const std::string& property)
 	setString(property, buf);
 }
 
-std::string FileProperties::getString(const std::string& property) const
+std::string Properties::getString(const std::string& property) const
 {
 	auto n = properties_.find(property);
 	if (n != properties_.end())
@@ -71,7 +71,7 @@ std::string FileProperties::getString(const std::string& property) const
 		return "";
 }
 
-int FileProperties::getInt(const std::string& property) const
+int Properties::getInt(const std::string& property) const
 {
 	std::string s = getString(property);
 	if (s.size() > 0)
@@ -79,7 +79,7 @@ int FileProperties::getInt(const std::string& property) const
 	else return 0;
 }
 
-float FileProperties::getFloat(const std::string& property) const
+float Properties::getFloat(const std::string& property) const
 {
 	std::string s = getString(property);
 	if (s.size() > 0)
@@ -87,12 +87,12 @@ float FileProperties::getFloat(const std::string& property) const
 	else return 0.0f;
 }
 
-int FileProperties::getCount(const std::string& property) const
+int Properties::getCount(const std::string& property) const
 {
 	return getInt(property);
 }
 
-std::string FileProperties::toString() const
+std::string Properties::toString() const
 {
 // old - \Files\All\file20110102030031;times;2;lasttime;28/12/2019;maxvol;-2.5;duration;9:28
 // new - a01;averagevol;2.20;duration;03:25:45.678;lasttime;15:52:59 28/03/2020;maxvol;1.10;selected;X;times;2
@@ -116,7 +116,7 @@ std::string FileProperties::toString() const
 //		tocsv).substr(1);
 }
 
-void FileProperties::fromString(const std::string& s)
+void Properties::fromString(const std::string& s)
 {
 	clear();
 	char d(';');
@@ -161,32 +161,32 @@ void FileProperties::fromString(const std::string& s)
 	}
 }
 
-void FileProperties::clear()
+void Properties::clear()
 {
 	properties_.clear();
 }
 
-int FileProperties::getSize() const
+int Properties::getSize() const
 {
 	return properties_.size();
 }
 
-void FileProperties::remove(const std::string property)
+void Properties::remove(const std::string property)
 {
 	auto n = properties_.find(property);
 	if (n != properties_.end()) properties_.erase(n);
 }
 
-void FileProperties::toLogger() const
+void Properties::toLogger() const
 {
 	Logger::info("File Properties");
 	for (auto p : properties_)
 		Logger::info("\t{} {}", p.first, p.second);
 }
 
-bool FileProperties::test()
+bool Properties::test()
 {
-	FileProperties fp;
+	Properties fp;
 	std::string s;
 	bool result = true;
 
@@ -197,64 +197,64 @@ bool FileProperties::test()
 	fp.incCount("p3");
 //	fp.setDateTimeNow("p4");
 	s = fp.toString();
-	result &= Logger::test(s.compare("p1;v1;p2;2;p3;3") == 0, "FileProperties::test() t1 failed");
+	result &= Logger::test(s.compare("p1;v1;p2;2;p3;3") == 0, "Properties::test() t1 failed");
 
 	fp.clear();
 	s = fp.toString();
-	result &= Logger::test(s.compare("") == 0, "FileProperties::test() t2 failed");
+	result &= Logger::test(s.compare("") == 0, "Properties::test() t2 failed");
 
 	fp.fromString("p1;v1;p2;10");
 	s = fp.toString();
-	result &= Logger::test(s.compare("p1;v1;p2;10") == 0, "FileProperties::test() t3 failed");
+	result &= Logger::test(s.compare("p1;v1;p2;10") == 0, "Properties::test() t3 failed");
 
 	int c = fp.getSize();
-	result &= Logger::test(c == 2, "FileProperties::test() t4 failed");
+	result &= Logger::test(c == 2, "Properties::test() t4 failed");
 
 	s = fp.getString("p1");
-	result &= Logger::test(s.compare("v1") == 0, "FileProperties::test() t5 failed");
+	result &= Logger::test(s.compare("v1") == 0, "Properties::test() t5 failed");
 
 	c = fp.getInt("p2");
-	result &= Logger::test(c == 10, "FileProperties::test() t6 failed");
+	result &= Logger::test(c == 10, "Properties::test() t6 failed");
 
 	c = fp.getCount("p2");
-	result &= Logger::test(c == 10, "FileProperties::test() t7 failed");
+	result &= Logger::test(c == 10, "Properties::test() t7 failed");
 
 	fp.remove("p1");
 	c = fp.getSize();
-	result &= Logger::test(c == 1, "FileProperties::test() t8 failed");
+	result &= Logger::test(c == 1, "Properties::test() t8 failed");
 
 	s = fp.toString();
-	result &= Logger::test(s.compare("p2;10") == 0, "FileProperties::test() t9 failed");
+	result &= Logger::test(s.compare("p2;10") == 0, "Properties::test() t9 failed");
 
 	fp.setString("p2", "");
 	c = fp.getSize();
-	result &= Logger::test(c == 0, "FileProperties::test() t10 failed");
+	result &= Logger::test(c == 0, "Properties::test() t10 failed");
 
 	s = fp.toString();
-	result &= Logger::test(s.compare("") == 0, "FileProperties::test() t11 failed");
+	result &= Logger::test(s.compare("") == 0, "Properties::test() t11 failed");
 
 	fp.fromString("");
 	s = fp.toString();
-	result &= Logger::test(s.compare("") == 0, "FileProperties::test() t12 failed");
+	result &= Logger::test(s.compare("") == 0, "Properties::test() t12 failed");
 
 	fp.fromString("p1;v1;p2");
 	s = fp.toString();
-	result &= Logger::test(s.compare("p1;v1") == 0, "FileProperties::test() t13 failed");
+	result &= Logger::test(s.compare("p1;v1") == 0, "Properties::test() t13 failed");
 
 	fp.fromString("p1;v1;p2;2;");
 	s = fp.toString();
-	Logger::test(s.compare("p1;v1;p2;2") == 0, "FileProperties::test() t14 failed");
+	Logger::test(s.compare("p1;v1;p2;2") == 0, "Properties::test() t14 failed");
 
 	fp.fromString("p1;v1;p2;;");
 	s = fp.toString();
-	result &= Logger::test(s.compare("p1;v1") == 0, "FileProperties::test() t15 failed");
+	result &= Logger::test(s.compare("p1;v1") == 0, "Properties::test() t15 failed");
 
 	fp.fromString("p1;v1;p2;");
 	s = fp.toString();
-	result &= Logger::test(s.compare("p1;v1") == 0, "FileProperties::test() t16 failed");
+	result &= Logger::test(s.compare("p1;v1") == 0, "Properties::test() t16 failed");
 
 	if (result)
-		Logger::info("FileProperties::test() passed");
+		Logger::info("Properties::test() passed");
 
 	return result;
 }

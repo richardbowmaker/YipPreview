@@ -21,7 +21,8 @@
 	#include <wx/thread.h>
 	#include <windows.h> 
 	#include <tchar.h>
-	#include <stdio.h> 
+	#include <shlwapi.h>
+	#include <stdio.h>
 	#include <strsafe.h>
 	#include <tchar.h>
 #elif LINUX_BUILD
@@ -141,33 +142,18 @@ std::string NewLogger::info(const char* format, Args... args)
 	return message;
 }
 
-
 void TryOut::tryout(const FileSetT fs)
 {
-	const FileSetCollT fs1 = FileSetManager::getFileSets();
-	const FileSetCollT fs2 = FileSetManager::getFileSets();
-
-	for (auto f1 :  fs1)
-	{
-		for (auto f2 : fs2)
-		{
-			bool b1 = f1->sort(ColT::Times, f2, true);
-			bool b2 = f2->sort(ColT::Times, f1, true);
-
-			std::string s1 = f1->properties().getString("times");
-			std::string s2 = f2->properties().getString("times");
-
-			if (s1.compare(s2) != 0)
-			{
-				if (b1 == b2)
-				{
-					int m = 0;
-				}
-			}
-		}
-	}
-
-
+	Logger::info("abc");
+	Utilities::delay(1000);
+	Logger::info("abc");
+	Utilities::delay(1000);
+	Logger::info("abc");
+	Utilities::delay(1000);
+	Logger::info("abc");
+	Utilities::delay(1000);
+	Logger::info("abc");
+	Utilities::delay(1000);
 }
 
 

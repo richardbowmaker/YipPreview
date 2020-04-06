@@ -1,12 +1,12 @@
 /*
- * FileProperties.h
+ * Properties.h
  *
- *  Created on: 19 Mar 2020
+ *  Created on: 6 Apr 2020
  *      Author: richard
  */
 
-#ifndef COMMON_FILEPROPERTIES_H_
-#define COMMON_FILEPROPERTIES_H_
+#ifndef COMMON_PROPERTIES_H_
+#define COMMON_PROPERTIES_H_
 
 #include <map>
 #include <memory>
@@ -15,12 +15,12 @@
 
 #include "_Types.h"
 
-class FileProperties
+class Properties
 {
 public:
 
-	FileProperties() = default;
-	~FileProperties() = default;
+	Properties() = default;
+	~Properties() = default;
 
 	static bool test();
 
@@ -42,7 +42,7 @@ public:
 
 private:
 
-	PropertiesT properties_;
+	PropertyCollT properties_;
 };
 
-#endif /* COMMON_FILEPROPERTIES_H_ */
+#endif /* COMMON_PROPERTIES_H_ */

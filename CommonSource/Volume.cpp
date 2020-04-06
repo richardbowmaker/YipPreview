@@ -67,10 +67,9 @@ Volume::Volume(std::string file, const bool isMountable) :
 	// if file is not a mountable volume then take the
 	// file to be a directory containing files that a mounted volume would
 	if (!isMountable_)
-	{
 		mount_ = file;
-		short_ = FU::abbreviateFilename(file, 30);
-	}
+
+	short_ = FU::abbreviateFilename(file, 30);
 }
 
 Volume::~Volume()
@@ -193,7 +192,7 @@ bool Volume::mount(const std::string &m, const std::string &password)
 	cmd 	<< Constants::veracrypt
 			<< " --password=" << password
 			<< " --slot=" << m.substr(m.size() - 2, 2) << " --hash=sha512 "
-			<< L'\"' << file_ << "\" "
+			<< '\"' << file_ << "\" "
 			<< m;
 	Logger::error("Volume::mount() TODO, sort out slot number");
 #endif
@@ -215,7 +214,6 @@ bool Volume::mount(const std::string &m, const std::string &password)
 		mount_ = m;
 		isMounted_ = true;
 		isDirty_ = false;
-		short_ = FU::abbreviateFilename(m, 30);
 		return true;
 	}
 	else

@@ -110,7 +110,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>wxbase31ud.lib;wxmsw31ud_core.lib;wxpngd.lib;wxzlibd.lib;wxmsw31ud_media.lib;comctl32.lib;rpcrt4.lib;fmtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>wxbase31ud.lib;wxmsw31ud_core.lib;wxpngd.lib;wxzlibd.lib;wxmsw31ud_media.lib;comctl32.lib;rpcrt4.lib;fmtd.lib;Shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>D:\_Ricks\c++\wxWidgets\3.1.3\wxWidgets-3.1.3\lib\vc_x64_dll;..\..\..\..\..\fmtlib\fmt-6.1.2\buildms\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
@@ -151,7 +151,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>D:\_Ricks\c++\wxWidgets\3.1.3\wxWidgets-3.1.3\lib\vc_x64_dll;..\..\..\..\..\fmtlib\fmt-6.1.2\buildms\Release</AdditionalLibraryDirectories>
-      <AdditionalDependencies>wxbase31u.lib;wxmsw31u_core.lib;wxbase31ud.lib;wxzlib.lib;wxmsw31u_media.lib;comctl32.lib;rpcrt4.lib;fmt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>wxbase31u.lib;wxmsw31u_core.lib;wxbase31ud.lib;wxzlib.lib;wxmsw31u_media.lib;comctl32.lib;rpcrt4.lib;fmt.lib;Shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

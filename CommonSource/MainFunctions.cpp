@@ -1,6 +1,4 @@
 
-
-#include "Main.h"
 /////////////////////////////////////////////////////////////////////
 //
 // MainFunction.cpp
@@ -8,6 +6,8 @@
 // Sets up menus, binds them to handlers which dispatch them to functions
 //
 /////////////////////////////////////////////////////////////////////
+
+#include "Main.h"
 
 #include <wx/wxprec.h>
 #ifndef WX_PRECOMP
@@ -29,7 +29,7 @@
 #include "Constants.h"
 #include "FileSet.h"
 #include "FileSetManager.h"
-#include "FileProperties.h"
+#include "Properties.h"
 #include "GridTable.h"
 #include "GridTableTest.h"
 #include "ImagePanel.h"
@@ -53,8 +53,8 @@ enum MenuIDsT
 	ID_MenuFile,
 	ID_MenuFileSelect,
 	ID_MenuFileDelete,
-	ID_MenuFileExit,
 	ID_MenuFileImport,
+	ID_MenuFileExit,
 	ID_MenuView,
 	ID_MenuViewPlay,
 	ID_MenuViewTogglePreview,
@@ -83,15 +83,19 @@ void Main::setupMenus()
 {
 	// file menu
 	wxMenu* menuFile = new wxMenu;
-	menuFile->Bind(wxEVT_MENU_OPEN, [this](wxMenuEvent& e) -> void { menuConfigure(e, ID_MenuFile); }, wxID_ANY);
+	menuFile->Bind(wxEVT_MENU_OPEN, [this](wxMenuEvent& e) -> void { onMenuConfigure(e, ID_MenuFile); }, wxID_ANY);
 
-	// file, delete
+	// file, select
 	menus_[ID_MenuFileSelect] =
 		menuFile->Append(ID_MenuFileSelect, "Select...\tCtrl-S", "Select volumes");
-	
+
 	// file, delete
 	menus_[ID_MenuFileDelete] =
 		menuFile->Append(ID_MenuFileDelete, "Delete...\tCtrl-D", "Delete file");
+
+	// file, select
+	menus_[ID_MenuFileImport] =
+		menuFile->Append(ID_MenuFileImport, "Import files...\tCtrl-I", "Import files");
 
 	menuFile->AppendSeparator();
 
@@ -100,7 +104,7 @@ void Main::setupMenus()
 
 	// view, menu
 	wxMenu* menuView = new wxMenu;
-	menuView->Bind(wxEVT_MENU_OPEN, [this](wxMenuEvent& e) -> void { menuConfigure(e, ID_MenuView); }, wxID_ANY);
+	menuView->Bind(wxEVT_MENU_OPEN, [this](wxMenuEvent& e) -> void { onMenuConfigure(e, ID_MenuView); }, wxID_ANY);
 
 	// view, play
 	menus_[ID_MenuViewPlay] =
@@ -118,15 +122,15 @@ void Main::setupMenus()
 
 	// tools menu
 	wxMenu* menuTools = new wxMenu;
-	menuTools->Bind(wxEVT_MENU_OPEN, [this](wxMenuEvent& e) -> void { menuConfigure(e, ID_MenuTools); }, wxID_ANY);
+	menuTools->Bind(wxEVT_MENU_OPEN, [this](wxMenuEvent& e) -> void { onMenuConfigure(e, ID_MenuTools); }, wxID_ANY);
 
 	// tools, video updater
 	menus_[ID_MenuToolsVideoUpdater] =
 		menuTools->Append(ID_MenuToolsVideoUpdater, "&Update video...\tCtrl-V", "Video update tools");
 
-	// tools menu
+	// test menu
 	wxMenu* menuTest = new wxMenu;
-	menuTools->Bind(wxEVT_MENU_OPEN, [this](wxMenuEvent& e) -> void { menuConfigure(e, ID_MenuTest); }, wxID_ANY);
+	menuTools->Bind(wxEVT_MENU_OPEN, [this](wxMenuEvent& e) -> void { onMenuConfigure(e, ID_MenuTest); }, wxID_ANY);
 
 	// test, test dialog
 	menus_[ID_MenuTestTest] =
@@ -138,25 +142,25 @@ void Main::setupMenus()
 
 	// test, to logger
 	menus_[ID_MenuTestToLogger] =
-		menuTest->Append(ID_MenuTestToLogger, "To Logger\tCtrl-", "Hook for experimental code");
+		menuTest->Append(ID_MenuTestToLogger, "To Logger\tCtrl-", "Output data to logger");
 
 	// help menu
 	wxMenu* menuHelp = new wxMenu;
-	menuHelp->Bind(wxEVT_MENU_OPEN, [this](wxMenuEvent& e) -> void { menuConfigure(e, ID_MenuHelp); }, wxID_ANY);
+	menuHelp->Bind(wxEVT_MENU_OPEN, [this](wxMenuEvent& e) -> void { onMenuConfigure(e, ID_MenuHelp); }, wxID_ANY);
 
 	menus_[ID_MenuHelpAbout] = menuHelp->Append(wxID_ABOUT);
 
 	// setup menu bar
 	wxMenuBar* menuBar = new wxMenuBar;
-	menuBar->Append(menuFile, "File");
-	menuBar->Append(menuView, "View");
+	menuBar->Append(menuFile,  "File");
+	menuBar->Append(menuView,  "View");
 	menuBar->Append(menuTools, "Tools");
-	menuBar->Append(menuTest, "Test");
-	menuBar->Append(menuHelp, "Help");
+	menuBar->Append(menuTest,  "Test");
+	menuBar->Append(menuHelp,  "Help");
 	SetMenuBar(menuBar);
 
 	// bind the menu selected event to the dispatch function
-	Bind(wxEVT_MENU, &Main::menuSelectedDispatch, this, wxID_ANY);
+	Bind(wxEVT_MENU, &Main::onMenuSelectedDispatch, this, wxID_ANY);
 
 	// accelerators
 	std::vector<wxAcceleratorEntry> keys;
@@ -181,45 +185,97 @@ void Main::setupMenus()
 }
 
 // called as the menu is about to be  displayed, enable and check status etc. can be updated here
-void Main::menuConfigure(wxMenuEvent& event, int menuId)
+void Main::onMenuConfigure(wxMenuEvent& event, int menuId)
 {
-	// is there a row selected
-	bool isSelected = false;
-	FileSetT fs;
-	int r = grid_->getSelectedRow();
-	if (r != -1)
-	{
-		isSelected = true;
-		fs = FileSetManager::getFileSet(r);
-	}
-	
+	int item = grid_->getSelectedRow();
+
 	switch (menuId)
 	{
 	case ID_MenuFile:
-		menus_[ID_MenuFileDelete]->Enable(isSelected);
+		menus_[ID_MenuFileSelect]->Enable(menuEnabled(ID_MenuFileSelect, item));
+		menus_[ID_MenuFileDelete]->Enable(menuEnabled(ID_MenuFileDelete, item));
+		menus_[ID_MenuFileImport]->Enable(menuEnabled(ID_MenuFileImport, item));
+		menus_[ID_MenuFileExit]  ->Enable(menuEnabled(ID_MenuFileExit,   item));
 		break;
 	case ID_MenuView:
-		menus_[ID_MenuViewPlay]->Enable(isSelected);
+		menus_[ID_MenuViewPlay]			->Enable(menuEnabled(ID_MenuViewPlay, 		   item));
+		menus_[ID_MenuViewTogglePreview]->Enable(menuEnabled(ID_MenuViewTogglePreview, item));
 		menus_[ID_MenuViewTogglePreview]->Check(Constants::previewMode);
 		if (Constants::previewMode)
 			menus_[ID_MenuViewTogglePreview]->SetItemLabel("Preview mode off");
 		else
 			menus_[ID_MenuViewTogglePreview]->SetItemLabel("Preview mode on");
-		menus_[ID_MenuViewMoreImages]->Enable(Constants::imageBrowserSize < Constants::imageBrowserSizeMax);
-		menus_[ID_MenuViewLessImages]->Enable(Constants::imageBrowserSize > Constants::imageBrowserSizeMin);
+		menus_[ID_MenuViewMoreImages]->Enable(menuEnabled(ID_MenuViewMoreImages, item));
+		menus_[ID_MenuViewLessImages]->Enable(menuEnabled(ID_MenuViewLessImages, item));
 		break;
 	case ID_MenuTools:
-		menus_[ID_MenuToolsVideoUpdater]->Enable(fs.get() != nullptr && fs->hasVideo());
+		menus_[ID_MenuToolsVideoUpdater]->Enable(menuEnabled(ID_MenuToolsVideoUpdater, 	item));
 		break;
 	case ID_MenuTest:
+		menus_[ID_MenuTestTest]	   ->Enable(menuEnabled(ID_MenuTestTest, 	 item));
+		menus_[ID_MenuTestTryout]  ->Enable(menuEnabled(ID_MenuTestTryout,   item));
+		menus_[ID_MenuTestToLogger]->Enable(menuEnabled(ID_MenuTestToLogger, item));
 		break;
 	case ID_MenuHelp:
 		break;
 	}
+	event.Skip();
+}
+
+bool Main::menuEnabled(const int menuId, const int item) const
+{
+	FileSetT fs;
+	if (item != -1)
+		fs = FileSetManager::getFileSet(item);
+
+	switch (menuId)
+	{
+	case ID_MenuFileSelect:
+		return true;
+	case ID_MenuFileDelete:
+		return (fs.get() != nullptr);
+	case ID_MenuFileImport:
+		return true;
+	case ID_MenuFileExit:
+	case wxID_EXIT:
+		return true;
+	case ID_MenuViewPlay:
+		return (fs.get() != nullptr && fs->hasVideo());
+	case ID_MenuViewTogglePreview:
+		return true;
+	case ID_MenuViewMoreImages:
+		return Constants::imageBrowserSize < Constants::imageBrowserSizeMax;
+	case ID_MenuViewLessImages:
+		return Constants::imageBrowserSize > Constants::imageBrowserSizeMin;
+	case ID_MenuToolsVideoUpdater:
+		return (fs.get() != nullptr && fs->hasVideo());
+	case ID_MenuTestTest:
+		return true;
+	case ID_MenuTestTryout:
+		return true;
+	case ID_MenuTestToLogger:
+		return true;
+	case ID_MenuHelpAbout:
+		return true;
+	case ID_PageUp:
+		return true;
+	case ID_PageDown:
+		return true;
+	case ID_CursorUp:
+		return true;
+	case ID_CursorDown:
+		return true;
+	case ID_CursorLeft:
+		return true;
+	case ID_CursorRight:
+		return true;
+	default:
+		return false;
+	}
 }
 
 // called when a menu option has been selected
-void Main::menuSelectedDispatch(wxCommandEvent& event)
+void Main::onMenuSelectedDispatch(wxCommandEvent& event)
 {
 	FileSetT fs;
 	int row = grid_->getSelectedRow();
@@ -256,7 +312,7 @@ void Main::menuSelectedDispatch(wxCommandEvent& event)
 		unitTests();
 		break;
 	case ID_MenuTestTryout:
-		TryOut::tryout(fs);
+		TestDialog::Run(this, fs);
 		break;
 	case ID_MenuTestToLogger:
 		toLogger();
@@ -282,6 +338,7 @@ void Main::menuSelectedDispatch(wxCommandEvent& event)
 		cursorRight();
 		break;
 	}
+	event.Skip();
 }
 
 // gets the popup menu used by the grid and images browser,
@@ -294,27 +351,27 @@ wxMenu *Main::getPopupMenu(const int item)
 	wxMenu *menu = new wxMenu();
 	wxMenuItem *menuItem;
 	menuItem = menu->Append(ID_MenuFileDelete, "Delete ...");
-	menuItem->Enable(fs.get() != nullptr);
+	menuItem->Enable(menuEnabled(ID_MenuFileDelete, item));
 
 	menuItem = menu->Append(ID_MenuViewPlay, "Play");
-	menuItem->Enable(fs.get() != nullptr);
+	menuItem->Enable(menuEnabled(ID_MenuViewPlay, item));
 
 	menuItem = menu->Append(ID_MenuToolsVideoUpdater, "Update video ...");
-	menuItem->Enable(fs.get() != nullptr && fs->hasVideo());
+	menuItem->Enable(menuEnabled(ID_MenuToolsVideoUpdater, item));
 
 	menuItem = menu->Append(ID_MenuViewTogglePreview, "Preview mode", wxEmptyString, wxITEM_CHECK);
+	menuItem->Enable(menuEnabled(ID_MenuViewTogglePreview, item));
 	menuItem->Check(Constants::previewMode);
 	if (Constants::previewMode)
 		menuItem->SetItemLabel("Preview mode off");
 	else
 		menuItem->SetItemLabel("Preview mode on");
 
-	menu->Bind(wxEVT_MENU, &Main::menuSelectedDispatch, this, wxID_ANY);
 	return menu;
 }
 
 //--------------------------------------------------------------------------
-// the menu option handlers 
+// the menu option handlers
 //--------------------------------------------------------------------------
 
 void Main::deleteFile(wxCommandEvent& event, const int row, FileSet& fileset)
@@ -329,6 +386,9 @@ void Main::play(wxCommandEvent& event, const int row, FileSet &fileset)
 	fileset.properties().setDateTimeNow("lasttime");
 	fileset.properties().incCount("times");
 	refresh(fileset);
+
+	std::string cmd = Constants::videoPlayer + SU::doubleQuotes(fileset.getVideo());
+	ShellExecute::shell(cmd);
 }
 
 void Main::pageUp()
@@ -426,7 +486,7 @@ void Main::unitTests()
 	bool result = true;
 
 	result &= Duration::test();
-	result &= FileProperties::test();
+	result &= Properties::test();
 
 	if (result) Logger::info("All unit tests passed");
 }
@@ -434,7 +494,7 @@ void Main::unitTests()
 void Main::updateNoOfImages(const int delta)
 {
 	int s = Constants::imageBrowserSize + delta;
-	if (s <= Constants::imageBrowserSizeMax && 
+	if (s <= Constants::imageBrowserSizeMax &&
 		s >= Constants::imageBrowserSizeMin)
 	{
 		int t = images_->getTop();
@@ -444,7 +504,6 @@ void Main::updateNoOfImages(const int delta)
 		images_->displayAt(t);
 	}
 }
-
 
 
 
