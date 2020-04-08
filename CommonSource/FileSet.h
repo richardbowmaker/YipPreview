@@ -51,6 +51,7 @@ public:
 	bool sort(const ColT col, FileSetT &other, const bool ascending);
 	std::string getToolTip() const;
 	std::string getLinkText() const;
+	void setLinkText(const std::string &link);
 	void toLogger();
 
 	// properties

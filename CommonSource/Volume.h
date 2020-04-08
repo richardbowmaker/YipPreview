@@ -15,6 +15,7 @@
 
 #include <memory>
 #include <string>
+#include <tuple>
 #include <vector>
 
 #include "_Types.h"
@@ -46,6 +47,10 @@ public:
 	void clearFiles();
 	std::string toString() const;
 	void toLogger() const;
+	std::tuple<bool, long long, long long> getFreeSpace() const; // (succeeded, total space, free space)
+	void setIsDirty(const bool dirty);
+	bool getIsdirty() const;
+	void addFileSet(FileSetT &fs);
 
 private:
 

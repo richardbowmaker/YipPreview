@@ -1,12 +1,12 @@
 #ifndef LOGGER_H
 #define LOGGER_H
 
+#include <fmt/core.h>
 #include <string>
 #include <sys/types.h>
 #include <wx/wx.h>
 
 #include "_Types.h"
-#include <fmt/core.h>
 
 // This class is a hybrid wxListBox control and static class for providing
 // thread safe global static logging functions.

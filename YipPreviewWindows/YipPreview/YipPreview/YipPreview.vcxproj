@@ -158,7 +158,6 @@
     <ClInclude Include="..\..\..\CommonSource\Constants.h" />
     <ClInclude Include="..\..\..\CommonSource\CThread.h" />
     <ClInclude Include="..\..\..\CommonSource\DialogEx.h" />
-    <ClInclude Include="..\..\..\CommonSource\FileProperties.h" />
     <ClInclude Include="..\..\..\CommonSource\FileSet.h" />
     <ClInclude Include="..\..\..\CommonSource\FileSetManager.h" />
     <ClInclude Include="..\..\..\CommonSource\GridTable.h" />
@@ -169,6 +168,7 @@
     <ClInclude Include="..\..\..\CommonSource\Logger.h" />
     <ClInclude Include="..\..\..\CommonSource\Main.h" />
     <ClInclude Include="..\..\..\CommonSource\MediaPreviewPlayer.h" />
+    <ClInclude Include="..\..\..\CommonSource\Properties.h" />
     <ClInclude Include="..\..\..\CommonSource\ShellExecute.h" />
     <ClInclude Include="..\..\..\CommonSource\TestDialog.h" />
     <ClInclude Include="..\..\..\CommonSource\Tryout.h" />
@@ -187,7 +187,6 @@
     <ClCompile Include="..\..\..\CommonSource\Constants.cpp" />
     <ClCompile Include="..\..\..\CommonSource\CThread.cpp" />
     <ClCompile Include="..\..\..\CommonSource\DialogEx.cpp" />
-    <ClCompile Include="..\..\..\CommonSource\FileProperties.cpp" />
     <ClCompile Include="..\..\..\CommonSource\FileSet.cpp" />
     <ClCompile Include="..\..\..\CommonSource\FileSetManager.cpp" />
     <ClCompile Include="..\..\..\CommonSource\GridTable.cpp" />
@@ -199,6 +198,7 @@
     <ClCompile Include="..\..\..\CommonSource\Main.cpp" />
     <ClCompile Include="..\..\..\CommonSource\MainFunctions.cpp" />
     <ClCompile Include="..\..\..\CommonSource\MediaPreviewPlayer.cpp" />
+    <ClCompile Include="..\..\..\CommonSource\Properties.cpp" />
     <ClCompile Include="..\..\..\CommonSource\ShellExecute.cpp" />
     <ClCompile Include="..\..\..\CommonSource\TestDialog.cpp" />
     <ClCompile Include="..\..\..\CommonSource\Tryout.cpp" />

@@ -63,8 +63,44 @@ bool ShellExecute::shell(const std::string &cmd)
 {
 	Logger::info("ShellExecute::shell {}", cmd);
 #ifdef WINDOWS_BUILD
-	ToDO
-	return false;
+
+	SECURITY_ATTRIBUTES saAttr;
+	saAttr.nLength = sizeof(SECURITY_ATTRIBUTES);
+	saAttr.bInheritHandle = TRUE;
+	saAttr.lpSecurityDescriptor = NULL;
+
+	PROCESS_INFORMATION piProcInfo;
+	STARTUPINFOA siStartInfo;
+	BOOL bSuccess = FALSE;
+
+	// Set up members of the PROCESS_INFORMATION structure. 
+	ZeroMemory(&piProcInfo, sizeof(PROCESS_INFORMATION));
+
+	// Set up members of the STARTUPINFO structure. 
+	// This structure specifies the STDIN and STDOUT handles for redirection.
+	ZeroMemory(&siStartInfo, sizeof(STARTUPINFO));
+	siStartInfo.cb = sizeof(STARTUPINFO);
+	siStartInfo.dwFlags |= STARTF_USESTDHANDLES;
+
+	// CreateProcess may modify the command line
+	constexpr int cmdMaxLen = 2000;
+	char cmd_[cmdMaxLen * sizeof(char)];
+	ZeroMemory(cmd_, cmdMaxLen * sizeof(char));
+
+	// Create the child process. 
+	bSuccess = CreateProcessA(
+		NULL,
+		cmd_,		   // command line 
+		&saAttr,       // process security attributes 
+		NULL,          // primary thread security attributes 
+		TRUE,          // handles are inherited 
+		CREATE_NO_WINDOW,     // creation flags 
+		NULL,          // use parent's environment 
+		NULL,          // use parent's current directory 
+		&siStartInfo,  // STARTUPINFO pointer 
+		&piProcInfo);  // receives PROCESS_INFORMATION 
+
+	return bSuccess;
 #elif LINUX_BUILD
 	ShellThreadData data;
 	data.result_.cmd_ = cmd;
@@ -320,8 +356,8 @@ DWORD WINAPI ShellExecute::shellWinThread1_(void* pdata)
 	siStartInfo.hStdOutput = hStdOutWr;
 	siStartInfo.hStdError = hStdErrWr;
 	siStartInfo.dwFlags |= STARTF_USESTDHANDLES;
-
-	// unicode version of CreateProcess may modify the command line
+	 
+	// CreateProcess may modify the command line
 	constexpr int cmdMaxLen = 2000;
 	char cmd_[cmdMaxLen * sizeof(char)];
 	ZeroMemory(cmd_, cmdMaxLen * sizeof(char));

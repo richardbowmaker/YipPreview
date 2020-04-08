@@ -8,6 +8,7 @@
 #ifndef COMMON_VOLUMEMANAGER_H_
 #define COMMON_VOLUMEMANAGER_H_
 
+#include <optional>
 #include <string>
 
 
@@ -35,6 +36,7 @@ public:
 	static bool unmountVolumes();
 	static bool hasMountedVolumes();
 	static FileSetCollT getFileSets();
+	static VolumeT findVolumeWithFreeSpace(const long long bytes);
 
 private:
 
@@ -56,7 +58,7 @@ private:
 	bool unmountVolumesImpl();
 	bool hasMountedVolumesImpl() const;
 	FileSetCollT getFileSetsImpl() const;
-
+	VolumeT findVolumeWithFreeSpaceImpl(const long long bytes) const;
 
 	VolumeCollT volumes_;
 	StringCollT mounts_;

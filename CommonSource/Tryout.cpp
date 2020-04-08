@@ -25,10 +25,9 @@
 	#include <stdio.h>
 	#include <strsafe.h>
 	#include <tchar.h>
+	#include <wx/clipbrd.h>
 #elif LINUX_BUILD
-	#include <sys/wait.h>
-	#include <sys/types.h>
-	#include <pthread.h>
+	#include <atomic>
 	#include <cstdio>
 	#include <iostream>
 	#include <memory>
@@ -42,11 +41,14 @@
 	#include <fcntl.h>
 	#include <time.h>
 	#include <future>
-	#include <atomic>
+	#include <pthread.h>
 	#include <sstream>
 	#include <string>
+	#include <sys/wait.h>
+	#include <sys/types.h>
 	#include <thread>
 	#include <unistd.h>
+	#include <wx/clipbrd.h>
 	#include <wx/wx.h>
 	#include <wx/thread.h>
 #endif
@@ -144,16 +146,12 @@ std::string NewLogger::info(const char* format, Args... args)
 
 void TryOut::tryout(const FileSetT fs)
 {
-	Logger::info("abc");
-	Utilities::delay(1000);
-	Logger::info("abc");
-	Utilities::delay(1000);
-	Logger::info("abc");
-	Utilities::delay(1000);
-	Logger::info("abc");
-	Utilities::delay(1000);
-	Logger::info("abc");
-	Utilities::delay(1000);
+	for (int i = 0; i < 10; ++i)
+	{
+		std::string s = FileSetManager::getNextId();
+		Logger::info("id = {}", s);
+	}
+
 }
 
 

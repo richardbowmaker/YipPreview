@@ -11,6 +11,12 @@
 #include <sstream>
 #include <stdio.h>
 
+#ifdef WINDOWS_BUILD
+#elif LINUX_BUILD
+	#include <sys/statvfs.h>
+#endif
+
+
 #include "_Types.h"
 #include "Constants.h"
 #include "Logger.h"
@@ -316,6 +322,44 @@ bool Volume::hasFileSets() const
 	return fileSets_.size() > 0;
 }
 
+std::tuple<bool, long long, long long>  Volume::getFreeSpace() const
+{
+	if (isMounted_)
+	{
+#ifdef WINDOWS_BUILD
+		TO DO
+#elif LINUX_BUILD
+		struct statvfs stat;
+
+		if (statvfs(mount_.c_str(), &stat) == 0)
+		{
+			return std::make_tuple(
+					true,
+					static_cast<long long>(stat.f_frsize) * static_cast<long long>(stat.f_blocks),
+					static_cast<long long>(stat.f_bsize)  * static_cast<long long>(stat.f_bfree));
+		}
+		else
+			Logger::systemError("Volume::getFreeSpace() statvfs() failed");
+#endif
+	}
+	return std::make_tuple(false, 0 , 0);
+}
+
+void Volume::setIsDirty(const bool dirty)
+{
+	isDirty_ = dirty;
+}
+
+bool Volume::getIsdirty() const
+{
+	return isDirty_;
+}
+
+void Volume::addFileSet(FileSetT &fs)
+{
+	fileSets_.push_back(fs);
+}
+
 std::string Volume::toString() const
 {
 	std::stringstream s;
@@ -323,6 +367,13 @@ std::string Volume::toString() const
 	if (isMountable_ && isMounted_) s << ", mount=" << mount_;
 	if (isDirty_) s << " *";
 	if (isSelected_) s << " X";
+
+	if (isMounted_)
+	{
+		auto[ok, ts, fs] = getFreeSpace();
+		if (ok) s << " " << Utilities::bytesToString(fs);
+	}
+
 	return s.str();
 }
 

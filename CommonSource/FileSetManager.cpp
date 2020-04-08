@@ -8,7 +8,11 @@
 #include "FileSetManager.h"
 
 #include <algorithm>
+#include <ctime>
+#include <fmt/core.h>
+#include <iostream>
 #include <map>
+#include <string>
 
 #include "_Types.h"
 #include "FileSet.h"
@@ -71,6 +75,16 @@ const FileSetCollT FileSetManager::getFileSets()
 void FileSetManager::sort(const ColT col)
 {
 	get().sortImpl(col);
+}
+
+std::string FileSetManager::getNextId()
+{
+	return get().getNextIdImpl();
+}
+
+void FileSetManager::addFileSet(FileSetT &fs)
+{
+	get().addFileSetImpl(fs);
 }
 
 void FileSetManager::toLogger()
@@ -138,8 +152,37 @@ void FileSetManager::sortImpl(const ColT col)
 	std::sort(fileSets_.begin(), fileSets_.end(),
 		[this, col](FileSetT& f1, FileSetT& f2) {return f1->sort(col, f2, sortAscend_); });
 
-
 	Main::get().refresh();
+}
+
+// return unique file id in fYYYYMMDDHHMMSS format
+std::string FileSetManager::getNextIdImpl()
+{
+    while (true)
+    {
+        std::time_t t = std::time(0);
+        std::tm* now = std::localtime(&t);
+		std::string id = fmt::format("f{:04}{:02}{:02}{:02}{:02}{:02}",
+				now->tm_year + 1900,
+				now->tm_mon,
+				now->tm_mday,
+				now->tm_hour,
+				now->tm_min,
+				now->tm_sec);
+
+		// ensure this id has not been used before
+		if (id.compare(lastId_) != 0)
+		{
+			lastId_ = id;
+			return id;
+		}
+		Utilities::delay(500);
+    }
+}
+
+void FileSetManager::addFileSetImpl(FileSetT &fs)
+{
+	fileSets_.push_back(fs);
 }
 
 void FileSetManager::toLoggerImpl() const

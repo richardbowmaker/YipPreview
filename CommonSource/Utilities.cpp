@@ -39,9 +39,9 @@
 #endif
 
 #include <chrono>
+#include <fmt/core.h>
 #include <thread>
 #include <wx/wx.h>
-
 
 #include "Constants.h"
 #include "Logger.h"
@@ -122,6 +122,28 @@ int Utilities::messageBox_(const char* message, const char* caption, const int s
 	if (caption != nullptr)
 		c = Constants::title + std::string(" - ") + std::string(caption);
 	return wxMessageBox(message, c.c_str(), style, parent);
+}
+
+std::string Utilities::bytesToString(long long bytes)
+{
+	std::string s = "";
+
+	long long kbs = bytes / 1024;
+	long long mbs = kbs / 1024;
+	long long gbs = mbs / 1024;
+
+	if (gbs > 0)
+		s = fmt::format("{}.{}GB", gbs, (mbs % 1024) / 102);
+	else if (mbs > 0)
+		s = fmt::format("{}.{}MB", mbs, (kbs % 1024) / 102);
+	else if (kbs > 0)
+		s = fmt::format("{}.{}kb", kbs, (bytes % 1024) / 102);
+	else
+		s = fmt::format("{} bytes", bytes);
+
+	s += fmt::format(" ({})", bytes);
+
+	return s;
 }
 
 void Utilities::delay(int ms)
@@ -414,6 +436,21 @@ bool FU::moveFile(const std::string src, const std::string dest, const bool over
 #endif
 }
 
+long long FU::getFileSize(const std::string file)
+{
+	struct stat statbuf;
+
+	if (stat(file.c_str(), &statbuf) == 0)
+	{
+		return static_cast<long long>(statbuf.st_size);
+	}
+	else
+	{
+		Logger::systemError("FU::getFileSize() stat() call failed for {}", file);
+		return 0;
+	}
+}
+
 bool FU::findFiles(
 	const std::string directory,
 	StringCollT *files,
@@ -646,6 +683,16 @@ std::string FU::getPathNoExt(const std::string path)
 		return path;
 	else
 		return path.substr(0, n);
+}
+
+std::string FU::getFileName(const std::string path)
+{
+	std::size_t n = path.find_last_of(FU::getPathSeparator());
+
+	if (n == std::string::npos )
+		return path;
+	else
+		return path.substr(n + 1, path.size() - n - 1);
 }
 
 std::string FU::getExt(const std::string path)

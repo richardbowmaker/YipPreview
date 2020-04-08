@@ -18,6 +18,7 @@
 #include <map>
 
 #include "_Types.h"
+#include "ClipboardCapture.h"
 #include "ImagesBrowser.h"
 #include "ImagesGrid.h"
 #include "Volume.h"
@@ -53,6 +54,7 @@ public:
     void refresh(const FileSet &fileset);
     void refresh();
     void populateGui();
+    void addFileSet(FileSetT &fs);
 
 private:
 
@@ -90,6 +92,7 @@ private:
     void togglePreviewMode();
     void unitTests();
 	void updateNoOfImages(const int delta);
+	void importFile();
 
     void pageUp();
     void pageDown();
@@ -115,7 +118,8 @@ private:
 	// allow global access to MyFrame via
     static Main* this_;
 
- 
+    ClipboardCapture clipboardCapture_;
+
 };
 
 #endif /* COMMON_MAIN_H_ */

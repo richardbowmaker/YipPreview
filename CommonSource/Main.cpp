@@ -175,6 +175,15 @@ Main::Main(const wxString& title, const wxPoint& pos, const wxSize& size) :
 
 	SetClientSize(wxSize(1500, 1000));
 
+	clipboardCapture_.initialise(this);
+
+	Constants::lastDirectory = FU::pathToLocal("/YipPreview");
+
+//	wxTimer *t = new wxTimer(this);
+//	auto te = [](wxTimerEvent &){ Logger::info("timer");};
+//	Bind(wxEVT_TIMER, te, wxID_ANY);
+//	t->Start(2000);
+
 #ifdef LINUX_BUILD
 	if (SudoMode::inSudoMode())
 		Logger::error("Application is currently running at SUDO level");
@@ -207,6 +216,11 @@ void Main::populateGui()
 	images_->uninitialise();
 	images_->initialise();
 	images_->displayAt(0);
+}
+
+void Main::addFileSet(FileSetT &fs)
+{
+	grid_->refreshRowsAppended(1);
 }
 
 //--------------------------------------------------------------
@@ -312,6 +326,7 @@ void Main::onClose(wxCloseEvent& event)
 		}
 	}
 
+	clipboardCapture_.uninitialise();
 	images_->uninitialise();
 	grid_->uninitialise();
 	FileSetManager::uninitialise();

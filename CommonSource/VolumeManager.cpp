@@ -102,6 +102,11 @@ FileSetCollT VolumeManager::getFileSets()
 	return get().getFileSetsImpl();
 }
 
+VolumeT VolumeManager::findVolumeWithFreeSpace(const long long bytes)
+{
+	return get().findVolumeWithFreeSpaceImpl(bytes);
+}
+
 //---------------------------------------------
 
 void VolumeManager::initialiseImpl()
@@ -323,6 +328,16 @@ FileSetCollT VolumeManager::getFileSetsImpl() const
 		fileSets.insert(fileSets.cbegin(), fs.cbegin(), fs.cend());
 	}
 	return fileSets;
+}
+
+VolumeT VolumeManager::findVolumeWithFreeSpaceImpl(const long long bytes) const
+{
+	for (auto v : volumes_)
+	{
+		auto [b, ts, fs] = v->getFreeSpace();
+		if (b && fs > (Constants::minDiskFreeSpace + bytes)) return v;
+	}
+	return nullptr;
 }
 
 void VolumeManager::toLoggerImpl() const

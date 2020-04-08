@@ -290,6 +290,9 @@ void Main::onMenuSelectedDispatch(wxCommandEvent& event)
 	case ID_MenuFileDelete:
 		deleteFile(event, row, *fs.get());
 		break;
+	case ID_MenuFileImport:
+		importFile();
+		break;
 	case wxID_EXIT:
 		Close();
 		break;
@@ -312,7 +315,7 @@ void Main::onMenuSelectedDispatch(wxCommandEvent& event)
 		unitTests();
 		break;
 	case ID_MenuTestTryout:
-		TestDialog::Run(this, fs);
+		TryOut::tryout(fs);
 		break;
 	case ID_MenuTestToLogger:
 		toLogger();
@@ -388,6 +391,7 @@ void Main::play(wxCommandEvent& event, const int row, FileSet &fileset)
 	refresh(fileset);
 
 	std::string cmd = Constants::videoPlayer + SU::doubleQuotes(fileset.getVideo());
+
 	ShellExecute::shell(cmd);
 }
 
@@ -467,6 +471,77 @@ void Main::cursorRight()
 		grid_->SelectRow(r);
 		images_->setSelected(r);
 	}
+}
+
+void Main::importFile()
+{
+	// user selects a file
+	std::string prompt = Constants::title + std::string(" - Select file");
+    wxFileDialog dlg(this, prompt.c_str(), Constants::lastDirectory, "",
+                   "all files (*.*)|*.*", wxFD_OPEN | wxFD_FILE_MUST_EXIST);
+
+	if (dlg.ShowModal() == wxID_CANCEL) return;
+
+	Constants::lastDirectory = dlg.GetDirectory();
+
+	// check file is a valid type
+	std::string src = std::string(dlg.GetPath());
+	if (!FileSet::isValidType(src))
+	{
+		Utilities::messageBox("{}\ncannot be imported, it is not a valid file type, image, video or link", "Import", wxOK, this, src);
+		return;
+	}
+
+	// find a volume with enough free space
+	long long size = FU::getFileSize(src);
+	VolumeT vol = VolumeManager::findVolumeWithFreeSpace(size);
+
+	if (vol.get() != nullptr)
+	{
+		// destination file name
+		std::string dest = vol->getFilesDirectory() + Constants::pathSeparator +
+				FileSetManager::getNextId() + std::string(".") + FU::getExt(src);
+
+		// ask user whether to move or copy file
+//		int ret = Utilities::messageBox(
+//				"Do you want to copy or move the file\n{}\n to {}\n\nNo=Copy, Yes=Copy", "Import",
+//				wxYES_NO | wxCANCEL, this, src, dest);
+
+		wxMessageDialog *box = new wxMessageDialog(
+				this,
+				fmt::format("Do you want to copy or move the file\\n{}\n\n to {}", src, dest),
+				(Constants::title + std::string(" - Import")).c_str(),
+				wxYES_NO | wxCANCEL | wxICON_QUESTION);
+
+		box->SetYesNoLabels("Move", "Copy");
+		int ret = box->ShowModal();
+		if (ret == wxCANCEL) return;
+
+		if (FU::fileExists(dest))
+		{
+			// shouldn't ever happen as a unique dest filename has been generated
+			if (Utilities::messageBox(
+					"The destination file {} already exists", "Import",
+					wxOK | wxCANCEL, this, dest)
+				== wxCANCEL) return;
+		}
+
+		// move/copy file
+		bool ok = true;
+		if (ret == wxYES) ok = FU::moveFile(src,  dest, true);
+		else              ok = FU::copyFile(src, dest, true);
+		if (!ok) return;
+
+		FileSetT fs = std::make_shared<FileSet>(vol.get(), dest);
+
+		// add to data and refresh gui
+		vol->addFileSet(fs);
+		FileSetManager::addFileSet(fs);
+		Main::get().addFileSet(fs);
+	}
+	else
+		Logger::error("Insufficient disk space to save import file {}", src);
+
 }
 
 void Main::toLogger()

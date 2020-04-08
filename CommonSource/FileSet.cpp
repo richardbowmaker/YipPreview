@@ -12,6 +12,7 @@
 #include <string>
 
 #include "_Types.h"
+#include "Constants.h"
 #include "Logger.h"
 #include "Utilities.h"
 
@@ -327,6 +328,17 @@ std::string FileSet::getLinkText() const
 	return lnk;
 }
 
+void FileSet::setLinkText(const std::string &link)
+{
+	// set the link file name
+	link_ = volume_->getFilesDirectory() +
+			Constants::pathSeparator + id_ + std::string(".lnk");
+
+	// write the link file
+	std::ofstream lf(link_);
+	lf << link << "\n";
+	lf.close();
+}
 
 void FileSet::toLogger()
 {

@@ -37,6 +37,8 @@ public:
 	static int imageBrowserSizeMax;
     static std::string veracrypt;
     static std::string pathSeparator;
+    static long long minDiskFreeSpace;
+    static std::string lastDirectory;
 
     // colours
     static wxColour blue;

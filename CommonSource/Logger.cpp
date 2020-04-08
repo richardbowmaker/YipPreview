@@ -107,7 +107,7 @@ void Logger::append(const LevelT level, const char* text)
 		OutputDebugStringA(es.str().c_str());
 		OutputDebugStringA("\n");
 #elif LINUX_BUILD
-		std::cout << es.str();
+		std::cout << es.str() << "\n";
 #endif
 	}
 

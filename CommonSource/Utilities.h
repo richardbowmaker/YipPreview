@@ -46,6 +46,8 @@ public:
 		return messageBox_(fmt::format(format, args...).c_str(), caption, style, parent);
 	}
 
+	static std::string bytesToString(long long bytes);
+
 private:
 
 	Utilities() = default;
@@ -148,7 +150,9 @@ public:
 	static bool fileExists(const std::string file);
 	static bool copyFile(const std::string src, const std::string dest, const bool overwrite = true);
 	static bool moveFile(const std::string src, const std::string dest, const bool overwrite = true);
+	static long long getFileSize(const std::string file);
 	static std::string getFileStem(const std::string path);
+	static std::string getFileName(const std::string path);
 	static std::string getPathNoExt(const std::string path);
 	static std::string getExt(const std::string path);
 	static std::string getPathSeparator();

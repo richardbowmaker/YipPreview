@@ -33,6 +33,8 @@ public:
 	static const FileSetCollT getFileSets();
 	static void sort(const ColT col);
 	static void toLogger();
+	static std::string getNextId();
+	static void addFileSet(FileSetT &fs);
 
 private:
 
@@ -48,10 +50,13 @@ private:
 	const FileSetCollT getFileSetsImpl() const;
 	void sortImpl(const ColT col);
 	void toLoggerImpl() const;
+	std::string getNextIdImpl();
+	void addFileSetImpl(FileSetT &fs);
 
 	FileSetCollT fileSets_;
 	ColT sortCol_;
 	bool sortAscend_;
+	std::string lastId_;
 };
 
 #endif /* COMMON_FILESETMANAGER_H_ */
