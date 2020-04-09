@@ -35,7 +35,7 @@ std::string VolumeSelectDialog::dir_;
 int VolumeSelectDialog::Run(wxWindow *parent)
 {
 	if (dir_.size() == 0)
-		dir_ = FU::pathToLocal(R"(/YipPreview/Encrypted)");
+		dir_ = FU::pathToOs(R"(/YipPreview/Encrypted)");
 
 	VolumeSelectDialog dlg(parent);
 	return dlg.ShowModal();

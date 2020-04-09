@@ -155,6 +155,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\CommonSource\ClipboardCapture.h" />
     <ClInclude Include="..\..\..\CommonSource\Constants.h" />
     <ClInclude Include="..\..\..\CommonSource\CThread.h" />
     <ClInclude Include="..\..\..\CommonSource\DialogEx.h" />
@@ -184,6 +185,7 @@
     <ClInclude Include="YipPreview.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\CommonSource\ClipboardCapture.cpp" />
     <ClCompile Include="..\..\..\CommonSource\Constants.cpp" />
     <ClCompile Include="..\..\..\CommonSource\CThread.cpp" />
     <ClCompile Include="..\..\..\CommonSource\DialogEx.cpp" />

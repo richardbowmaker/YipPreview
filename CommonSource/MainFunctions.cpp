@@ -60,6 +60,7 @@ enum MenuIDsT
 	ID_MenuViewTogglePreview,
 	ID_MenuViewMoreImages,
 	ID_MenuViewLessImages,
+	ID_MenuViewRefresh,
 	ID_MenuTools,
 	ID_MenuToolsVideoUpdater,
 	ID_MenuTest,
@@ -119,6 +120,10 @@ void Main::setupMenus()
 		menuView->Append(ID_MenuViewMoreImages, "Show more images", "Shows more images in the image browser");
 	menus_[ID_MenuViewLessImages] =
 		menuView->Append(ID_MenuViewLessImages, "Show less images", "Shows less images in the image browser");
+
+	// view, play
+	menus_[ID_MenuViewRefresh] =
+		menuView->Append(ID_MenuViewRefresh, "Refresh\tF5", "Refresh");
 
 	// tools menu
 	wxMenu* menuTools = new wxMenu;
@@ -207,6 +212,7 @@ void Main::onMenuConfigure(wxMenuEvent& event, int menuId)
 			menus_[ID_MenuViewTogglePreview]->SetItemLabel("Preview mode on");
 		menus_[ID_MenuViewMoreImages]->Enable(menuEnabled(ID_MenuViewMoreImages, item));
 		menus_[ID_MenuViewLessImages]->Enable(menuEnabled(ID_MenuViewLessImages, item));
+		menus_[ID_MenuViewRefresh]->Enable(menuEnabled(ID_MenuViewRefresh, item));
 		break;
 	case ID_MenuTools:
 		menus_[ID_MenuToolsVideoUpdater]->Enable(menuEnabled(ID_MenuToolsVideoUpdater, 	item));
@@ -247,6 +253,8 @@ bool Main::menuEnabled(const int menuId, const int item) const
 		return Constants::imageBrowserSize < Constants::imageBrowserSizeMax;
 	case ID_MenuViewLessImages:
 		return Constants::imageBrowserSize > Constants::imageBrowserSizeMin;
+	case ID_MenuViewRefresh:
+		return true;
 	case ID_MenuToolsVideoUpdater:
 		return (fs.get() != nullptr && fs->hasVideo());
 	case ID_MenuTestTest:
@@ -307,6 +315,9 @@ void Main::onMenuSelectedDispatch(wxCommandEvent& event)
 		break;
 	case ID_MenuViewLessImages:
 		updateNoOfImages(-1);
+		break;
+	case ID_MenuViewRefresh:
+		viewRefresh();
 		break;
 	case ID_MenuToolsVideoUpdater:
 		VideoUpdaterDialog::Run(this, fs);
@@ -386,13 +397,20 @@ void Main::play(wxCommandEvent& event, const int row, FileSet &fileset)
 {
 	Logger::info("Play {}, row = {}", fileset.getId(), row);
 
-	fileset.properties().setDateTimeNow("lasttime");
-	fileset.properties().incCount("times");
-	refresh(fileset);
+	if (fileset.hasVideo())
+	{
+		fileset.properties().setDateTimeNow("lasttime");
+		fileset.properties().incCount("times");
+		refresh(fileset);
 
-	std::string cmd = Constants::videoPlayer + SU::doubleQuotes(fileset.getVideo());
-
-	ShellExecute::shell(cmd);
+		// play the video
+#ifdef WINDOWS_BUILD
+		ShellExecute::shellFile("open", SU::doubleQuotes(fileset.getVideo()));
+#elif LINUX_BUILD
+		std::string cmd = Constants::videoPlayer + SU::doubleQuotes(fileset.getVideo());
+		ShellExecute(cmd);
+#endif
+	}
 }
 
 void Main::pageUp()
@@ -477,18 +495,18 @@ void Main::importFile()
 {
 	// user selects a file
 	std::string prompt = Constants::title + std::string(" - Select file");
-    wxFileDialog dlg(this, prompt.c_str(), Constants::lastDirectory, "",
+    wxFileDialog dlg(this, prompt.c_str(), Constants::lastDir, "",
                    "all files (*.*)|*.*", wxFD_OPEN | wxFD_FILE_MUST_EXIST);
 
 	if (dlg.ShowModal() == wxID_CANCEL) return;
 
-	Constants::lastDirectory = dlg.GetDirectory();
+	Constants::lastDir = dlg.GetDirectory();
 
 	// check file is a valid type
 	std::string src = std::string(dlg.GetPath());
 	if (!FileSet::isValidType(src))
 	{
-		Utilities::messageBox("{}\ncannot be imported, it is not a valid file type, image, video or link", "Import", wxOK, this, src);
+		US::messageBox("{}\ncannot be imported, it is not a valid file type, image, video or link", "Import", wxOK, this, src);
 		return;
 	}
 
@@ -503,24 +521,20 @@ void Main::importFile()
 				FileSetManager::getNextId() + std::string(".") + FU::getExt(src);
 
 		// ask user whether to move or copy file
-//		int ret = Utilities::messageBox(
-//				"Do you want to copy or move the file\n{}\n to {}\n\nNo=Copy, Yes=Copy", "Import",
-//				wxYES_NO | wxCANCEL, this, src, dest);
-
 		wxMessageDialog *box = new wxMessageDialog(
 				this,
-				fmt::format("Do you want to copy or move the file\\n{}\n\n to {}", src, dest),
+				fmt::format("Do you want to copy or move the file\n\n{}\n\n to {}", src, dest),
 				(Constants::title + std::string(" - Import")).c_str(),
 				wxYES_NO | wxCANCEL | wxICON_QUESTION);
-
 		box->SetYesNoLabels("Move", "Copy");
 		int ret = box->ShowModal();
-		if (ret == wxCANCEL) return;
+		delete box;
+		if (ret == wxID_CANCEL) return;
 
 		if (FU::fileExists(dest))
 		{
 			// shouldn't ever happen as a unique dest filename has been generated
-			if (Utilities::messageBox(
+			if (US::messageBox(
 					"The destination file {} already exists", "Import",
 					wxOK | wxCANCEL, this, dest)
 				== wxCANCEL) return;
@@ -528,8 +542,8 @@ void Main::importFile()
 
 		// move/copy file
 		bool ok = true;
-		if (ret == wxYES) ok = FU::moveFile(src,  dest, true);
-		else              ok = FU::copyFile(src, dest, true);
+		if (ret == wxID_YES) ok = FU::moveFile(src, dest, true);
+		else				 ok = FU::copyFile(src, dest, true);
 		if (!ok) return;
 
 		FileSetT fs = std::make_shared<FileSet>(vol.get(), dest);
@@ -538,10 +552,18 @@ void Main::importFile()
 		vol->addFileSet(fs);
 		FileSetManager::addFileSet(fs);
 		Main::get().addFileSet(fs);
+
+		Logger::info("New file added {}", dest);
 	}
 	else
 		Logger::error("Insufficient disk space to save import file {}", src);
+}
 
+void Main::viewRefresh()
+{
+	VolumeManager::reloadFiles();
+	FileSetManager::setFileSets(VolumeManager::getFileSets());
+	populateGui();
 }
 
 void Main::toLogger()

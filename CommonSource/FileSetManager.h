@@ -34,7 +34,8 @@ public:
 	static void sort(const ColT col);
 	static void toLogger();
 	static std::string getNextId();
-	static void addFileSet(FileSetT &fs);
+	static void addFileSet(FileSetT& fs);
+	static void removeFileSet(FileSetT &fs);
 
 private:
 
@@ -51,7 +52,8 @@ private:
 	void sortImpl(const ColT col);
 	void toLoggerImpl() const;
 	std::string getNextIdImpl();
-	void addFileSetImpl(FileSetT &fs);
+	void addFileSetImpl(FileSetT& fs);
+	void removeFileSetImpl(FileSetT &fs);
 
 	FileSetCollT fileSets_;
 	ColT sortCol_;

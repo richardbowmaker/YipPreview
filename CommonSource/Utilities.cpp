@@ -25,13 +25,15 @@
 	#include <fnmatch.h>
 	#include <fstream>
 	#include <iostream>
+	#include <limits.h>
 	#include <regex>
 	#include <stdio.h>
 	#include <stdlib.h>
 	#include <string>
 	#include <string.h>
-	#include <sys/syscall.h>
 	#include <sys/stat.h>
+	#include <sys/statvfs.h>
+	#include <sys/syscall.h>
 	#include <sys/types.h>
 	#include <time.h>
 	#include <unistd.h>
@@ -47,9 +49,9 @@
 #include "Logger.h"
 #include "ShellExecute.h"
 
-bool Utilities::srand_{false};
+bool US::srand_{false};
 
-long Utilities::getThreadId()
+long US::getThreadId()
 {
 #ifdef WINDOWS_BUILD
 	return static_cast<long>(GetCurrentThreadId());
@@ -58,7 +60,7 @@ long Utilities::getThreadId()
 #endif
 }
 
-long Utilities::getProcessId()
+long US::getProcessId()
 {
 #ifdef WINDOWS_BUILD
 	return static_cast<long>(GetCurrentProcessId());
@@ -67,7 +69,7 @@ long Utilities::getProcessId()
 #endif
 }
 
-long Utilities::getMsCounter()
+long US::getMsCounter()
 {
 #ifdef WINDOWS_BUILD
 	return static_cast<long>(GetTickCount64());
@@ -81,7 +83,7 @@ long Utilities::getMsCounter()
 #endif
 }
 
-int Utilities::pageDown(const int total, const int top, const int visible)
+int US::pageDown(const int total, const int top, const int visible)
 {
 	int t = 0;
 	if (top >= total - visible) t = 0;
@@ -93,7 +95,7 @@ int Utilities::pageDown(const int total, const int top, const int visible)
 	return t;
 }
 
-int Utilities::pageUp(const int total, const int top, const int visible)
+int US::pageUp(const int total, const int top, const int visible)
 {
 	int t = 0;
 	if (top == 0) t = total - visible;
@@ -105,8 +107,7 @@ int Utilities::pageUp(const int total, const int top, const int visible)
 	return t;
 }
 
-
-int Utilities::getRand(const int min, const int max)
+int US::getRand(const int min, const int max)
 {
 	if (!srand_)
 	{
@@ -116,7 +117,7 @@ int Utilities::getRand(const int min, const int max)
 	return min + (rand() % (max - min + 1));
 }
 
-int Utilities::messageBox_(const char* message, const char* caption, const int style, wxWindow* parent)
+int US::messageBox_(const char* message, const char* caption, const int style, wxWindow* parent)
 {
 	std::string c;
 	if (caption != nullptr)
@@ -124,7 +125,7 @@ int Utilities::messageBox_(const char* message, const char* caption, const int s
 	return wxMessageBox(message, c.c_str(), style, parent);
 }
 
-std::string Utilities::bytesToString(long long bytes)
+std::string US::bytesToString(long long bytes)
 {
 	std::string s = "";
 
@@ -146,13 +147,43 @@ std::string Utilities::bytesToString(long long bytes)
 	return s;
 }
 
-void Utilities::delay(int ms)
+void US::delay(int ms)
 {
 #ifdef WINDOWS_BUILD
 	// std::this_thread::sleep_for (std::chrono::milliseconds(ms));
 	Sleep(ms);
 #elif LINUX_BUILD
 	usleep(ms * 1000);
+#endif
+}
+
+std::string US::getWorkingDirectory()
+{
+#ifdef WINDOWS_BUILD
+
+	HMODULE hModule = GetModuleHandle(nullptr);
+	if (hModule)
+	{
+		char path[MAX_PATH];
+		GetModuleFileNameA(hModule, path, sizeof(path));
+		std::string wd = std::string(path);
+		return FU::getPath(wd); // strip of executable filename
+	}
+	else
+	{
+		Logger::systemError("US::getWorkingDirectory() GetModuleFileNameA() failed");
+		return "";
+	}
+
+#elif LINUX_BUILD
+	char path[PATH_MAX];
+	if (getcwd(path, sizeof(path)) != nullptr)
+		return std::string(path);
+	else
+	{
+		Logger::systemError("US::getWorkingDirectory() getcwd() failed");
+		return "";
+	}
 #endif
 }
 
@@ -303,6 +334,26 @@ bool SU::startsWith(const std::string str, const std::string prefix)
 	return startsWith(str.c_str(), prefix.c_str());
 }
 
+bool SU::endsWith(const char* str, const char* suffix)
+{
+	int sl = strlen(str);
+	int el = strlen(suffix);
+
+	if (el == 0) return true;
+
+	const char* ps = str + sl;
+	const char* pe = suffix + el;
+
+	while (ps != str && pe != suffix)
+		if (*(--ps) != *(--pe)) return false;
+	return pe == suffix;
+}
+
+bool SU::endsWith(const std::string str, const std::string suffix)
+{
+	return endsWith(str.c_str(), suffix.c_str());
+}
+
 std::string SU::doubleQuotes(const std::string &s)
 {
 	return std::string("\"") + s + std::string("\"");
@@ -438,8 +489,21 @@ bool FU::moveFile(const std::string src, const std::string dest, const bool over
 
 long long FU::getFileSize(const std::string file)
 {
-	struct stat statbuf;
+#ifdef WINDOWS_BUILD
+	WIN32_FILE_ATTRIBUTE_DATA attr;
+	if (GetFileAttributesExA(file.c_str(), GetFileExInfoStandard, &attr))
+	{
+		return (static_cast<long long>(attr.nFileSizeHigh) * static_cast<long long>(LONG_MAX)) +
+			static_cast<long long>(attr.nFileSizeLow);
+	}
+	else
+	{
+		Logger::systemError("FU::getFileSize() GetFileAttributesExA() call failed for {}", file);
+		return 0;
+	}
 
+#elif LINUX_BUILD
+	struct stat statbuf;
 	if (stat(file.c_str(), &statbuf) == 0)
 	{
 		return static_cast<long long>(statbuf.st_size);
@@ -449,8 +513,49 @@ long long FU::getFileSize(const std::string file)
 		Logger::systemError("FU::getFileSize() stat() call failed for {}", file);
 		return 0;
 	}
+#endif
 }
 
+bool FU::getVolumeFreeSpace(const std::string& volume, DiskSpaceT &space)
+{
+#ifdef WINDOWS_BUILD
+	DWORD sectorsPerCluster;
+	DWORD bytesPerSector;
+	DWORD numberOfFreeClusters;
+	DWORD totalNumberOfClusters;
+
+	if (GetDiskFreeSpaceA(
+		volume.c_str(),
+		&sectorsPerCluster,
+		&bytesPerSector,
+		&numberOfFreeClusters,
+		&totalNumberOfClusters))
+	{
+		long long bytesPerCluster = static_cast<long long>(sectorsPerCluster)* static_cast<long long>(bytesPerSector);
+		space.total = static_cast<long long>(totalNumberOfClusters)* bytesPerCluster;
+		space.free = static_cast<long long>(numberOfFreeClusters)* bytesPerCluster;
+		return true;
+	}
+	else
+	{
+		Logger::systemError("FU::getFreeSpace() GetDiskFreeSpaceA() failed");
+		return false;
+	}
+#elif LINUX_BUILD
+	struct statvfs stat;
+	if (statvfs(volume.c_str(), &stat) == 0)
+	{
+		space.total = static_cast<long long>(stat.f_frsize)* static_cast<long long>(stat.f_blocks);
+		space.free = static_cast<long long>(stat.f_bsize)* static_cast<long long>(stat.f_bfree);
+		return true;
+	}
+	else
+	{
+		Logger::systemError("FU::getFreeSpace() statvfs() failed");
+		return false;
+	}
+#endif
+}
 bool FU::findFiles(
 	const std::string directory,
 	StringCollT *files,
@@ -685,6 +790,16 @@ std::string FU::getPathNoExt(const std::string path)
 		return path.substr(0, n);
 }
 
+std::string FU::getPath(const std::string path)
+{
+	std::size_t n = path.find_last_of(FU::getPathSeparator());
+
+	if (n == std::string::npos)
+		return "";
+	else
+		return path.substr(0, n);
+}
+
 std::string FU::getFileName(const std::string path)
 {
 	std::size_t n = path.find_last_of(FU::getPathSeparator());
@@ -717,8 +832,13 @@ std::string FU::getPathSeparator()
 
 }
 
+std::string FU::pathToOs(const std::string& path)
+{
+	return pathToOs(path.c_str());
+}
+
 // convert file path to window or linux build version
-std::string FU::pathToLocal(const char* path)
+std::string FU::pathToOs(const char* path)
 {
 	constexpr const char* sW = R"(D:\)";
 	constexpr const char* sL = R"(/media/nas_share/Top/Data/)";

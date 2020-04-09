@@ -87,6 +87,11 @@ void FileSetManager::addFileSet(FileSetT &fs)
 	get().addFileSetImpl(fs);
 }
 
+void FileSetManager::removeFileSet(FileSetT& fs)
+{
+	get().removeFileSetImpl(fs);
+}
+
 void FileSetManager::toLogger()
 {
 	get().toLoggerImpl();
@@ -162,7 +167,7 @@ std::string FileSetManager::getNextIdImpl()
     {
         std::time_t t = std::time(0);
         std::tm* now = std::localtime(&t);
-		std::string id = fmt::format("f{:04}{:02}{:02}{:02}{:02}{:02}",
+		std::string id = fmt::format("file{:04}{:02}{:02}{:02}{:02}{:02}",
 				now->tm_year + 1900,
 				now->tm_mon,
 				now->tm_mday,
@@ -176,13 +181,23 @@ std::string FileSetManager::getNextIdImpl()
 			lastId_ = id;
 			return id;
 		}
-		Utilities::delay(500);
+		US::delay(500);
     }
 }
 
 void FileSetManager::addFileSetImpl(FileSetT &fs)
 {
 	fileSets_.push_back(fs);
+}
+
+void FileSetManager::removeFileSetImpl(FileSetT& fs)
+{
+	FileSetCollT::const_iterator n = std::find_if(
+		fileSets_.cbegin(), fileSets_.cend(),
+		[fs](const FileSetT& fs1) { return fs->getId().compare(fs1->getId()) == 0; });
+
+	if (n != fileSets_.cend())
+		fileSets_.erase(n);
 }
 
 void FileSetManager::toLoggerImpl() const

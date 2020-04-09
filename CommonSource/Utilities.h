@@ -21,11 +21,11 @@
 #include <fmt/core.h>
 #include "Logger.h"
 
-class Utilities
+class US
 {
 public:
 
-	virtual ~Utilities();
+	virtual ~US();
 
 	static long getThreadId();
 	static long getProcessId();
@@ -34,6 +34,7 @@ public:
 	static int pageUp(const int total, const int top, const int visible);
 	static int getRand(const int min, const int max);
 	static void delay(int ms);
+	static std::string getWorkingDirectory();
 
 	template<typename... Args>
 	static int messageBox(
@@ -50,9 +51,9 @@ public:
 
 private:
 
-	Utilities() = default;
-	Utilities(const Utilities&) = default;
-	Utilities(Utilities&&);
+	US() = default;
+	US(const US&) = default;
+	US(US&&);
 
 	static int messageBox_(const char* message, const char* caption, const int style, wxWindow* parent);
 
@@ -130,6 +131,8 @@ public:
 	static std::string  wStrToStr(const std::wstring str);
 	static bool startsWith(const char *str, const char* prefix);
 	static bool startsWith(const std::string str, const std::string prefix);
+	static bool endsWith(const char* str, const char* suffix);
+	static bool endsWith(const std::string str, const std::string suffix);
 	static std::string doubleQuotes(const std::string &s);
 	static std::string singleQuotes(const std::string &s);
 
@@ -151,9 +154,18 @@ public:
 	static bool copyFile(const std::string src, const std::string dest, const bool overwrite = true);
 	static bool moveFile(const std::string src, const std::string dest, const bool overwrite = true);
 	static long long getFileSize(const std::string file);
+
+	struct DiskSpaceT
+	{
+		long long free;
+		long long total;
+	};
+	static bool getVolumeFreeSpace(const std::string& volume, DiskSpaceT &space);
+
 	static std::string getFileStem(const std::string path);
 	static std::string getFileName(const std::string path);
 	static std::string getPathNoExt(const std::string path);
+	static std::string getPath(const std::string path);
 	static std::string getExt(const std::string path);
 	static std::string getPathSeparator();
 	static bool findFiles(
@@ -193,7 +205,8 @@ public:
 			StringCollT &dirs,
 			const bool subdirs = false,
 			const bool sort = false);
-	static std::string pathToLocal(const char *path);
+	static std::string pathToOs(const char *path);
+	static std::string pathToOs(const std::string &path);
 	static std::string abbreviateFilename(const std::string &file, const int max);
 	static bool mkDir(const std::string dir);
 	static bool rmDir(const std::string dir);

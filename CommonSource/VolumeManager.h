@@ -37,6 +37,7 @@ public:
 	static bool hasMountedVolumes();
 	static FileSetCollT getFileSets();
 	static VolumeT findVolumeWithFreeSpace(const long long bytes);
+	static void reloadFiles();
 
 private:
 
@@ -59,6 +60,8 @@ private:
 	bool hasMountedVolumesImpl() const;
 	FileSetCollT getFileSetsImpl() const;
 	VolumeT findVolumeWithFreeSpaceImpl(const long long bytes) const;
+	void reloadFilesImpl();
+
 
 	VolumeCollT volumes_;
 	StringCollT mounts_;

@@ -84,6 +84,11 @@ public:
 	// returns true if command executed ok
 	static bool shell(const std::string &cmd);
 
+#ifdef WINDOWS_BUILD
+	// windows only, invokes shell execute
+	static bool shellFile(const std::string& verb, const std::string& cmd);
+#endif
+
 	// simple synchronous, no result object returned
 	// returns true if command executed ok
 	static bool shellSync(

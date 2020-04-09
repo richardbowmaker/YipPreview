@@ -93,7 +93,7 @@ private:
     void unitTests();
 	void updateNoOfImages(const int delta);
 	void importFile();
-
+    void viewRefresh();
     void pageUp();
     void pageDown();
 	void cursorUp();

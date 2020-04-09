@@ -33,7 +33,7 @@ Logger::Logger() : wxListBox()
 Logger::Logger(wxWindow* parent, wxWindowID id) :
 	wxListBox(parent, id, wxDefaultPosition, wxDefaultSize, 0, nullptr, wxLB_SINGLE)
 {
-	tid_ = Utilities::getThreadId();
+	tid_ = US::getThreadId();
 	lbox_ = this;
 	Bind(wxEVT_LOGGER_EVENT, &Logger::onLogger, this);
 }
@@ -79,7 +79,7 @@ void Logger::append(const LevelT level, const char* text)
 {
 
 	// first call, set ticks at time zero
-	long t = Utilities::getMsCounter();
+	long t = US::getMsCounter();
 	if (tzero_ == 0) tzero_ = t;
 
 	std::stringstream es;
@@ -105,7 +105,6 @@ void Logger::append(const LevelT level, const char* text)
 // show message
 #ifdef WINDOWS_BUILD
 		OutputDebugStringA(es.str().c_str());
-		OutputDebugStringA("\n");
 #elif LINUX_BUILD
 		std::cout << es.str() << "\n";
 #endif
@@ -118,7 +117,7 @@ void Logger::appendLb(const LevelT level, std::string text)
 {
 	if (lbox_ == nullptr) return;
 
-	if (tid_ == Utilities::getThreadId())
+	if (tid_ == US::getThreadId())
 	{
 		// add to list box
 		lbox_->Append(text);

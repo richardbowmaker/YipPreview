@@ -43,6 +43,7 @@ bool ClipboardCapture::initialise(wxWindow *owner)
 	timer_ = new wxTimer(owner_);
 	owner_->Bind(wxEVT_TIMER, &ClipboardCapture::onTimer, this, wxID_ANY);
 	timer_->Start(1000);
+	return true;
 }
 
 void ClipboardCapture::uninitialise()
@@ -51,6 +52,7 @@ void ClipboardCapture::uninitialise()
 	{
 		timer_->Stop();
 		owner_->Unbind(wxEVT_TIMER, &ClipboardCapture::onTimer, this, wxID_ANY);
+		delete timer_;
 		timer_ = nullptr;
 		bitmap_.reset();
 	}
@@ -107,19 +109,17 @@ int ClipboardCaptureDialog::Run(wxWindow *parent, const std::string text, std::s
 }
 
 ClipboardCaptureDialog::ClipboardCaptureDialog(wxWindow *parent, const std::string text, std::shared_ptr<wxBitmap> bitmap) :
-	DialogEx(parent, wxID_ANY, wxSize(1000, 1000), wxOK | wxCANCEL),
+	DialogEx(parent, wxID_ANY, wxSize(500, 500), wxOK | wxCANCEL, "Clipboard capture", wxDefaultPosition, wxSTAY_ON_TOP),
 	text_	{text},
 	bitmap_ {bitmap}
-
 {
-	setTitle("Test dialog");
-
 	wxBoxSizer *sizer = new wxBoxSizer(wxVERTICAL);
 	getPanel()->SetSizer(sizer);
 
 	ImagePanel *image = new ImagePanel(getPanel());
     sizer->Add(image, 1, wxEXPAND);
-    image->setImage(bitmap);
+	sizer->Layout();
+	image->setImage(bitmap);
 }
 
 void ClipboardCaptureDialog::onOk(wxCommandEvent &event)
@@ -142,6 +142,8 @@ void ClipboardCaptureDialog::onOk(wxCommandEvent &event)
 			vol->addFileSet(fs);
 			FileSetManager::addFileSet(fs);
 			Main::get().addFileSet(fs);
+
+			Logger::info("Files added {}, {}", image, fs->getLinkText());
 		}
 		else
 			Logger::error("ClipboardCaptureDialog::onOk() save bit map to {} failed", SU::singleQuotes(image));

@@ -146,15 +146,19 @@ std::string NewLogger::info(const char* format, Args... args)
 
 void TryOut::tryout(const FileSetT fs)
 {
-	for (int i = 0; i < 10; ++i)
-	{
-		std::string s = FileSetManager::getNextId();
-		Logger::info("id = {}", s);
-	}
+	bool b;
+
+	b = SU::endsWith("123", "3");
+	b = SU::endsWith("123", "");
+	b = SU::endsWith("123", "123");
+	b = SU::endsWith("123", "4");
+	b = SU::endsWith("123", "0123");
+	b = SU::endsWith("", "");
+	b = SU::endsWith("", "1");
+
+	int n = 0;
 
 }
-
-
 
 void TryOut::AsyncShell(wxEvtHandler *handler)
 {

@@ -100,14 +100,36 @@ Main::Main(const wxString& title, const wxPoint& pos, const wxSize& size) :
 
 	SudoMode::initialise(1000);
 
+	// get working directory
+	std::string wd = US::getWorkingDirectory();
+#ifdef WINDOWS_BUILD
+	// if running in the development environment then the
+	if (SU::endsWith(wd, "Debug") || SU::endsWith(wd, "Release"))
+		for (int i = 0; i < 4; i++) wd = FU::getPath(wd);
+	Constants::workingDir = wd;
+	Constants::lastDir = wd;
+#elif LINUX_BUILD
+	if (SU::endsWith(wd, "YipPreviewLinux"))
+		wd = FU::getPath(wd);
+	Constants::workingDir = wd;
+	Constants::lastDir = wd;
+#endif
+
+	// set up some constant directories and files based on the working directory
+	Constants::resourcesDir =
+		FU::pathToOs(wd + Constants::pathSeparator + std::string(R"(Executable/Resources)"));
+	Constants::noImageJpeg = Constants::resourcesDir + Constants::pathSeparator + std::string("no_image.jpg");
+
 	Constants::initialise();
 	FileSetManager::initialise();
 
 	VolumeManager::initialise();
-	VolumeT vol1 = std::make_shared<Volume>(FU::pathToLocal(R"(/YipPreview/Tryout)"), false);
-//	VolumeT vol2 = std::make_shared<Volume>(FU::pathToLocal(R"(/YipPreview/Encrypted/TestVol1.hc)"), true);
+	VolumeT vol1 = std::make_shared<Volume>(FU::pathToOs(R"(/YipPreview/Tryout)"), false);
+	VolumeT vol2 = std::make_shared<Volume>(FU::pathToOs(R"(/YipPreview/Encrypted/TestVol1.hc)"), true);
+	VolumeT vol3 = std::make_shared<Volume>(FU::pathToOs(R"(/YipPreview/Encrypted/TestVol2.hc)"), true);
 	VolumeManager::add(vol1);
-//	VolumeManager::add(vol2);
+	VolumeManager::add(vol2);
+	VolumeManager::add(vol3);
 
 	setupMenus();
 	CreateStatusBar();
@@ -175,14 +197,12 @@ Main::Main(const wxString& title, const wxPoint& pos, const wxSize& size) :
 
 	SetClientSize(wxSize(1500, 1000));
 
-	clipboardCapture_.initialise(this);
+//	clipboardCapture_.initialise(this);
 
-	Constants::lastDirectory = FU::pathToLocal("/YipPreview");
+	Constants::lastDir = FU::pathToOs("/YipPreview");
 
-//	wxTimer *t = new wxTimer(this);
-//	auto te = [](wxTimerEvent &){ Logger::info("timer");};
-//	Bind(wxEVT_TIMER, te, wxID_ANY);
-//	t->Start(2000);
+	Logger::info("working directory {}", Constants::workingDir);
+
 
 #ifdef LINUX_BUILD
 	if (SudoMode::inSudoMode())
@@ -278,7 +298,11 @@ void Main::browserSetSelected(const int selected)
 
 std::string Main::browserGetImage(const int n)
 {
-	return FileSetManager::getFileSet(n)->getImage();
+	FileSetT fs = FileSetManager::getFileSet(n);
+	if (fs->hasImage())
+		return fs->getImage();
+	else
+		return Constants::noImageJpeg;
 }
 
 std::string Main::browserGetVideo(const int n)
@@ -317,7 +341,7 @@ void Main::onClose(wxCloseEvent& event)
 	int unmount{wxNO};
 	if (VolumeManager::hasMountedVolumes())
 	{
-		unmount = Utilities::messageBox("Do you want to unmount all volumes ?",
+		unmount = US::messageBox("Do you want to unmount all volumes ?",
 				"Close", wxYES_NO | wxCANCEL , this);
 		if (unmount == wxCANCEL)
 		{

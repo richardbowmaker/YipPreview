@@ -171,7 +171,7 @@ void ImagesBrowser::stopPreview()
 void ImagesBrowser::pageUp()
 {
 	displayAt(
-		Utilities::pageUp(
+		US::pageUp(
 			iServer_->browserGetNoOfImages(),
 			top_,
 			iServer_->browserGetNoOfRows() * iServer_->browserGetNoOfCols())
@@ -181,7 +181,7 @@ void ImagesBrowser::pageUp()
 void ImagesBrowser::pageDown()
 {
 	displayAt(
-		Utilities::pageDown(
+		US::pageDown(
 			iServer_->browserGetNoOfImages(),
 			top_,
 			iServer_->browserGetNoOfRows() * iServer_->browserGetNoOfCols())

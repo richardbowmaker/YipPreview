@@ -107,6 +107,11 @@ VolumeT VolumeManager::findVolumeWithFreeSpace(const long long bytes)
 	return get().findVolumeWithFreeSpaceImpl(bytes);
 }
 
+void VolumeManager::reloadFiles()
+{
+	get().reloadFilesImpl();
+}
+
 //---------------------------------------------
 
 void VolumeManager::initialiseImpl()
@@ -220,7 +225,7 @@ bool VolumeManager::mountVolumesImpl(const std::string &password)
 					// use has to decide whether to use it or not
 					if (FU::fileExists(m))
 					{
-						int r = Utilities::messageBox(
+						int r = US::messageBox(
 								"Mount folder \'{}\' already exists, do you want to use it ?", "Mount volume",
 								wxYES_NO | wxCANCEL, &Main::get(), m);
 						if (r == wxCANCEL) return false;
@@ -334,10 +339,16 @@ VolumeT VolumeManager::findVolumeWithFreeSpaceImpl(const long long bytes) const
 {
 	for (auto v : volumes_)
 	{
-		auto [b, ts, fs] = v->getFreeSpace();
-		if (b && fs > (Constants::minDiskFreeSpace + bytes)) return v;
+		if (v->getIsMounted())
+			if (v->hasFreeSpace(bytes)) return v;
 	}
 	return nullptr;
+}
+
+void VolumeManager::reloadFilesImpl()
+{
+	for (auto v : volumes_)
+		v->loadFiles();
 }
 
 void VolumeManager::toLoggerImpl() const

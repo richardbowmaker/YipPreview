@@ -70,6 +70,8 @@ void ImagePanel::setBorderColour(const wxColour &colour)
 {
 	SetBackgroundColour(colour);
 	paneli_->SetBackgroundColour(Constants::white);
+	Refresh();
+	Update();
 }
 
 void ImagePanel::setImage(const std::string file, const wxBitmapType format)

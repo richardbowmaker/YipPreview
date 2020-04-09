@@ -47,10 +47,11 @@ public:
 	void clearFiles();
 	std::string toString() const;
 	void toLogger() const;
-	std::tuple<bool, long long, long long> getFreeSpace() const; // (succeeded, total space, free space)
 	void setIsDirty(const bool dirty);
 	bool getIsdirty() const;
-	void addFileSet(FileSetT &fs);
+	void addFileSet(FileSetT& fs);
+	void removeFileSet(FileSetT &fs);
+	bool hasFreeSpace(const long long size);
 
 private:
 

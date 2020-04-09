@@ -15,7 +15,6 @@
 #elif LINUX_BUILD
 #endif
 
-
 class Constants
 {
 public:
@@ -38,7 +37,9 @@ public:
     static std::string veracrypt;
     static std::string pathSeparator;
     static long long minDiskFreeSpace;
-    static std::string lastDirectory;
+    static std::string lastDir;
+	static std::string resourcesDir;
+	static std::string noImageJpeg;
 
     // colours
     static wxColour blue;

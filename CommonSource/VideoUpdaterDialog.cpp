@@ -119,7 +119,7 @@ void VideoUpdaterDialog::onOk(wxCommandEvent &event)
 		ShellExecuteResult result;
 
 		// random point in video to grab an image
-		int r = Utilities::getRand(1, duration_);
+		int r = US::getRand(1, duration_);
 
 		// ffmpeg command
 		char buf[500];

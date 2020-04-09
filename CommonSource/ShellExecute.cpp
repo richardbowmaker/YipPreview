@@ -57,13 +57,34 @@ ShellExecute::~ShellExecute()
 {
 }
 
+#ifdef WINDOWS_BUILD
+bool ShellExecute::shellFile(const std::string& verb, const std::string& cmd)
+{
+	Logger::info("ShellExecute::shellFile {} {}", verb, cmd);
+
+	HINSTANCE n = ShellExecuteA(
+		NULL,
+		verb.c_str(),
+		cmd.c_str(),
+		NULL,
+		NULL,
+		SW_MAXIMIZE);
+
+	if (reinterpret_cast<int>(n) > 32)
+		return true;
+	else
+	{
+		Logger::systemError("ShellExecute::shell() CreateProcessA() failed, {} {} ", verb, cmd);
+		return false;
+	}
+}
+#endif
 
 // shell
 bool ShellExecute::shell(const std::string &cmd)
 {
 	Logger::info("ShellExecute::shell {}", cmd);
 #ifdef WINDOWS_BUILD
-
 	SECURITY_ATTRIBUTES saAttr;
 	saAttr.nLength = sizeof(SECURITY_ATTRIBUTES);
 	saAttr.bInheritHandle = TRUE;
@@ -89,18 +110,24 @@ bool ShellExecute::shell(const std::string &cmd)
 
 	// Create the child process. 
 	bSuccess = CreateProcessA(
-		NULL,
-		cmd_,		   // command line 
-		&saAttr,       // process security attributes 
-		NULL,          // primary thread security attributes 
-		TRUE,          // handles are inherited 
-		CREATE_NO_WINDOW,     // creation flags 
-		NULL,          // use parent's environment 
-		NULL,          // use parent's current directory 
-		&siStartInfo,  // STARTUPINFO pointer 
-		&piProcInfo);  // receives PROCESS_INFORMATION 
+		nullptr,
+		cmd_,				// command line 
+		&saAttr,			// process security attributes 
+		nullptr,			// primary thread security attributes 
+		TRUE,				// handles are inherited 
+		CREATE_NO_WINDOW,   // creation flags 
+		nullptr,			// use parent's environment 
+		nullptr,			// use parent's current directory 
+		&siStartInfo, 
+		&piProcInfo); 
 
-	return bSuccess;
+	if (bSuccess)
+		return true;
+	else
+	{
+		Logger::systemError("ShellExecute::shell() CreateProcessA() failed, {} ", cmd);
+		return false;
+	}
 #elif LINUX_BUILD
 	ShellThreadData data;
 	data.result_.cmd_ = cmd;
@@ -557,14 +584,14 @@ bool ShellExecute::shellWait(ShellThreadData &data)
 	char buff[100000];
 
 	int rerr;
-	long stime = Utilities::getMsCounter();
+	long stime = US::getMsCounter();
 
 	bool bStdout = true;
 	bool bStderr = true;
 
 	while (true)
 	{
-		Utilities::delay(250);
+		US::delay(250);
 
 		// std out handling
 		rerr = read(fileno(data.fpStdout_), buff, sizeof(buff) - 1);
@@ -615,7 +642,7 @@ bool ShellExecute::shellWait(ShellThreadData &data)
 		// check for timedout
 		if (data.timeoutms_ != -1)
 		{
-			long timer = Utilities::getMsCounter();
+			long timer = US::getMsCounter();
 			if (timer - stime > data.timeoutms_)
 			{
 				fclose(data.fpStdout_);

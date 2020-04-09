@@ -33,7 +33,10 @@ int Constants::imageBrowserSizeMin = 1;
 int Constants::imageBrowserSizeMax = 4;
 
 long long Constants::minDiskFreeSpace = 50 * 1024 * 1024;	// 50MB
-std::string Constants::lastDirectory;
+std::string Constants::lastDir;
+std::string Constants::resourcesDir;
+std::string Constants::noImageJpeg;
+
 
 wxColour Constants::white;
 wxColour Constants::blue;

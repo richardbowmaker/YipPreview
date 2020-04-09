@@ -7,6 +7,7 @@
 
 #include "Volume.h"
 
+#include <algorithm>
 #include <fstream>
 #include <sstream>
 #include <stdio.h>
@@ -157,10 +158,19 @@ void Volume::writeProperties()
 {
 	if (isMountable_ && !isMounted_) return;
 
-	if (fileSets_.size() == 0)
+//bug check
+	int pc = 0;
+	for (auto fs : fileSets_)
+		pc += fs->properties().getSize();
+
+	if (pc == 0)
 	{
-		int nn = 0;
+		int ret = US::messageBox("No properties for volume {}\n Cancel = skip writing properties",
+				"write properties", wxOK | wxCANCEL, nullptr);
+		if (ret == wxID_CANCEL) return;
 	}
+// bug check
+
 
 	std::ofstream pcache(getPropertiesFile());
 	for (auto fs : fileSets_)
@@ -189,7 +199,7 @@ bool Volume::mount(const std::string &m, const std::string &password)
 //  "C:\Program Files\VeraCrypt\VeraCrypt.exe" /q /a /nowaitdlg y /hash sha512 /v VolAccounts.hc /l x /p password
 	cmd << Constants::veracrypt
 		<< R"( /q /a /nowaitdlg y /hash sha512)"
-		<< R"( /v ")" << file_ << R"(")"
+		<< R"( /v )" << SU::doubleQuotes(file_)
 		<< R"( /l )" << m[0]
 		<< R"( /p )" << password;
 #elif LINUX_BUILD
@@ -198,7 +208,7 @@ bool Volume::mount(const std::string &m, const std::string &password)
 	cmd 	<< Constants::veracrypt
 			<< " --password=" << password
 			<< " --slot=" << m.substr(m.size() - 2, 2) << " --hash=sha512 "
-			<< '\"' << file_ << "\" "
+			<< SU::doubleQuotes(file_) << " "
 			<< m;
 	Logger::error("Volume::mount() TODO, sort out slot number");
 #endif
@@ -303,8 +313,6 @@ void Volume::loadFiles()
 		Logger::warning(
 				"Volume::loadFiles() empty directory {}",
 				getFilesDirectory());
-
-	int n = 0;
 }
 
 void Volume::clearFiles()
@@ -322,29 +330,6 @@ bool Volume::hasFileSets() const
 	return fileSets_.size() > 0;
 }
 
-std::tuple<bool, long long, long long>  Volume::getFreeSpace() const
-{
-	if (isMounted_)
-	{
-#ifdef WINDOWS_BUILD
-		TO DO
-#elif LINUX_BUILD
-		struct statvfs stat;
-
-		if (statvfs(mount_.c_str(), &stat) == 0)
-		{
-			return std::make_tuple(
-					true,
-					static_cast<long long>(stat.f_frsize) * static_cast<long long>(stat.f_blocks),
-					static_cast<long long>(stat.f_bsize)  * static_cast<long long>(stat.f_bfree));
-		}
-		else
-			Logger::systemError("Volume::getFreeSpace() statvfs() failed");
-#endif
-	}
-	return std::make_tuple(false, 0 , 0);
-}
-
 void Volume::setIsDirty(const bool dirty)
 {
 	isDirty_ = dirty;
@@ -360,6 +345,26 @@ void Volume::addFileSet(FileSetT &fs)
 	fileSets_.push_back(fs);
 }
 
+void Volume::removeFileSet(FileSetT& fs)
+{
+	FileSetCollT::const_iterator n = std::find_if(
+		fileSets_.cbegin(), fileSets_.cend(),
+		[fs](const FileSetT &fs1) { return fs->getId().compare(fs1->getId()) == 0; });
+
+	if (n != fileSets_.cend())
+		fileSets_.erase(n);
+}
+
+bool Volume::hasFreeSpace(const long long size)
+{
+	if (!isMounted_) return false;
+
+	FU::DiskSpaceT space;
+	if (FU::getVolumeFreeSpace(mount_, space))
+		return space.free > (Constants::minDiskFreeSpace + size);
+	else return false;
+}
+
 std::string Volume::toString() const
 {
 	std::stringstream s;
@@ -370,8 +375,9 @@ std::string Volume::toString() const
 
 	if (isMounted_)
 	{
-		auto[ok, ts, fs] = getFreeSpace();
-		if (ok) s << " " << Utilities::bytesToString(fs);
+		FU::DiskSpaceT space;
+		if (FU::getVolumeFreeSpace(mount_, space))
+			s << " " << US::bytesToString(space.free);
 	}
 
 	return s.str();
