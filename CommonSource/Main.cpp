@@ -98,7 +98,9 @@ Main::Main(const wxString& title, const wxPoint& pos, const wxSize& size) :
 	// keep static pointer to main frame
 	this_ = this;
 
+#if LINUX_BUILD
 	SudoMode::initialise(1000);
+#endif
 
 	// get working directory
 	std::string wd = US::getWorkingDirectory();

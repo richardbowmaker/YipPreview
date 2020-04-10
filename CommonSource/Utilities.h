@@ -60,6 +60,7 @@ private:
 	static bool srand_;
 };
 
+
 // class for boosting program up to sudo mode
 // only valid for linux programs started in sudo mode
 // in windows or linux programs running at user level this class can be used but does nothing
@@ -97,7 +98,7 @@ private:
  * thread lowers to user level.
  * If one thread raises to sudo level then all threads are now in sudo level.
  */
-
+/*
 class SudoMode
 {
 public:
@@ -117,6 +118,7 @@ private:
 	static int uid_;
 	bool got_;	// true when this instance has a ref count
 };
+*/
 
 // String Utilities
 class SU
@@ -225,6 +227,13 @@ private:
 			StringCollT *dirs,
 			const bool subdirs,
 			const bool sort);
+};
+
+
+class AU
+{
+public:
+	static void setVolume(const int vol); // 0 - 100
 };
 
 class Duration

@@ -1,21 +1,19 @@
 /*
  * ShellExecute.h
  *
- *  Created on: 20 Jan 2020
- *      Author: richard
+ *  There are 3 cpp implementation files lniked to this header
+ *
+ *  	./CommonSource/ShellExecute.cpp
+ *  	./LinuxSource/ShellExecute.cpp
+ *  	./WindowsSource/ShellExecute.cpp
+ *
  */
 
 #ifndef COMMON_SHELLEXECUTE_H_
 #define COMMON_SHELLEXECUTE_H_
 
-#ifdef WINDOWS_BUILD
-	#include <string>
-	#include <Windows.h>
-	#include <wx/wx.h>
-#elif LINUX_BUILD
-	#include <string>
-	#include <wx/wx.h>
-#endif
+#include <string>
+#include <wx/wx.h>
 
 //----------------------------------------------------------------------------
 // Shell execute result, when a client is notified of shell execute completion
@@ -43,13 +41,7 @@ public:
 	void *getUserData() const;
 	std::string toString() const;
 
-	void killChildProcess();	// after a timeout this can be used to kill
-								// the hanging process
 	void clear();
-
-	friend class ShellExecute;
-
-private:
 
 	std::string 	cmd_;		// command executed
 	int 			pid_;		// process id of the shell process, the shell itself has a child process
@@ -72,13 +64,14 @@ private:
 // or a wxWidgets event on the main GUI thread.
 //----------------------------------------------------------------------------
 
+using ShellExecuteEventHandlerT = void (*)(ShellExecuteResult &result);
+
 class ShellExecute
 {
 public:
 	ShellExecute();
 	virtual ~ShellExecute();
 
-	using ShellExecuteEventHandlerT = void (*)(ShellExecuteResult &result);
 
 	// simple synchronous, no result object returned
 	// returns true if command executed ok
@@ -119,40 +112,6 @@ public:
 			void *userData = nullptr,
 			const int timeoutms = -1);
 
-	// data passed to pthread function via pointer
-	struct ShellThreadData
-	{
-	public:
-
-		ShellThreadData();
-
-		ShellExecuteResult 	result_;
-		int 				timeoutms_;
-		wxEvtHandler*		wxHandler_;
-		int					wxid_;
-		ShellExecuteEventHandlerT handler_;
-
-#ifdef WINDOWS_BUILD
-		HANDLE completed_;
-#elif LINUX_BUILD
-		FILE* fpStdout_;
-		FILE* fpStderr_;
-#endif
-
-	};
-
-private:
-
-#ifdef WINDOWS_BUILD
-	static bool shellWin_(ShellThreadData& data);
-	static DWORD WINAPI shellWinThread1_(void* pdata);
-	static DWORD WINAPI shellWinThread2_(void* pdata);
-#elif LINUX_BUILD
-	static void *shellThreadWait(void *ptr);
-	static void *shellThreadWaitGui(void *ptr);
-	static bool shellStart(ShellThreadData &data);
-	static bool shellWait(ShellThreadData &data);
-#endif
 };
 
 //----------------------------------------------------------------------------

@@ -66,6 +66,8 @@
                                     <listOptionValue builtIn="false" value="/usr/local/wxwidgets/debug/shared/include/wx-3.1"/>
                                     									
                                     <listOptionValue builtIn="false" value="/media/nas_share/Top/Data/Projects/fmtlib/fmt-6.1.2/include"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Source/Common}&quot;"/>
                                     								
                                 </option>
                                 								
@@ -118,6 +120,8 @@
                                     <listOptionValue builtIn="false" value="X11"/>
                                     									
                                     <listOptionValue builtIn="false" value="fmt"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="asound"/>
                                     								
                                 </option>
                                 								
@@ -143,7 +147,9 @@
                     					
                     <sourceEntries>
                         						
-                        <entry excluding="Shared|CommonDebug" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+                        <entry excluding="Header|Headers|Source|Shared|CommonDebug" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+                        						
+                        <entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Source"/>
                         					
                     </sourceEntries>
                     				
@@ -298,6 +304,8 @@
                     </folderInfo>
                     					
                     <sourceEntries>
+                        						
+                        <entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Source"/>
                         						
                         <entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src"/>
                         					

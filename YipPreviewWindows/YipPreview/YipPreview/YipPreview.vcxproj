@@ -209,6 +209,11 @@
     <ClCompile Include="..\..\..\CommonSource\Volume.cpp" />
     <ClCompile Include="..\..\..\CommonSource\VolumeManager.cpp" />
     <ClCompile Include="..\..\..\CommonSource\VolumeSelectDialog.cpp" />
+    <ClCompile Include="..\..\..\WindowsSource\ShellExecuteWin.cpp">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\WindowsSource;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\WindowsSource;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <ClCompile Include="..\..\..\WindowsSource\UtilitiesWin.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="YipPreview.rc" />

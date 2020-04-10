@@ -404,11 +404,12 @@ void Main::play(wxCommandEvent& event, const int row, FileSet &fileset)
 		refresh(fileset);
 
 		// play the video
+		AU::setVolume(50);
 #ifdef WINDOWS_BUILD
 		ShellExecute::shellFile("open", SU::doubleQuotes(fileset.getVideo()));
 #elif LINUX_BUILD
 		std::string cmd = Constants::videoPlayer + SU::doubleQuotes(fileset.getVideo());
-		ShellExecute(cmd);
+		ShellExecute::shell(cmd);
 #endif
 	}
 }
