@@ -88,75 +88,9 @@
 
 
 
-template<typename T>
-std::string toString(T t) { return "??"; }
-
-template<>
-std::string toString(const std::string &t) { return t; }
-
-template<>
-std::string toString(const int t)
-{
-	char buf[100];
-	sprintf(buf, "%d", t);
-	return std::string(buf);
-}
-
-std::string toString(const char* s)
-{
-	return std::string(s);
-}
-
-template<typename T>
-void logss(std::stringstream &ss, const std::string &format, T v)
-{
-	ss << toString(v);
-}
-
-template<typename T, typename... Args>
-void logss(std::stringstream &ss, const std::string &format, T v, Args... args)
-{
-	ss << toString(v);
-	logss(ss, format, args...);
-}
-
-template<typename... Args>
-std::string log(const std::string &format, Args... args)
-{
-	std::stringstream ss;
-	logss(ss, format, args...);
-	return ss.str();
-}
-
-class NewLogger
-{
-public:
-
-	template<typename... Args>
-	static std::string info(const char* format, Args... args);
-
-};
-
-template<typename... Args>
-std::string NewLogger::info(const char* format, Args... args)
-{
-	std::string message = fmt::format(format, args...);
-	return message;
-}
-
 void TryOut::tryout(const FileSetT fs)
 {
-	bool b;
-
-	b = SU::endsWith("123", "3");
-	b = SU::endsWith("123", "");
-	b = SU::endsWith("123", "123");
-	b = SU::endsWith("123", "4");
-	b = SU::endsWith("123", "0123");
-	b = SU::endsWith("", "");
-	b = SU::endsWith("", "1");
-
-	int n = 0;
+	AU::setVolume(0);
 
 }
 

@@ -213,14 +213,14 @@ bool Volume::mount(const std::string &m, const std::string &password)
 	Logger::error("Volume::mount() TODO, sort out slot number");
 #endif
 	// mount must be in sudo mode
+#if LINUX_BUILD
 	SudoMode sudo;
+#endif
 	ShellExecuteResult result;
 
 	// if running in the IDE, i.e. not at sudo level, then bigger timeout
 	// will allow the user to type in their password
-	int tout = sudo.inSudoMode() ? 10000 : 60000;
-	ShellExecute::shellSync(cmd.str(), result, tout);
-	sudo.lower();
+	ShellExecute::shellSync(cmd.str(), result, 15000);
 
 	Logger::info("{}", result.toString());
 
@@ -253,11 +253,10 @@ bool Volume::unmount()
 	cmd << Constants::veracrypt << R"( /q /nowaitdlg y /force /d )" << mount_[0];
 #elif LINUX_BUILD
 	cmd << Constants::veracrypt << " -d " << " " << mount_;
-#endif
 	SudoMode sudo;
+#endif
 	ShellExecuteResult result;
 	ShellExecute::shellSync(cmd.str(), result, 5000);
-	sudo.lower();
 
 	Logger::info("{}", result.toString());
 

@@ -26,9 +26,14 @@
 	</natures>
 	<linkedResources>
 		<link>
-			<name>Common</name>
+			<name>Source/Common</name>
 			<type>2</type>
 			<location>/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/CommonSource</location>
+		</link>
+		<link>
+			<name>Source/LinuxSource</name>
+			<type>2</type>
+			<location>/media/nas_share/Top/Data/Projects/WxWidgets/YipPreview/LinuxSource</location>
 		</link>
 	</linkedResources>
 </projectDescription>

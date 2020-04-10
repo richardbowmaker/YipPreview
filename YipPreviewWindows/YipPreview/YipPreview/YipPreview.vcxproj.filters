@@ -22,6 +22,12 @@
     <Filter Include="Common\Source Files">
       <UniqueIdentifier>{5408be86-c903-41f0-a8cf-742a134ad4a5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Windows">
+      <UniqueIdentifier>{a90cb46d-36d5-4c85-92e8-c176decc8d3a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Windows\Source Files">
+      <UniqueIdentifier>{f2cd014f-0126-4a0c-9e4a-5bf8d91fcc04}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -181,6 +187,12 @@
     </ClCompile>
     <ClCompile Include="..\..\..\CommonSource\ClipboardCapture.cpp">
       <Filter>Common\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\WindowsSource\ShellExecuteWin.cpp">
+      <Filter>Windows\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\WindowsSource\UtilitiesWin.cpp">
+      <Filter>Windows\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
